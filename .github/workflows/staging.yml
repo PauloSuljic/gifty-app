@@ -5,10 +5,13 @@ on:
     branches:
       - staging
   workflow_dispatch:
+<<<<<<< HEAD
 
 permissions:
   id-token: write
   contents: read
+=======
+>>>>>>> origin/master
 
 jobs:
   build_backend:
