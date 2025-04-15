@@ -31,7 +31,6 @@ lerna-debug.log*
 
 # Cache & Temporary
 .cache/
-firebase/
 *.tmp
 *.tmp_proj
 *.cache
