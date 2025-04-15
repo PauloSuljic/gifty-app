@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - staging
-  workflow_dispatch:  
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build_backend:
