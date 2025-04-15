@@ -1,0 +1,197 @@
+# =========================
+# Global Ignore Rules
+# =========================
+
+# System & IDE Specific
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment Files
+.env
+.env.*     # Matches .env.production, .env.development etc.
+
+# Editor Settings
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cache & Temporary
+.cache/
+firebase/
+*.tmp
+*.tmp_proj
+*.cache
+*.dbmdl
+*.jfm
+
+# =========================
+# Frontend
+# =========================
+
+# Build Output
+dist/
+dist-ssr/
+*.local
+
+# Dependencies
+node_modules/
+
+# =========================
+# Backend
+# =========================
+
+# Local settings
+appsettings.Development.json
+
+# Build Results
+[Bb]in/
+[Oo]bj/
+[Ll]og[s]*/
+[Dd]ebug*/
+[Rr]elease*/
+out/
+x64/
+x86/
+bld/
+Generated\ Files/
+artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+
+# Visual Studio Specific
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.userprefs
+*.VC.db
+*.VC.VC.opendb
+*.dbproj.schemaview
+*.vspscc
+*.vssscc
+*.builds
+*.pidb
+*.scc
+*.plg
+*.opt
+*.vbw
+
+# Crash dumps
+mono_crash.*
+
+# Logs & Reports
+*.log
+*.tss
+*.binlog
+*.mm.*
+TestResult.xml
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Code Coverage Tools
+*.coverage
+*.coveragexml
+*.dotCover
+.axoCover/
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+OpenCover/
+
+# ReSharper & Extensions
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Azure & Publish Output
+publish/
+PublishScripts/
+*.publishproj
+*.pubxml
+*.azurePubxml
+*.build.csdef
+csx/
+ecf/
+rcf/
+AppPackages/
+*.appx*
+*.appxupload
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# Scaffolding & Generated Files
+ScaffoldingReadMe.txt
+Generated_Code/
+**/*.HTMLClient/GeneratedArtifacts
+**/*.DesktopClient/GeneratedArtifacts
+**/*.Server/GeneratedArtifacts
+**/*.DesktopClient/ModelManifest.xml
+**/*.Server/ModelManifest.xml
+
+# SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Visual Studio Test Tools & Profiling
+*.psess
+*.vsp*
+*.sap
+*.e2e
+
+# Misc. Tools & Plugins
+*.gpState        # Guidance Automation Toolkit
+*.GhostDoc.xml   # GhostDoc plugin
+*.jmconfig       # Telerik JustMock
+.ntvs_analysis.dat
+*.nvuser         # NVidia Nsight
+.localhistory/
+.mfractor/
+MigrationBackup/
+.ionide/
+
+# Fakes, Benchmarks, Docs
+FakesAssemblies/
+BenchmarkDotNet.Artifacts/
+StyleCopReport.xml
+DocProject/
+orleans.codegen.cs
+
+# Paket
+.paket/paket.exe
+paket-files/
+
+# FAKE
+.fake/
+
+# Strong name files (security risk, commented out by default)
+# *.snk
