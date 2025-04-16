@@ -74,4 +74,4 @@ jobs:
         with:
           app-name: "gifty-api-staging"
           slot-name: "Production"
-          package: ./publish
+          package: ./backend-publish
