@@ -134,10 +134,10 @@ Coming soon! (e.g. Vitest or Playwright)
 
 CI/CD is fully automated using **GitHub Actions** + **Azure**:
 
-| Branch   | Environment   | Workflow Type                |
-|----------|----------------|------------------------------|
-| `staging` | QA / Preview   | ✅ Backend & frontend staging |
-| `master`  | Production     | 🚀 Full production deploys    |
+| Branch    | Environment  | Workflow Type                 |
+| --------- | ------------ | ----------------------------- |
+| `staging` | QA / Preview | ✅ Backend & frontend staging |
+| `master`  | Production   | 🚀 Full production deploys    |
 
 Workflows are separated by:
 
@@ -151,20 +151,20 @@ Workflows are separated by:
 
 **Base URL**: `https://gifty-api.azurewebsites.net/api`
 
-| Method | Endpoint                                  | Description                 | Auth |
-|--------|-------------------------------------------|-----------------------------|------|
-| GET    | `/users/{id}`                             | Get user profile            | ✅    |
-| POST   | `/users`                                  | Create user                 | ✅    |
-| GET    | `/wishlists`                              | List wishlists              | ✅    |
-| POST   | `/wishlists`                              | Create wishlist             | ✅    |
-| DELETE | `/wishlists/{id}`                         | Delete wishlist             | ✅    |
-| GET    | `/wishlist-items/{wishlistId}`            | Get wishlist items          | ✅    |
-| POST   | `/wishlist-items`                         | Add item                    | ✅    |
-| PATCH  | `/wishlist-items/{itemId}`                | Edit item                   | ✅    |
-| DELETE | `/wishlist-items/{itemId}`                | Delete item                 | ✅    |
-| PATCH  | `/wishlist-items/{itemId}/reserve`        | Reserve/unreserve item      | ✅    |
-| POST   | `/shared-links/{wishlistId}/generate`     | Generate share link         | ✅    |
-| GET    | `/shared-links/{shareCode}`               | View shared wishlist        | ❌    |
+| Method | Endpoint                              | Description            | Auth |
+| ------ | ------------------------------------- | ---------------------- | ---- |
+| GET    | `/users/{id}`                         | Get user profile       | ✅   |
+| POST   | `/users`                              | Create user            | ✅   |
+| GET    | `/wishlists`                          | List wishlists         | ✅   |
+| POST   | `/wishlists`                          | Create wishlist        | ✅   |
+| DELETE | `/wishlists/{id}`                     | Delete wishlist        | ✅   |
+| GET    | `/wishlist-items/{wishlistId}`        | Get wishlist items     | ✅   |
+| POST   | `/wishlist-items`                     | Add item               | ✅   |
+| PATCH  | `/wishlist-items/{itemId}`            | Edit item              | ✅   |
+| DELETE | `/wishlist-items/{itemId}`            | Delete item            | ✅   |
+| PATCH  | `/wishlist-items/{itemId}/reserve`    | Reserve/unreserve item | ✅   |
+| POST   | `/shared-links/{wishlistId}/generate` | Generate share link    | ✅   |
+| GET    | `/shared-links/{shareCode}`           | View shared wishlist   | ❌   |
 
 ---
 
@@ -177,15 +177,15 @@ Workflows are separated by:
 
 ## 📦 Tech Stack
 
-| Layer     | Tech Stack                               |
-|-----------|-------------------------------------------|
-| Frontend  | Vite, React, TypeScript, Tailwind         |
-| Backend   | ASP.NET Core 8 Web API                    |
-| Auth      | Firebase Auth (Google + Email)            |
-| DB        | PostgreSQL + EF Core                      |
-| Caching   | Redis                                     |
-| CI/CD     | GitHub Actions                            |
-| Hosting   | Azure Web Apps + Azure Static Web Apps    |
+| Layer    | Tech Stack                             |
+| -------- | -------------------------------------- |
+| Frontend | Vite, React, TypeScript, Tailwind      |
+| Backend  | ASP.NET Core 8 Web API                 |
+| Auth     | Firebase Auth (Google + Email)         |
+| DB       | PostgreSQL + EF Core                   |
+| Caching  | Redis                                  |
+| CI/CD    | GitHub Actions                         |
+| Hosting  | Azure Web Apps + Azure Static Web Apps |
 
 ---
 
@@ -200,4 +200,3 @@ Feel free to fork and submit a pull request — collaboration welcome!
 
 **Paulo Suljic**  
 🔗 [GitHub](https://github.com/PauloSuljic) ・ 🌍 [giftyapp.live](https://giftyapp.live)
-
