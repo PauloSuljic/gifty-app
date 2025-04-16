@@ -61,6 +61,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-publish
+          path: publish
 
       - name: Login to Azure
         uses: azure/login@v2
