@@ -47,8 +47,8 @@ jobs:
         env:
           DefaultConnection: "Host=localhost;Port=5433;Database=GiftyDb;Username=postgres;Password=postgrespassword123"
           Redis: "localhost:6379"
-          UseTestAuth: "false"
-          ASPNETCORE_ENVIRONMENT: "Production"
+          UseTestAuth: "true"
+          ASPNETCORE_ENVIRONMENT: "Development"
 
   deploy_backend:
     runs-on: windows-latest
