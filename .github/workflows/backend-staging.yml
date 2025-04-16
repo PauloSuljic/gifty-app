@@ -1,0 +1,54 @@
+name: Backend Deploy (Staging)
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-staging.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build_and_deploy_backend:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Restore dependencies
+        run: dotnet restore backend/Gifty.Api/Gifty.Api.csproj
+
+      - name: Build
+        run: dotnet build backend/Gifty.Api/Gifty.Api.csproj --configuration Release
+
+      - name: Test
+        run: dotnet test backend/Gifty.Tests/Gifty.Tests.csproj --configuration Release
+        env:
+          DefaultConnection: "Host=localhost;Port=5433;Database=GiftyDb;Username=postgres;Password=postgrespassword123"
+          Redis: "localhost:6379"
+          UseTestAuth: "true"
+          ASPNETCORE_ENVIRONMENT: "Development"
+
+      - name: Publish
+        run: dotnet publish backend/Gifty.Api/Gifty.Api.csproj -c Release -o ./publish
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_STAGING }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_STAGING }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_STAGING }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'gifty-api-staging'
+          slot-name: 'Production'
+          package: ./publish
