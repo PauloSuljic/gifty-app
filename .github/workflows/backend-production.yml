@@ -13,22 +13,38 @@ permissions:
   contents: read
 
 jobs:
-  build_and_deploy_backend:
+  build:
     runs-on: windows-latest
+    name: Build Backend (.NET)
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
-
       - name: Restore dependencies
         run: dotnet restore backend/Gifty.Api/Gifty.Api.csproj
-
       - name: Build
         run: dotnet build backend/Gifty.Api/Gifty.Api.csproj --configuration Release
+      - name: Publish
+        run: dotnet publish backend/Gifty.Api/Gifty.Api.csproj -c Release -o ./publish
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-publish
+          path: ./publish
 
-      - name: Test
+  test:
+    runs-on: windows-latest
+    name: Test Backend
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+      - name: Run Tests
         run: dotnet test backend/Gifty.Tests/Gifty.Tests.csproj --configuration Release
         env:
           DefaultConnection: "Host=localhost;Port=5433;Database=GiftyDb;Username=postgres;Password=postgrespassword123"
@@ -36,8 +52,15 @@ jobs:
           UseTestAuth: "true"
           ASPNETCORE_ENVIRONMENT: "Development"
 
-      - name: Publish
-        run: dotnet publish backend/Gifty.Api/Gifty.Api.csproj -c Release -o ./publish
+  deploy:
+    runs-on: windows-latest
+    name: Deploy Backend to Azure (Production)
+    needs: test
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-publish
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -51,4 +74,4 @@ jobs:
         with:
           app-name: 'gifty-api'
           slot-name: 'Production'
-          package: ./publish
+          package: .
