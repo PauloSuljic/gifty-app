@@ -153,9 +153,9 @@ const SharedWithMe = () => {
               />
               <h3 className="text-2xl font-semibold">{group.ownerName}</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="columns-1 md:columns-2 gap-6 space-y-6">
               {group.wishlists.map(wishlist => (
-                <Card key={wishlist.id}>
+                <Card key={wishlist.id} className="break-inside-avoid">
                   <button
                     onClick={() => toggleWishlistDropdown(wishlist.id)}
                     className="w-full flex justify-between items-center text-left text-xl font-semibold text-white"
