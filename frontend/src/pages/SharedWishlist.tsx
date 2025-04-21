@@ -4,10 +4,9 @@ import { useAuth } from "../components/AuthProvider";
 import Card from "../components/ui/Card";
 import { apiFetch } from "../api";
 import toast from "react-hot-toast";
-import { FiLock } from "react-icons/fi";
 import Spinner from "../components/ui/Spinner";
+import WishlistItem from "../components/WishlistItem";
 
-// ✅ Define TypeScript types
 type WishlistItemType = {
   id: string;
   name: string;
@@ -66,18 +65,51 @@ const SharedWishlist = () => {
     if (!token) {
       toast.error("You need to be logged in to reserve items.", {
         duration: 3000,
-        position: "bottom-center"
+        position: "bottom-center",
       });
       return;
     }
 
-    const response = await apiFetch(`/api/wishlist-items/${itemId}/reserve`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const response = await apiFetch(`/api/wishlist-items/${itemId}/reserve`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (response.ok) {
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        if (errorData.error === "You can only reserve 1 item per wishlist.") {
+          toast.error("You can only reserve 1 item per wishlist.", {
+            duration: 3000,
+            position: "bottom-center",
+            style: {
+              background: "#333",
+              color: "#fff",
+              border: "1px solid #555",
+            },
+          });
+        }
+        return;
+      }
+
       const updatedItem = await response.json();
+
+      toast.success(
+        updatedItem.isReserved
+          ? "Item reserved successfully! 🎁"
+          : "Reservation removed ✅",
+        {
+          duration: 3000,
+          position: "bottom-center",
+          style: {
+            background: "#333",
+            color: "#fff",
+            border: "1px solid #555",
+          },
+        }
+      );
+
       setWishlist((prev) =>
         prev
           ? {
@@ -94,13 +126,23 @@ const SharedWishlist = () => {
             }
           : null
       );
+    } catch (error) {
+      console.error("Error toggling reservation:", error);
+      toast.error("Something went wrong!", {
+        duration: 3000,
+        position: "bottom-center",
+      });
     }
   };
 
-  if (loading) {
-     return <Spinner />
-  }  
-  if (!wishlist) return <p className="text-gray-300 text-center mt-6">Invalid or expired shared link.</p>;
+  if (loading) return <Spinner />;
+  if (!wishlist) {
+    return (
+      <p className="text-gray-300 text-center mt-6">
+        Invalid or expired shared link.
+      </p>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 text-white">
@@ -110,10 +152,10 @@ const SharedWishlist = () => {
           Gifty
         </h1>
       </div>
-  
-      {/* 📋 Wishlist Card (with items nested inside) */}
+
+      {/* 📋 Wishlist Card */}
       <Card className="p-6 bg-gray-800">
-        {/* Header: Sharer Info */}
+        {/* Sharer Info */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-6">
           <img
             src={wishlist.ownerAvatar || "/avatars/avatar1.png"}
@@ -121,17 +163,21 @@ const SharedWishlist = () => {
             className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/20"
           />
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-bold text-purple-400">{wishlist.name}</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-purple-400">
+              {wishlist.name}
+            </h2>
             <p className="text-gray-300 mt-1">
               Shared by:{" "}
               <span className="text-white font-medium">
-                {wishlist.ownerId === firebaseUser?.uid ? "You" : wishlist.ownerName || "Unknown"}
+                {wishlist.ownerId === firebaseUser?.uid
+                  ? "You"
+                  : wishlist.ownerName || "Unknown"}
               </span>
             </p>
           </div>
         </div>
-  
-        {/* 🔗 CTA Button */}
+
+        {/* CTA */}
         <div className="text-center mb-6">
           <Link
             to={firebaseUser ? "/dashboard" : "/"}
@@ -140,78 +186,33 @@ const SharedWishlist = () => {
             {firebaseUser ? "Go to Dashboard" : "Open Gifty App"}
           </Link>
         </div>
-  
-        {/* 🧾 Wishlist Items */}
+
+        {/* Items */}
         {wishlist.items.length > 0 ? (
           <div className="space-y-4">
-            {wishlist.items.map((item) => {
-              const isReserver = item.reservedBy === firebaseUser?.uid;
-              const isGuest = !firebaseUser;
-              const isReserved = item.isReserved;
-  
-              return (
-                <div
-                  key={item.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between bg-white/5 p-4 rounded-lg border border-white/10"
-                >
-                  {/* Name & Link */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-lg font-semibold">{item.name}</h3>
-                      {isReserved && <FiLock className="text-red-400" title="Item reserved" />}
-                    </div>
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 text-sm underline break-all"
-                    >
-                      View Item ↗
-                    </a>
-                  </div>
-  
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-3 sm:mt-0">
-                    {isReserved ? (
-                      <span
-                        className={`text-sm px-3 py-1 rounded-full flex items-center gap-2 ${
-                          isReserver ? "bg-green-700" : "bg-red-700"
-                        }`}
-                      >
-                        <FiLock size={14} />
-                        {isReserver ? "You reserved this" : "Reserved"}
-                      </span>
-                    ) : isGuest ? (
-                      <span className="text-sm text-red-400 italic">Login to reserve</span>
-                    ) : (
-                      <button
-                        onClick={() => toggleReservation(item.id)}
-                        className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
-                      >
-                        Reserve
-                      </button>
-                    )}
-  
-                    {isReserver && (
-                      <button
-                        onClick={() => toggleReservation(item.id)}
-                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm"
-                      >
-                        Unreserve
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {wishlist.items.map((item) => (
+              <WishlistItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                link={item.link}
+                isReserved={item.isReserved}
+                reservedBy={item.reservedBy}
+                wishlistOwner={wishlist.ownerId}
+                currentUser={firebaseUser?.uid}
+                context="shared"
+                onToggleReserve={() => toggleReservation(item.id)}
+              />
+            ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-center">No items in this wishlist.</p>
+          <p className="text-gray-400 text-center">
+            No items in this wishlist.
+          </p>
         )}
       </Card>
     </div>
-  );    
-  
+  );
 };
 
 export default SharedWishlist;
