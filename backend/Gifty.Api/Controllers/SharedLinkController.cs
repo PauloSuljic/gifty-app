@@ -162,6 +162,9 @@ public class SharedLinkController : ControllerBase
                     UserId = userId
                 });
                 await _context.SaveChangesAsync();
+                
+                // ✅ Invalidate cache
+                await _cache.RemoveAsync($"shared-with-me:{userId}");
             }
         }
 
