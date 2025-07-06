@@ -5,34 +5,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Gifty.Infrastructure;
-using Gifty.Infrastructure.Services;
 
 namespace gifty_web_backend.Controllers
 {
     [Authorize]
     [Route("api/users")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController(GiftyDbContext context) : ControllerBase
     {
-        private readonly GiftyDbContext _context;
-        private readonly IRedisCacheService _cache;
-
-        public UserController(GiftyDbContext context, IRedisCacheService cache)
-        {
-            _context = context;
-            _cache = cache;
-        }
-
         // Get user by Firebase UID
         [HttpGet("{firebaseUid}")]
         public async Task<IActionResult> GetUserByFirebaseUid(string firebaseUid)
         {
-            var cacheKey = $"user-profile:{firebaseUid}";
-    
-            var cached = await _cache.GetAsync<object>(cacheKey);
-            if (cached != null) return Ok(cached);
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
 
             if (user == null)
                 return NotFound(new { message = "User not found" });
@@ -45,8 +30,7 @@ namespace gifty_web_backend.Controllers
                 email = user.Email,
                 avatarUrl = user.AvatarUrl
             };
-
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
+            
             return Ok(response);
         }
     
@@ -60,7 +44,7 @@ namespace gifty_web_backend.Controllers
             if (firebaseUid != user.Id)
                 return Forbid("You can only create a profile for your own Firebase account.");
 
-            var exists = await _context.Users.AnyAsync(u => u.Id == firebaseUid);
+            var exists = await context.Users.AnyAsync(u => u.Id == firebaseUid);
             if (exists)
                 return BadRequest(new { message = "User already exists" });
 
@@ -75,8 +59,8 @@ namespace gifty_web_backend.Controllers
 
             user.AvatarUrl = avatarOptions[new Random().Next(avatarOptions.Count)];
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUserByFirebaseUid), new { firebaseUid = user.Id }, user);
         }
@@ -84,15 +68,14 @@ namespace gifty_web_backend.Controllers
         [HttpPut("{firebaseUid}")]
         public async Task<IActionResult> UpdateUserProfile(string firebaseUid, [FromBody] UpdateUserDto model)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
             if (user == null) return NotFound("User not found.");
 
             user.Username = model.Username;
             user.Bio = model.Bio;
             user.AvatarUrl = model.AvatarUrl;
 
-            await _context.SaveChangesAsync();
-            await _cache.RemoveAsync($"user-profile:{firebaseUid}");
+            await context.SaveChangesAsync();
 
             return Ok(user);
         }
@@ -101,16 +84,15 @@ namespace gifty_web_backend.Controllers
         [HttpDelete("{firebaseUid}")]
         public async Task<IActionResult> DeleteUser(string firebaseUid)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
 
             if (user == null)
             {
                 return NotFound(new { message = "User not found" });
             }
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            await _cache.RemoveAsync($"user-profile:{firebaseUid}");
+            context.Users.Remove(user);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }

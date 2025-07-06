@@ -1,13 +1,10 @@
 using System.Security.Claims;
-using Xunit;
-using Moq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using gifty_web_backend.Controllers;
 using Gifty.Infrastructure;
 using Gifty.Domain.Entities;
-using Gifty.Infrastructure.Services;
 using Gifty.Tests.DTOs;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -36,10 +33,7 @@ namespace Gifty.Tests.Unit.Controllers
             });
             context.SaveChanges();
 
-            // 👇 Mock RedisCacheService (we're not calling it in unit tests)
-            var mockCache = new Mock<IRedisCacheService>();
-
-            _controller = new UserController(context, mockCache.Object);
+            _controller = new UserController(context);
         }
 
         [Fact]
@@ -59,7 +53,6 @@ namespace Gifty.Tests.Unit.Controllers
             userData.Should().NotBeNull();
             userData!.Username.Should().Be("TestUser");
         }
-
 
         [Fact]
         public async Task GetUserByFirebaseUid_ShouldReturnNotFound_WhenUserDoesNotExist()

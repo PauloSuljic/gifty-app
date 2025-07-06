@@ -1,4 +1,3 @@
-using Xunit;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,13 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Gifty.Infrastructure;
 using Gifty.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using gifty_web_backend.Controllers;
-using Gifty.Infrastructure.Services;
 using Gifty.Tests.DTOs;
-using Moq;
 
 namespace Gifty.Tests.Unit.Controllers
 {
@@ -39,13 +32,14 @@ namespace Gifty.Tests.Unit.Controllers
 
         private SharedLinkController GetControllerWithUser(GiftyDbContext db, string userId)
         {
-            var mockCache = new Mock<IRedisCacheService>();
-            var controller = new SharedLinkController(db, mockCache.Object);
-            controller.ControllerContext = new ControllerContext
+            var controller = new SharedLinkController(db)
             {
-                HttpContext = new DefaultHttpContext
+                ControllerContext = new ControllerContext
                 {
-                    User = GetFakeUser(userId)
+                    HttpContext = new DefaultHttpContext
+                    {
+                        User = GetFakeUser(userId)
+                    }
                 }
             };
             return controller;

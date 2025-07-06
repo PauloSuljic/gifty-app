@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Gifty.Domain.Entities;
 using Gifty.Infrastructure;
-using Gifty.Infrastructure.Services;
 using Gifty.Tests.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
@@ -12,12 +11,10 @@ using Microsoft.AspNetCore.Authorization;
 public class SharedLinkController : ControllerBase
 {
     private readonly GiftyDbContext _context;
-    private readonly IRedisCacheService _cache;
 
-    public SharedLinkController(GiftyDbContext context, IRedisCacheService cache)
+    public SharedLinkController(GiftyDbContext context)
     {
         _context = context;
-        _cache = cache;
     }
     
     [Authorize]
@@ -28,12 +25,7 @@ public class SharedLinkController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
 
         string cacheKey = $"shared-with-me:{userId}";
-
-        // ✅ Try cache
-        var cached = await _cache.GetAsync<object>(cacheKey);
-        if (cached != null)
-            return Ok(cached);
-
+        
         // 🐢 DB fallback
         var visitedWishlists = await _context.SharedLinkVisits
             .Include(v => v.SharedLink)
@@ -72,9 +64,6 @@ public class SharedLinkController : ControllerBase
                 }).ToList()
             }).ToList();
 
-        // ✅ Store in Redis
-        await _cache.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5));
-
         return Ok(result);
     }
 
@@ -112,12 +101,7 @@ public class SharedLinkController : ControllerBase
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         string cacheKey = $"shared-link:{shareCode}";
-
-        // ✅ Check cache first
-        var cached = await _cache.GetAsync<object>(cacheKey);
-        if (cached != null)
-            return Ok(cached);
-
+        
         // 🐢 DB fallback
         var sharedLink = await _context.SharedLinks
             .Include(l => l.Wishlist)
@@ -145,9 +129,6 @@ public class SharedLinkController : ControllerBase
             }).ToList()
         };
 
-        // ✅ Store in Redis
-        await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(10));
-
         // 🧠 Log shared visit (don't cache this part)
         if (!string.IsNullOrEmpty(userId) && userId != sharedLink.Wishlist.UserId)
         {
@@ -162,9 +143,6 @@ public class SharedLinkController : ControllerBase
                     UserId = userId
                 });
                 await _context.SaveChangesAsync();
-                
-                // ✅ Invalidate cache
-                await _cache.RemoveAsync($"shared-with-me:{userId}");
             }
         }
 

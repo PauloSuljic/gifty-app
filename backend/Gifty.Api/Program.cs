@@ -107,7 +107,7 @@ builder.Services.AddAuthorization();
 // ✅ 6. CORS
 var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGIN")?
                          .Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                     ?? new[] { "http://localhost:5173" };
+                     ?? ["http://localhost:5173"];
 
 builder.Services.AddCors(options =>
 {
@@ -118,39 +118,6 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
     });
 });
-
-// ✅ Redis Setup
-var isRunningInCi = Environment.GetEnvironmentVariable("CI") == "true";
-
-if (!builder.Environment.IsDevelopment() && !isRunningInCi)
-{
-    // Production Redis (e.g. Azure)
-    builder.Services.AddStackExchangeRedisCache(options =>
-    {
-        var redisConnection = builder.Configuration["Redis"];
-        if (string.IsNullOrWhiteSpace(redisConnection))
-        {
-            throw new Exception("❌ Redis connection string not found in Azure App Settings (key: Redis).");
-        }
-
-        options.Configuration = redisConnection;
-    });
-}
-else if (isRunningInCi)
-{
-    // ✅ CI fallback – use in-memory caching instead of Redis
-    builder.Services.AddDistributedMemoryCache();
-}
-else
-{
-    // ✅ Local Redis (e.g. Docker or dev environment)
-    builder.Services.AddStackExchangeRedisCache(options =>
-    {
-        options.Configuration = "localhost:6379"; // Adjust if needed for Docker/Mac/WSL
-    });
-}
-
-builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 
 var app = builder.Build();
 
