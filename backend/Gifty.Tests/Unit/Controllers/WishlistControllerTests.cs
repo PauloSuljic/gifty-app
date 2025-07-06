@@ -1,18 +1,12 @@
-using Xunit;
-using Moq;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Gifty.Infrastructure;
 using Gifty.Domain.Entities;
-using System;
 using gifty_web_backend.Controllers;
 using gifty_web_backend.DTOs;
-using Gifty.Infrastructure.Services;
 
 namespace Gifty.Tests.Unit.Controllers
 {
@@ -40,13 +34,14 @@ namespace Gifty.Tests.Unit.Controllers
 
         private WishlistController GetControllerWithUser(GiftyDbContext dbContext, string userId)
         {
-            var mockCache = new Mock<IRedisCacheService>();
-            var controller = new WishlistController(dbContext, mockCache.Object);
-            controller.ControllerContext = new ControllerContext
+            var controller = new WishlistController(dbContext)
             {
-                HttpContext = new DefaultHttpContext
+                ControllerContext = new ControllerContext
                 {
-                    User = GetFakeUser(userId)
+                    HttpContext = new DefaultHttpContext
+                    {
+                        User = GetFakeUser(userId)
+                    }
                 }
             };
             return controller;
@@ -124,7 +119,7 @@ namespace Gifty.Tests.Unit.Controllers
             // Assert
             result.Should().BeOfType<OkObjectResult>();
             var updated = await db.Wishlists.FindAsync(wishlist.Id);
-            updated.Name.Should().Be(newName);
+            updated?.Name.Should().Be(newName);
         }
         
         [Fact]

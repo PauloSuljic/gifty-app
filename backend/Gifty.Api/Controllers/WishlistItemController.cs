@@ -3,23 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Gifty.Domain.Entities;
 using Gifty.Infrastructure;
-using Gifty.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
+
+namespace gifty_web_backend.Controllers; 
 
 [Authorize]
 [Route("api/wishlist-items")]
 [ApiController]
-public class WishlistItemController : ControllerBase
+public class WishlistItemController(GiftyDbContext context) : ControllerBase
 {
-    private readonly GiftyDbContext _context;
-    private readonly IRedisCacheService _cache;
-
-    public WishlistItemController(GiftyDbContext context, IRedisCacheService cache)
-    {
-        _context = context;
-        _cache = cache;
-    }
-
     // ✅ Add a new item to a wishlist
     [HttpPost]
     public async Task<IActionResult> AddWishlistItem([FromBody] WishlistItem item)
@@ -27,34 +19,23 @@ public class WishlistItemController : ControllerBase
         if (string.IsNullOrWhiteSpace(item.Name))
             return BadRequest(new { error = "The item field is required." });
 
-        var wishlist = await _context.Wishlists.FindAsync(item.WishlistId);
+        var wishlist = await context.Wishlists.FindAsync(item.WishlistId);
         if (wishlist == null) return NotFound(new { error = "Wishlist not found." });
 
-        _context.WishlistItems.Add(item);
-        await _context.SaveChangesAsync();
-        await _cache.RemoveAsync($"wishlist-items:{item.WishlistId}");
+        context.WishlistItems.Add(item);
+        await context.SaveChangesAsync();
 
         return Ok(item);
     }
 
     // ✅ Get items for a specific wishlist
-    [HttpGet("{wishlistId}")]
+    [HttpGet("{wishlistId:guid}")]
     public async Task<IActionResult> GetWishlistItems(Guid wishlistId)
     {
-        var cacheKey = $"wishlist-items:{wishlistId}";
-
-        // ✅ Try Redis first
-        var cached = await _cache.GetAsync<List<WishlistItem>>(cacheKey);
-        if (cached != null)
-            return Ok(cached);
-
         // 🐢 Fallback to DB
-        var items = await _context.WishlistItems
+        var items = await context.WishlistItems
             .Where(i => i.WishlistId == wishlistId)
             .ToListAsync();
-
-        // ✅ Save in cache
-        await _cache.SetAsync(cacheKey, items, TimeSpan.FromMinutes(10));
 
         return Ok(items);
     }
@@ -62,15 +43,11 @@ public class WishlistItemController : ControllerBase
     [HttpDelete("{itemId}")]
     public async Task<IActionResult> DeleteWishlistItem(Guid itemId)
     {
-        var item = await _context.WishlistItems.FindAsync(itemId);
+        var item = await context.WishlistItems.FindAsync(itemId);
         if (item == null) return NotFound("Item not found.");
 
-        var wishlistId = item.WishlistId;
-
-        _context.WishlistItems.Remove(item);
-        await _context.SaveChangesAsync();
-
-        await _cache.RemoveAsync($"wishlist-items:{wishlistId}");
+        context.WishlistItems.Remove(item);
+        await context.SaveChangesAsync();
 
         return NoContent();
     }
@@ -79,7 +56,7 @@ public class WishlistItemController : ControllerBase
     [HttpPatch("{itemId}/reserve")]
     public async Task<IActionResult> ToggleReserveItem(Guid itemId)
     {
-        var item = await _context.WishlistItems.FindAsync(itemId);
+        var item = await context.WishlistItems.FindAsync(itemId);
         if (item == null) return NotFound(new { error = "Item not found." });
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -95,7 +72,7 @@ public class WishlistItemController : ControllerBase
         }
         else
         {
-            var wishlist = await _context.Wishlists
+            var wishlist = await context.Wishlists
                 .Include(w => w.Items)
                 .FirstOrDefaultAsync(w => w.Id == item.WishlistId);
 
@@ -109,8 +86,7 @@ public class WishlistItemController : ControllerBase
             item.ReservedBy = userId;
         }
 
-        await _context.SaveChangesAsync();
-        await _cache.RemoveAsync($"wishlist-items:{item.WishlistId}");
+        await context.SaveChangesAsync();
 
         return Ok(item);
     }
@@ -119,13 +95,13 @@ public class WishlistItemController : ControllerBase
     [HttpPatch("{itemId}")]
     public async Task<IActionResult> UpdateWishlistItem(Guid itemId, [FromBody] WishlistItem updated)
     {
-        var item = await _context.WishlistItems.FindAsync(itemId);
+        var item = await context.WishlistItems.FindAsync(itemId);
         if (item == null) return NotFound(new { error = "Item not found." });
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
 
-        var wishlist = await _context.Wishlists.FindAsync(item.WishlistId);
+        var wishlist = await context.Wishlists.FindAsync(item.WishlistId);
         if (wishlist == null || wishlist.UserId != userId)
             return Forbid("You are not allowed to edit this item.");
 
@@ -135,8 +111,7 @@ public class WishlistItemController : ControllerBase
         if (!string.IsNullOrWhiteSpace(updated.Link))
             item.Link = updated.Link;
 
-        await _context.SaveChangesAsync();
-        await _cache.RemoveAsync($"wishlist-items:{item.WishlistId}");
+        await context.SaveChangesAsync();
 
         return Ok(item);
     }
