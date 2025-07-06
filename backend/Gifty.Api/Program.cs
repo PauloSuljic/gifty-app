@@ -62,10 +62,6 @@ if (useTestAuth != "true")
 // ✅ 3. Services
 builder.Services.AddScoped<FirebaseAuthService>();
 
-// ✅ 4. PostgreSQL DB
-builder.Services.AddDbContext<GiftyDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
