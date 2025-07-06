@@ -1,5 +1,4 @@
 using System.Net.Http.Headers;
-using System.Reflection;
 using gifty_web_backend;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -26,7 +25,7 @@ namespace Gifty.Tests.Integration
                 config.AddInMemoryCollection(new Dictionary<string, string>
                 {
                     { "UseTestAuth", "true" }
-                });
+                }!);
             });
 
             builder.ConfigureServices(services =>

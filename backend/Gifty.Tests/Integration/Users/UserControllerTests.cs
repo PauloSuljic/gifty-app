@@ -1,27 +1,18 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using Xunit;
 using Gifty.Domain.Entities;
 using FluentAssertions;
 
 namespace Gifty.Tests.Integration.Users
 {
     [Collection("IntegrationTestCollection")]
-    public class UserControllerTests
+    public class UserControllerTests(TestApiFactory factory)
     {
-        private readonly TestApiFactory _factory;
-
-        public UserControllerTests(TestApiFactory factory)
-        {
-            _factory = factory;
-        }
-
         [Fact]
         public async Task CreateUser_ShouldReturnCreated()
         {
             var userId = "firebase-test-id";
-            var client = _factory.CreateClientWithTestAuth(userId);
+            var client = factory.CreateClientWithTestAuth(userId);
 
             var user = new User
             {
@@ -43,7 +34,7 @@ namespace Gifty.Tests.Integration.Users
         public async Task CreateUser_ShouldFail_WhenUserAlreadyExists()
         {
             var userId = "duplicate-user";
-            var client = _factory.CreateClientWithTestAuth(userId);
+            var client = factory.CreateClientWithTestAuth(userId);
 
             var user = new User
             {
@@ -66,7 +57,7 @@ namespace Gifty.Tests.Integration.Users
         public async Task GetUserByFirebaseUid_ShouldReturnUser_WhenExists()
         {
             var userId = "fetch-me";
-            var client = _factory.CreateClientWithTestAuth(userId);
+            var client = factory.CreateClientWithTestAuth(userId);
 
             var user = new User
             {
@@ -90,7 +81,7 @@ namespace Gifty.Tests.Integration.Users
         [Fact]
         public async Task GetUserByFirebaseUid_ShouldReturnNotFound_WhenUserMissing()
         {
-            var client = _factory.CreateClientWithTestAuth("someone");
+            var client = factory.CreateClientWithTestAuth("someone");
             var response = await client.GetAsync("/api/users/non-existent-user");
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -100,7 +91,7 @@ namespace Gifty.Tests.Integration.Users
         public async Task UpdateUser_ShouldUpdate_WhenUserExists()
         {
             var userId = "update-me";
-            var client = _factory.CreateClientWithTestAuth(userId);
+            var client = factory.CreateClientWithTestAuth(userId);
 
             var user = new User
             {
@@ -134,7 +125,7 @@ namespace Gifty.Tests.Integration.Users
         public async Task DeleteUser_ShouldReturnNoContent_WhenUserExists()
         {
             var userId = "delete-me";
-            var client = _factory.CreateClientWithTestAuth(userId);
+            var client = factory.CreateClientWithTestAuth(userId);
 
             var user = new User
             {
@@ -157,7 +148,7 @@ namespace Gifty.Tests.Integration.Users
         [Fact]
         public async Task DeleteUser_ShouldReturnNotFound_WhenUserDoesNotExist()
         {
-            var client = _factory.CreateClientWithTestAuth("some-user");
+            var client = factory.CreateClientWithTestAuth("some-user");
             var response = await client.DeleteAsync("/api/users/ghost-user");
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -167,7 +158,7 @@ namespace Gifty.Tests.Integration.Users
         public async Task UpdateUser_ShouldReturnNotFound_IfUserDoesNotExist()
         {
             var userId = "missing-id";
-            var client = _factory.CreateClientWithTestAuth(userId);
+            var client = factory.CreateClientWithTestAuth(userId);
 
             var update = new
             {

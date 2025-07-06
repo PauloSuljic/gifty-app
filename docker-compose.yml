@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: gifty_postgres_db_local
+    restart: always
+    environment:
+      POSTGRES_DB: giftydb
+      POSTGRES_USER: giftyuser
+      POSTGRES_PASSWORD: StrongAndUniqueGiftyDevPass123!
+    ports:
+      - "5432:5432"
+    volumes:
+      - gifty_db_data:/var/lib/postgresql/data
+
+volumes:
+  gifty_db_data:

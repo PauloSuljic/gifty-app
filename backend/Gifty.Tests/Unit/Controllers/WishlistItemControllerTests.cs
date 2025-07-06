@@ -3,10 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using gifty_web_backend.Controllers;
 using Gifty.Domain.Entities;
 using Gifty.Infrastructure;
-using Gifty.Infrastructure.Services;
-using Moq;
 
 namespace Gifty.Tests.Unit.Controllers
 {
@@ -34,16 +33,17 @@ namespace Gifty.Tests.Unit.Controllers
 
         private WishlistItemController GetControllerWithUser(GiftyDbContext db, string userId)
         {
-            var mockCache = new Mock<IRedisCacheService>();
-            var controller = new WishlistItemController(db, mockCache.Object);
-
-            controller.ControllerContext = new ControllerContext
+            var controller = new WishlistItemController(db)
             {
-                HttpContext = new DefaultHttpContext
+                ControllerContext = new ControllerContext
                 {
-                    User = GetFakeUser(userId)
+                    HttpContext = new DefaultHttpContext
+                    {
+                        User = GetFakeUser(userId)
+                    }
                 }
             };
+
             return controller;
         }
 

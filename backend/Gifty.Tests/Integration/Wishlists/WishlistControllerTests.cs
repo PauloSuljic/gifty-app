@@ -1,13 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using Xunit;
 using FluentAssertions;
 using Gifty.Domain.Entities;
-using Gifty.Tests.Integration;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
 using Xunit.Abstractions;
 
 namespace Gifty.Tests.Integration.Wishlists
