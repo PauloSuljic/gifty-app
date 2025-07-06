@@ -23,12 +23,19 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // ✅ 1. Read Connection String
-var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
-                       ?? configuration.GetConnectionString("DefaultConnection");
-
-if (string.IsNullOrEmpty(connectionString))
+if (builder.Environment.EnvironmentName != "Testing")
 {
-    throw new Exception("❌ No connection string found!");
+    var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
+                           ?? configuration.GetConnectionString("DefaultConnection");
+
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new Exception("❌ No connection string found!");
+    }
+
+    // ✅ 4. PostgreSQL DB
+    builder.Services.AddDbContext<GiftyDbContext>(options =>
+        options.UseNpgsql(connectionString));
 }
 
 // ✅ 2. Firebase Admin SDK
@@ -136,12 +143,15 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
+if (app.Environment.EnvironmentName != "Testing")
 {
-    var db = scope.ServiceProvider.GetRequiredService<GiftyDbContext>();
-    if (db.Database.IsRelational())
+    using (var scope = app.Services.CreateScope())
     {
-        db.Database.Migrate();
+        var db = scope.ServiceProvider.GetRequiredService<GiftyDbContext>();
+        if (db.Database.IsRelational())
+        {
+            db.Database.Migrate();
+        }
     }
 }
 
