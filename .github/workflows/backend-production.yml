@@ -47,8 +47,6 @@ jobs:
       - name: Run Tests
         run: dotnet test backend/Gifty.Tests/Gifty.Tests.csproj --configuration Release
         env:
-          DefaultConnection: "Host=localhost;Port=5433;Database=GiftyDb;Username=postgres;Password=postgrespassword123"
-          Redis: "localhost:6379"
           UseTestAuth: "true"
           ASPNETCORE_ENVIRONMENT: "Development"
 
