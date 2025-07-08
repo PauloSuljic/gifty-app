@@ -71,7 +71,7 @@ namespace gifty_web_backend.Controllers
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
             if (user == null) return NotFound("User not found.");
 
-            user.Username = model.Username;
+            user.Username = model.Username!;
             user.Bio = model.Bio;
             user.AvatarUrl = model.AvatarUrl;
 

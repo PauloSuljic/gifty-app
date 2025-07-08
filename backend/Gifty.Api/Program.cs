@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 using FirebaseAdmin;
-using Gifty.Api.Utils;
+using gifty_web_backend.Utils;
 using Google.Apis.Auth.OAuth2;
 using Gifty.Infrastructure;
 using Gifty.Infrastructure.Services;
@@ -60,7 +60,7 @@ if (useTestAuth != "true")
 }
 
 // ✅ 3. Services
-builder.Services.AddScoped<FirebaseAuthService>();
+builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -141,13 +141,11 @@ app.MapControllers();
 
 if (app.Environment.EnvironmentName != "Testing")
 {
-    using (var scope = app.Services.CreateScope())
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<GiftyDbContext>();
+    if (db.Database.IsRelational())
     {
-        var db = scope.ServiceProvider.GetRequiredService<GiftyDbContext>();
-        if (db.Database.IsRelational())
-        {
-            db.Database.Migrate();
-        }
+        db.Database.Migrate();
     }
 }
 

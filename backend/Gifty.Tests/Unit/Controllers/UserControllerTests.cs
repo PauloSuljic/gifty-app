@@ -3,9 +3,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using gifty_web_backend.Controllers;
+using gifty_web_backend.DTOs;
 using Gifty.Infrastructure;
 using Gifty.Domain.Entities;
-using Gifty.Tests.DTOs;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
@@ -51,7 +51,7 @@ namespace Gifty.Tests.Unit.Controllers
             var userData = JsonConvert.DeserializeObject<UserDto>(json);
 
             userData.Should().NotBeNull();
-            userData!.Username.Should().Be("TestUser");
+            userData.Username.Should().Be("TestUser");
         }
 
         [Fact]

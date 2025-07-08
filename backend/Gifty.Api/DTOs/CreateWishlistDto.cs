@@ -1,8 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace gifty_web_backend.DTOs
 {
     public class CreateWishlistDto
     {
-        public string Name { get; set; }
+        [Required]
+        public required string Name { get; set; }
         public bool IsPublic { get; set; }
     }
 }

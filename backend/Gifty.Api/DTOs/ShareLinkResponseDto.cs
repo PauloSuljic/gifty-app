@@ -1,11 +1,6 @@
-namespace Gifty.Tests.DTOs;
+namespace gifty_web_backend.DTOs;
 
-public class ShareLinkResponseDto
+public class ShareLinkResponseDto(string shareCode)
 {
-    public string ShareCode { get; set; }
-
-    public ShareLinkResponseDto(string shareCode)
-    {
-        ShareCode = shareCode;
-    }
+    public string ShareCode { get; set; } = shareCode;
 }

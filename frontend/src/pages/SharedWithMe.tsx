@@ -56,7 +56,7 @@ const SharedWithMe = () => {
     if (!token) return;
   
     try {
-      const response = await apiFetch(`/api/wishlist-items/${itemId}/reserve`, {
+        const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}/reserve`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -75,8 +75,13 @@ const SharedWithMe = () => {
               border: "1px solid #555",
             },
           });
+        } else { 
+            toast.error("Failed to toggle reservation.", {
+                duration: 3000,
+                position: "bottom-center",
+            });
         }
-        return; // ✅ Stop here if error
+        return; 
       }
   
       const updatedItem = await response.json();

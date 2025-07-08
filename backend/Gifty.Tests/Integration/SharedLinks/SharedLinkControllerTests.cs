@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Gifty.Domain.Entities;
-using Xunit;
 
 namespace Gifty.Tests.Integration.SharedLinks;
 
@@ -60,12 +59,12 @@ public class SharedLinkControllerTests
         var first = await _client.PostAsync($"/api/shared-links/{wishlist.Id}/generate", null);
         first.EnsureSuccessStatusCode(); // ✅
 
-        var firstCode = (await first.Content.ReadFromJsonAsync<Dictionary<string, string>>())["shareCode"];
+        var firstCode = (await first.Content.ReadFromJsonAsync<Dictionary<string, string>>())?["shareCode"];
 
         var second = await _client.PostAsync($"/api/shared-links/{wishlist.Id}/generate", null);
         second.EnsureSuccessStatusCode(); // ✅
 
-        var secondCode = (await second.Content.ReadFromJsonAsync<Dictionary<string, string>>())["shareCode"];
+        var secondCode = (await second.Content.ReadFromJsonAsync<Dictionary<string, string>>())?["shareCode"];
 
         firstCode.Should().Be(secondCode);
     }
