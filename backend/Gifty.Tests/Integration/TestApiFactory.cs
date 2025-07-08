@@ -51,35 +51,40 @@ namespace Gifty.Tests.Integration
                 {
                     options.UseInMemoryDatabase(InMemoryDbName);
                 });
-
-                // Remove the actual IFirebaseAuthService implementation
-                // Look for the interface now
+                
                 var firebaseAuthServiceDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(IFirebaseAuthService)); 
                 if (firebaseAuthServiceDescriptor != null)
                 {
                     services.Remove(firebaseAuthServiceDescriptor);
                 }
-
-                // --- CRITICAL CHANGE HERE: Mock your IFirebaseAuthService ---
+                
                 var mockFirebaseAuthService = new Mock<IFirebaseAuthService>();
                 mockFirebaseAuthService.Setup(m => m.AuthenticateUserAsync(It.IsAny<string>()))
-                                       .ReturnsAsync((string token) =>
+                                       .Returns((string token) =>
                                        {
                                            var userId = token.Replace("mock-firebase-token-for-", "");
+                                           
+                                           var serviceProvider = services.BuildServiceProvider();
+                                           var dbContext = serviceProvider.GetRequiredService<GiftyDbContext>();
 
-                                           // Return a mock User object that would be returned by your AuthenticateUserAsync
-                                           // This simulates a successful authentication and user creation/retrieval
-                                           return new User
+                                           var user = dbContext.Users.FirstOrDefault(u => u.Id == userId);
+                                           if (user == null)
                                            {
-                                               Id = userId,
-                                               Username = $"TestUser_{userId.Substring(0, 6)}",
-                                               Email = $"test_{userId.Substring(0, 6)}@example.com",
-                                               CreatedAt = DateTime.UtcNow
-                                           };
+                                               user = new User
+                                               {
+                                                   Id = userId,
+                                                   Username = $"TestUser_{userId.Substring(0, 6)}",
+                                                   Email = $"test_{userId.Substring(0, 6)}@example.com",
+                                                   CreatedAt = DateTime.UtcNow
+                                               };
+                                               dbContext.Users.Add(user);
+                                               dbContext.SaveChanges();
+                                           }
+                               
+                                           return Task.FromResult<User?>(user);
                                        });
-
-                // Add the mocked interface to the service collection
+                
                 services.AddSingleton(mockFirebaseAuthService.Object); 
             });
         }

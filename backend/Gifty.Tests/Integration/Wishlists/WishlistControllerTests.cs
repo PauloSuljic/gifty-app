@@ -66,10 +66,12 @@ namespace Gifty.Tests.Integration.Wishlists
         {
             var userId = Guid.NewGuid().ToString();
             var client = _factory.CreateClientWithTestAuth(userId);
-            var otherClient = _factory.CreateClientWithTestAuth("other-user-" + Guid.NewGuid());
+            
+            var otherUserId = Guid.NewGuid().ToString();
+            var otherClient = _factory.CreateClientWithTestAuth(otherUserId);
 
             await CreateTestUser(userId, client);
-            await CreateTestUser("other-user-" + Guid.NewGuid(), otherClient);
+            await CreateTestUser(otherUserId, otherClient);
 
             for (int i = 0; i < 2; i++)
             {

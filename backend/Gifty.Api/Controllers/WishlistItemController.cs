@@ -104,7 +104,7 @@ public class WishlistItemController(GiftyDbContext context) : ControllerBase
         return NoContent();
     }
 
-    // ✅ Toggle reservation (PATCH) - Update to return DTO
+    // ✅ Toggle reservation (PATCH)
     [HttpPatch("{itemId}/reserve")]
     public async Task<IActionResult> ToggleReserveItem(Guid itemId)
     {
@@ -113,15 +113,10 @@ public class WishlistItemController(GiftyDbContext context) : ControllerBase
 
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
-        
+    
         var wishlist = await context.Wishlists.Include(w => w.Items)
             .FirstOrDefaultAsync(w => w.Id == item.WishlistId);
         if (wishlist == null) return NotFound("Wishlist not found.");
-
-        if (wishlist.UserId != userId && !wishlist.IsPublic)
-        {
-            return Forbid("You do not have permission to reserve/unreserve items on this private wishlist.");
-        }
 
         if (item.IsReserved)
         {
@@ -133,19 +128,16 @@ public class WishlistItemController(GiftyDbContext context) : ControllerBase
         }
         else
         {
-            if (wishlist.UserId != userId)
-            {
-                 bool hasReservedItem = wishlist.Items.Any(i => i.IsReserved && i.ReservedBy == userId);
-                 if (hasReservedItem)
-                     return BadRequest(new { error = "You can only reserve 1 item per wishlist." });
-            }
-
+            bool hasReservedItem = wishlist.Items.Any(i => i.IsReserved && i.ReservedBy == userId);
+            if (hasReservedItem)
+                return BadRequest(new { error = "You can only reserve 1 item per wishlist." });
+        
             item.IsReserved = true;
             item.ReservedBy = userId;
         }
 
         await context.SaveChangesAsync();
-        
+    
         return Ok(new WishlistItemDto
         {
             Id = item.Id, Name = item.Name, Link = item.Link,
