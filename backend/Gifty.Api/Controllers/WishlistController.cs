@@ -29,8 +29,19 @@ public class WishlistController(GiftyDbContext context) : ControllerBase
 
         context.Wishlists.Add(wishlist);
         await context.SaveChangesAsync();
+        
+        var createdWishlistDto = new WishlistDto
+        {
+            Id = wishlist.Id,
+            Name = wishlist.Name,
+            IsPublic = wishlist.IsPublic,
+            UserId = wishlist.UserId,
+            CreatedAt = wishlist.CreatedAt,
+            Order = wishlist.Order,
+            Items = new List<WishlistItemDto>()
+        };
 
-        return CreatedAtAction(nameof(GetUserWishlists), new { userId }, wishlist);
+        return CreatedAtAction(nameof(GetUserWishlists), new { userId }, createdWishlistDto);
     }
 
     // ✅ Get All Wishlists for Logged-in User
@@ -46,8 +57,28 @@ public class WishlistController(GiftyDbContext context) : ControllerBase
             .Include(w => w.Items)
             .OrderBy(w => w.Order)
             .ToListAsync();
+        
+        var wishlistDtos = wishlists.Select(w => new WishlistDto
+        {
+            Id = w.Id,
+            Name = w.Name,
+            IsPublic = w.IsPublic,
+            UserId = w.UserId,
+            CreatedAt = w.CreatedAt,
+            Order = w.Order,
+            Items = w.Items.Select(i => new WishlistItemDto
+            {
+                Id = i.Id,
+                Name = i.Name,
+                Link = i.Link,
+                IsReserved = i.IsReserved,
+                ReservedBy = i.ReservedBy,
+                CreatedAt = i.CreatedAt,
+                WishlistId = i.WishlistId
+            }).ToList()
+        }).ToList();
 
-        return Ok(wishlists);
+        return Ok(wishlistDtos);
     }
 
     // ✅ Delete a Wishlist

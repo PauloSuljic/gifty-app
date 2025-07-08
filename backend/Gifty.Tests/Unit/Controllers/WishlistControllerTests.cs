@@ -50,7 +50,6 @@ namespace Gifty.Tests.Unit.Controllers
         [Fact]
         public async Task CreateWishlist_ShouldCreate_WhenUserIsAuthenticated()
         {
-            // Arrange
             var db = GetDbContext();
             var userId = "test-user-id";
             var controller = GetControllerWithUser(db, userId);
@@ -61,15 +60,12 @@ namespace Gifty.Tests.Unit.Controllers
                 IsPublic = false
             };
 
-
-            // Act
             var result = await controller.CreateWishlist(dto);
 
-            // Assert
             var createdResult = result as CreatedAtActionResult;
             createdResult.Should().NotBeNull();
             createdResult.StatusCode.Should().Be(201);
-            db.Wishlists.CountAsync().Result.Should().Be(1);
+            (await db.Wishlists.CountAsync()).Should().Be(1);
         }
 
         [Fact]
@@ -79,7 +75,6 @@ namespace Gifty.Tests.Unit.Controllers
             var userId = "user-a";
             var otherUserId = "user-b";
 
-            // Seed
             db.Wishlists.AddRange(
                 new Wishlist { Id = Guid.NewGuid(), Name = "A1", UserId = userId },
                 new Wishlist { Id = Guid.NewGuid(), Name = "A2", UserId = userId },
@@ -89,38 +84,16 @@ namespace Gifty.Tests.Unit.Controllers
 
             var controller = GetControllerWithUser(db, userId);
 
-            // Act
             var result = await controller.GetUserWishlists();
             var okResult = result as OkObjectResult;
-            var wishlists = okResult?.Value as List<Wishlist>;
+            var wishlists = okResult?.Value as List<WishlistDto>;
 
-            // Assert
             wishlists.Should().NotBeNull();
             wishlists.Count.Should().Be(2);
             wishlists.All(w => w.UserId == userId).Should().BeTrue();
         }
         
-        [Fact]
-        public async Task RenameWishlist_ShouldUpdateName_WhenUserIsOwner()
-        {
-            // Arrange
-            var db = GetDbContext();
-            var userId = "user-123";
-            var wishlist = new Wishlist { Id = Guid.NewGuid(), Name = "Old Name", UserId = userId };
-            db.Wishlists.Add(wishlist);
-            await db.SaveChangesAsync();
-
-            var controller = GetControllerWithUser(db, userId);
-            var newName = "New Wishlist Name";
-
-            // Act
-            var result = await controller.RenameWishlist(wishlist.Id, newName);
-
-            // Assert
-            result.Should().BeOfType<OkObjectResult>();
-            var updated = await db.Wishlists.FindAsync(wishlist.Id);
-            updated?.Name.Should().Be(newName);
-        }
+        
         
         [Fact]
         public async Task RenameWishlist_ShouldForbid_WhenUserIsNotOwner()

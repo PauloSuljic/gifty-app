@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Gifty.Domain.Entities
 {
@@ -14,11 +9,11 @@ namespace Gifty.Domain.Entities
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
-        public string Name { get; set; }
-        public bool IsPublic { get; set; } = false; // Default: Private
+        public required string Name { get; set; }
+        public bool IsPublic { get; set; } = false;
         [Required]
         [ForeignKey("User")]
-        public string UserId { get; set; }
+        public required string UserId { get; set; }
         [JsonIgnore]
         public User? User { get; set; }
         public ICollection<WishlistItem> Items { get; set; } = new List<WishlistItem>();

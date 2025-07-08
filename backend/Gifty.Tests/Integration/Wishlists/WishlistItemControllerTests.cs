@@ -2,24 +2,74 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Gifty.Domain.Entities;
-using Xunit;
+using gifty_web_backend.DTOs; // Make sure this is included for DTOs
 
 namespace Gifty.Tests.Integration.Wishlists;
 
 [Collection("IntegrationTestCollection")]
 public class WishlistItemControllerTests
 {
+    
     private readonly HttpClient _client;
     private readonly string _userId;
 
-    public WishlistItemControllerTests()
+    public WishlistItemControllerTests(TestApiFactory factory) // Inject TestApiFactory
     {
-        _userId = Guid.NewGuid().ToString(); // isolate data
-        _client = new TestApiFactory().CreateClientWithTestAuth(_userId);
+        // Assign the injected factory
+        _userId = Guid.NewGuid().ToString();
+        _client = factory.CreateClientWithTestAuth(_userId);
+    }
+
+    // Re-add the CreateTestUser method here, identical to the one in WishlistControllerTests
+    private async Task CreateTestUser(string userId, HttpClient client)
+    {
+        // 1. Authenticate the user (this hits our mocked IFirebaseAuthService)
+        var mockFirebaseIdToken = $"mock-firebase-token-for-{userId}";
+        var loginDto = new TokenRequestDto { Token = mockFirebaseIdToken };
+        var onboardingResponse = await client.PostAsJsonAsync("/api/auth/login", loginDto);
+
+        if (!onboardingResponse.IsSuccessStatusCode && onboardingResponse.StatusCode != HttpStatusCode.Conflict)
+        {
+            var body = await onboardingResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to onboard test user via /api/auth/login ({onboardingResponse.StatusCode}):\n{body}");
+        }
+
+        // 2. Now that the user is "authenticated" via our test scheme,
+        //    if your /api/users endpoint is for updating a *profile* for an already logged-in user,
+        //    then you should call it here.
+        //    If /api/users is for initial *creation* of a user record linked to Firebase UID,
+        //    and that creation is automatically handled by /api/auth/login, then this step might be redundant
+        //    or need adjustment based on your actual UserController logic.
+
+        // Assuming your /api/users endpoint is for setting profile details after first login:
+        var userUpdateDto = new UpdateUserDto // Make sure UpdateUserDto exists and matches your API
+        {
+            Username = "Test User",
+            Bio = "Test Bio",
+            AvatarUrl = "http://example.com/avatar.png" // Include other fields as needed
+        };
+
+        // The POST to /api/users is likely handled automatically by /api/auth/login now,
+        // which automatically creates the user record if it doesn't exist.
+        // So, if /api/users is only for *updates* you might need a PUT/PATCH here, or skip entirely
+        // if login auto-creates the initial user record.
+
+        // Let's assume for now that the /api/users endpoint handles profile *updates* for the authenticated user.
+        // So, you might need to use PUT or PATCH to /api/users/{userId}
+        var updateProfileResponse = await client.PutAsJsonAsync($"/api/users/{userId}", userUpdateDto);
+        // You might also check if it's 200 OK or 204 No Content for a successful update.
+        if (!updateProfileResponse.IsSuccessStatusCode)
+        {
+            var updateBody = await updateProfileResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to update test user profile ({updateProfileResponse.StatusCode}):\n{updateBody}");
+        }
     }
 
     private async Task<Wishlist> CreateWishlistAsync()
     {
+        // CRITICAL: Ensure the user exists before creating a wishlist for them
+        await CreateTestUser(_userId, _client); 
+
         var wishlist = new Wishlist
         {
             Name = "Wishlist with items",
@@ -49,7 +99,7 @@ public class WishlistItemControllerTests
 
         var created = await response.Content.ReadFromJsonAsync<WishlistItem>();
         created.Should().NotBeNull();
-        created!.Name.Should().Be("Cool Item");
+        created.Name.Should().Be("Cool Item");
     }
 
     [Fact]
@@ -101,10 +151,10 @@ public class WishlistItemControllerTests
 
         var items = await response.Content.ReadFromJsonAsync<List<WishlistItem>>();
         items.Should().HaveCount(1);
-        items![0].Name.Should().Be("Item 1");
+        items[0].Name.Should().Be("Item 1");
     }
     
-        [Fact]
+    [Fact]
     public async Task ToggleReservation_ShouldReserve_IfNoneReservedYet()
     {
         var wishlist = await CreateWishlistAsync();
@@ -206,5 +256,4 @@ public class WishlistItemControllerTests
 
         items.Should().NotContain(i => i.Id == created.Id);
     }
-
 }

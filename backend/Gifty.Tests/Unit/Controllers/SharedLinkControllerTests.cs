@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using gifty_web_backend.Controllers;
+using gifty_web_backend.DTOs;
 using Gifty.Infrastructure;
 using Gifty.Domain.Entities;
-using Gifty.Tests.DTOs;
 
 namespace Gifty.Tests.Unit.Controllers
 {
@@ -67,7 +68,7 @@ namespace Gifty.Tests.Unit.Controllers
             var response = ok?.Value as ShareLinkResponseDto;
 
             response.Should().NotBeNull();
-            response!.ShareCode.Should().Be(sharedLink.ShareCode);
+            response.ShareCode.Should().Be(sharedLink.ShareCode);
         }
 
         [Fact]
@@ -89,7 +90,7 @@ namespace Gifty.Tests.Unit.Controllers
             var response = ok?.Value as ShareLinkResponseDto;
 
             response.Should().NotBeNull();
-            response!.ShareCode.Should().NotBeNullOrEmpty();
+            response.ShareCode.Should().NotBeNullOrEmpty();
         }
 
         [Fact]
@@ -101,10 +102,12 @@ namespace Gifty.Tests.Unit.Controllers
             var result = await controller.GetWishlistsSharedWithMe();
 
             var ok = result as OkObjectResult;
-            var data = ok?.Value as List<object>;
+            ok.Should().NotBeNull();
+    
+            var data = ok.Value as List<SharedWithMeWishlistOwnerGroupDto>; 
 
             data.Should().NotBeNull();
-            data!.Should().BeEmpty();
+            data.Should().BeEmpty();
         }
     }
 }
