@@ -206,7 +206,7 @@ const Wishlist = () => {
   const fetchWishlistItems = async (wishlistId: string) => {
     if (!firebaseUser) return;
     const token = await firebaseUser.getIdToken();
-    const response = await apiFetch(`/api/wishlist-items/${wishlistId}`, {
+    const response = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -255,7 +255,7 @@ const Wishlist = () => {
     if (!selectedWishlist || !firebaseUser) return;
   
     const token = await firebaseUser.getIdToken();
-    const response = await apiFetch("/api/wishlist-items", {
+    const response = await apiFetch(`/api/wishlists/${selectedWishlist}/items`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -264,7 +264,6 @@ const Wishlist = () => {
       body: JSON.stringify({
         name: newItem.name,
         link: newItem.link,
-        wishlistId: selectedWishlist,
         reservedBy: null
       }),
     });
@@ -297,7 +296,7 @@ const Wishlist = () => {
     const { id, wishlistId, name } = itemToDelete;
     const token = await firebaseUser.getIdToken();
   
-    const response = await apiFetch(`/api/wishlist-items/${id}`, {
+    const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${id}`, { 
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -323,7 +322,7 @@ const Wishlist = () => {
   const toggleReservation = async (wishlistId: string, itemId: string) => {
     if (!firebaseUser) return;
     const token = await firebaseUser.getIdToken();
-    const response = await apiFetch(`/api/wishlist-items/${itemId}/reserve`, {
+    const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}/reserve`, { 
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
     });
@@ -336,6 +335,13 @@ const Wishlist = () => {
           item.id === itemId ? { ...item, isReserved: updatedItem.isReserved } : item
         ),
       }));
+    }
+    else {
+        console.error("Error toggling reservation:", await response.json());
+        toast.error("Failed to toggle reservation.", {
+          duration: 3000,
+          position: "bottom-center",
+        });
     }
   };
 
@@ -397,7 +403,7 @@ const Wishlist = () => {
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
   
-    const response = await apiFetch(`/api/wishlist-items/${itemToEdit.id}`, {
+    const response = await apiFetch(`/api/wishlists/${itemToEdit.wishlistId}/items/${itemToEdit.id}`, { 
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
