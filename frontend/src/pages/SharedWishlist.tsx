@@ -60,7 +60,7 @@ const SharedWishlist = () => {
     fetchSharedWishlist();
   }, [shareCode, firebaseUser]);
 
-  const toggleReservation = async (itemId: string) => {
+  const toggleReservation = async (wishlistId: string, itemId: string) => { 
     const token = await firebaseUser?.getIdToken();
     if (!token) {
       toast.error("You need to be logged in to reserve items.", {
@@ -71,7 +71,7 @@ const SharedWishlist = () => {
     }
 
     try {
-      const response = await apiFetch(`/api/wishlist-items/${itemId}/reserve`, {
+      const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}/reserve`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -201,8 +201,7 @@ const SharedWishlist = () => {
                 wishlistOwner={wishlist.ownerId}
                 currentUser={firebaseUser?.uid}
                 context="shared"
-                onToggleReserve={() => toggleReservation(item.id)}
-              />
+                onToggleReserve={() => toggleReservation(wishlist.id, item.id)}              />
             ))}
           </div>
         ) : (

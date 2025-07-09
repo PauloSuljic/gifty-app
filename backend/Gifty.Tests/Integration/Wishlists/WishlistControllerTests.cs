@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text;
 using FluentAssertions;
 using Gifty.Domain.Entities;
-using Xunit.Abstractions;
+using gifty_web_backend.DTOs;
 
 namespace Gifty.Tests.Integration.Wishlists
 {
@@ -13,13 +13,11 @@ namespace Gifty.Tests.Integration.Wishlists
         private readonly TestApiFactory _factory;
         private readonly HttpClient _client;
         private readonly string _userId = "wishlist-user-id";
-        private readonly ITestOutputHelper _output;
 
-        public WishlistControllerTests(TestApiFactory factory, ITestOutputHelper output)
+        public WishlistControllerTests(TestApiFactory factory)
         {
             _factory = factory;
             _client = _factory.CreateClientWithTestAuth(_userId);
-            _output = output;
         }
 
         private async Task CreateTestUser(string userId, HttpClient client)
@@ -39,27 +37,26 @@ namespace Gifty.Tests.Integration.Wishlists
                 var body = await response.Content.ReadAsStringAsync();
 
                 if (response.StatusCode == HttpStatusCode.BadRequest && body.Contains("User already exists"))
-                    return; // ✅ Ignore duplicate users for test runs
+                    return;
 
-                throw new Exception($"❌ Failed to create user ({response.StatusCode}):\n{body}");
+                throw new Exception($"Failed to create user ({response.StatusCode}):\n{body}");
             }
         }
 
         [Fact]
         public async Task CreateWishlist_ShouldReturnCreated()
         {
-            var userId = "wishlist-user-id";
-            var client = _factory.CreateClientWithTestAuth(userId); // ✅ Ensure auth matches
+            var userId = "integration-user-id-1";
+            var client = _factory.CreateClientWithTestAuth(userId);
 
-            // ✅ User must be created with the same ID as the one in the header
             await CreateTestUser(userId, client);
 
-            var dto = new { Name = "Integration Wishlist", IsPublic = false };
+            var dto = new CreateWishlistDto { Name = "Integration Wishlist", IsPublic = false };
             var response = await client.PostAsJsonAsync("/api/wishlists", dto);
 
             response.EnsureSuccessStatusCode();
 
-            var created = await response.Content.ReadFromJsonAsync<Wishlist>();
+            var created = await response.Content.ReadFromJsonAsync<WishlistDto>();
             created!.Name.Should().Be("Integration Wishlist");
             created.UserId.Should().Be(userId);
         }
@@ -69,28 +66,30 @@ namespace Gifty.Tests.Integration.Wishlists
         {
             var userId = Guid.NewGuid().ToString();
             var client = _factory.CreateClientWithTestAuth(userId);
-            var otherClient = _factory.CreateClientWithTestAuth("other-user");
+            
+            var otherUserId = Guid.NewGuid().ToString();
+            var otherClient = _factory.CreateClientWithTestAuth(otherUserId);
 
             await CreateTestUser(userId, client);
-            await CreateTestUser("other-user", otherClient);
+            await CreateTestUser(otherUserId, otherClient);
 
             for (int i = 0; i < 2; i++)
             {
-                var dto = new { Name = $"My Wishlist {i}", IsPublic = false };
+                var dto = new CreateWishlistDto { Name = $"My Wishlist {i}", IsPublic = false };
                 var res = await client.PostAsJsonAsync("/api/wishlists", dto);
                 res.EnsureSuccessStatusCode();
             }
 
-            var otherDto = new { Name = "Other User List", IsPublic = true };
+            var otherDto = new CreateWishlistDto { Name = "Other User List", IsPublic = true };
             var otherRes = await otherClient.PostAsJsonAsync("/api/wishlists", otherDto);
             otherRes.EnsureSuccessStatusCode();
 
             var response = await client.GetAsync("/api/wishlists");
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<List<Wishlist>>();
+            var result = await response.Content.ReadFromJsonAsync<List<WishlistDto>>();
             result.Should().NotBeNull();
-            result!.Count.Should().Be(2);
+            result.Count.Should().Be(2);
             result.All(w => w.UserId == userId).Should().BeTrue();
         }
 
@@ -99,45 +98,46 @@ namespace Gifty.Tests.Integration.Wishlists
         {
             await CreateTestUser(_userId, _client);
 
-            var dto = new { Name = "Before Rename", IsPublic = false };
+            var dto = new CreateWishlistDto { Name = "Before Rename", IsPublic = false };
             var response = await _client.PostAsJsonAsync("/api/wishlists", dto);
             response.EnsureSuccessStatusCode();
 
-            var created = await response.Content.ReadFromJsonAsync<Wishlist>();
+            var created = await response.Content.ReadFromJsonAsync<WishlistDto>();
+            
             var content = new StringContent("\"Renamed List\"", Encoding.UTF8, "application/json");
 
             var renameResponse = await _client.PatchAsync($"/api/wishlists/{created!.Id}", content);
             renameResponse.EnsureSuccessStatusCode();
 
-            var renamed = await renameResponse.Content.ReadFromJsonAsync<Wishlist>();
+            var renamed = await renameResponse.Content.ReadFromJsonAsync<WishlistDto>();
             renamed!.Name.Should().Be("Renamed List");
         }
 
         [Fact]
         public async Task DeleteWishlist_ShouldRemoveSuccessfully()
         {
-            var userId = "wishlist-user-id";
-            var client = _factory.CreateClientWithTestAuth(userId); // ✅ matches the payload's ID
+            var userId = "wishlist-user-id-2";
+            var client = _factory.CreateClientWithTestAuth(userId);
             await CreateTestUser(userId, client);
 
-            var dto = new { Name = "To Delete", IsPublic = false };
-            var response = await _client.PostAsJsonAsync("/api/wishlists", dto);
+            var dto = new CreateWishlistDto { Name = "To Delete", IsPublic = false };
+            var response = await client.PostAsJsonAsync("/api/wishlists", dto);
 
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                throw new Exception($"❌ POST failed: {response.StatusCode}\n{body}");
+                throw new Exception($"Failed to create user ({response.StatusCode}):\n{body}");
             }
 
-            var created = await response.Content.ReadFromJsonAsync<Wishlist>();
+            var created = await response.Content.ReadFromJsonAsync<WishlistDto>();
 
-            var delete = await _client.DeleteAsync($"/api/wishlists/{created!.Id}");
+            var delete = await client.DeleteAsync($"/api/wishlists/{created!.Id}");
             delete.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-            var check = await _client.GetAsync("/api/wishlists");
+            var check = await client.GetAsync("/api/wishlists");
             check.EnsureSuccessStatusCode();
 
-            var wishlists = await check.Content.ReadFromJsonAsync<List<Wishlist>>();
+            var wishlists = await check.Content.ReadFromJsonAsync<List<WishlistDto>>();
             wishlists!.Any(w => w.Id == created.Id).Should().BeFalse();
         }
 
@@ -148,16 +148,16 @@ namespace Gifty.Tests.Integration.Wishlists
             var client = _factory.CreateClientWithTestAuth(userId);
             await CreateTestUser(userId, client);
 
-            var res1 = await client.PostAsJsonAsync("/api/wishlists", new { Name = "List A", IsPublic = false });
-            var created1 = await res1.Content.ReadFromJsonAsync<Wishlist>();
+            var res1 = await client.PostAsJsonAsync("/api/wishlists", new CreateWishlistDto { Name = "List A", IsPublic = false });
+            var created1 = await res1.Content.ReadFromJsonAsync<WishlistDto>();
 
-            var res2 = await client.PostAsJsonAsync("/api/wishlists", new { Name = "List B", IsPublic = false });
-            var created2 = await res2.Content.ReadFromJsonAsync<Wishlist>();
+            var res2 = await client.PostAsJsonAsync("/api/wishlists", new CreateWishlistDto { Name = "List B", IsPublic = false });
+            var created2 = await res2.Content.ReadFromJsonAsync<WishlistDto>();
 
             var reorderPayload = new[]
             {
-                new { Id = created2!.Id, Order = 0 },
-                new { Id = created1!.Id, Order = 1 }
+                new ReorderWishlistDto { Id = created2!.Id, Order = 0 },
+                new ReorderWishlistDto { Id = created1!.Id, Order = 1 }
             };
 
             var reorderRes = await client.PutAsJsonAsync("/api/wishlists/reorder", reorderPayload);
@@ -166,10 +166,10 @@ namespace Gifty.Tests.Integration.Wishlists
             var finalRes = await client.GetAsync("/api/wishlists");
             finalRes.EnsureSuccessStatusCode();
 
-            var wishlists = await finalRes.Content.ReadFromJsonAsync<List<Wishlist>>();
+            var wishlists = await finalRes.Content.ReadFromJsonAsync<List<WishlistDto>>();
             wishlists.Should().NotBeNull().And.HaveCount(2);
 
-            var sorted = wishlists!.OrderBy(w => w.Order).ToList();
+            var sorted = wishlists.OrderBy(w => w.Order).ToList();
             sorted[0].Id.Should().Be(created2.Id);
             sorted[1].Id.Should().Be(created1.Id);
         }

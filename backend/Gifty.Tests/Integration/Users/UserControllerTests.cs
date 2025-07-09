@@ -27,7 +27,7 @@ namespace Gifty.Tests.Integration.Users
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             var created = await response.Content.ReadFromJsonAsync<User>();
             created.Should().NotBeNull();
-            created!.Username.Should().Be("TestUser");
+            created.Username.Should().Be("TestUser");
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace Gifty.Tests.Integration.Users
 
             var returned = await response.Content.ReadFromJsonAsync<User>();
             returned.Should().NotBeNull();
-            returned!.Username.Should().Be("Fetcher");
+            returned.Username.Should().Be("Fetcher");
         }
 
         [Fact]
@@ -116,7 +116,7 @@ namespace Gifty.Tests.Integration.Users
 
             var updated = await response.Content.ReadFromJsonAsync<User>();
             updated.Should().NotBeNull();
-            updated!.Username.Should().Be("UpdatedUser");
+            updated.Username.Should().Be("UpdatedUser");
             updated.Bio.Should().Be("Updated bio");
             updated.AvatarUrl.Should().Be("/avatars/avatar1.png");
         }

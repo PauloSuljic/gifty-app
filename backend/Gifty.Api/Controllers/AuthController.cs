@@ -1,41 +1,35 @@
-﻿using Gifty.Infrastructure.Services;
+﻿using gifty_web_backend.DTOs;
+using Gifty.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Gifty.Api.Controllers
+namespace gifty_web_backend.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthController : ControllerBase
+    public class AuthController(IFirebaseAuthService firebaseAuthService) : ControllerBase
     {
-        private readonly FirebaseAuthService _firebaseAuthService;
-
-        public AuthController(FirebaseAuthService firebaseAuthService)
-        {
-            _firebaseAuthService = firebaseAuthService;
-        }
-
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] TokenRequest request)
+        public async Task<IActionResult> Login([FromBody] TokenRequestDto request)
         {
-            var user = await _firebaseAuthService.AuthenticateUserAsync(request.Token);
-            if (user == null)
+            if (request.Token == null)
             {
-                return Unauthorized(new { message = "Invalid token" });
+                return BadRequest(new { message = "Authentication token is required." });
             }
 
-            return Ok(new
+            var user = await firebaseAuthService.AuthenticateUserAsync(request.Token);
+            if (user == null)
             {
-                user.Id,
-                user.Username,
-                user.Bio,
-                user.AvatarUrl
+                return Unauthorized(new { message = "Invalid or expired token, or authentication failed." });
+            }
+            
+            return Ok(new UserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Bio = user.Bio,
+                AvatarUrl = user.AvatarUrl,
+                Email = user.Email 
             });
         }
-    }
-    
-
-    public class TokenRequest
-    {
-        public string Token { get; set; }
     }
 }
