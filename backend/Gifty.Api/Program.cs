@@ -1,15 +1,18 @@
 using System.Runtime.CompilerServices;
 using FirebaseAdmin;
 using gifty_web_backend.Utils;
+using Gifty.Application.Features.Users.Dtos;
+using Gifty.Domain.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Gifty.Infrastructure;
+using Gifty.Infrastructure.Repositories;
 using Gifty.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-[assembly: InternalsVisibleTo("Gifty.Tests")]
+[assembly: InternalsVisibleTo("Gifty.Tests.Integration")]
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -32,8 +35,7 @@ if (builder.Environment.EnvironmentName != "Testing")
     {
         throw new Exception("❌ No connection string found!");
     }
-
-    // ✅ 4. PostgreSQL DB
+    
     builder.Services.AddDbContext<GiftyDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
@@ -60,13 +62,21 @@ if (useTestAuth != "true")
 }
 
 // ✅ 3. Services
-builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ 5. Auth Setup
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(UserDto).Assembly)); 
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+builder.Services.AddScoped<IWishlistItemRepository, WishlistItemRepository>();
+builder.Services.AddScoped<ISharedLinkRepository, SharedLinkRepository>();
+builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
+builder.Services.AddScoped<ISharedLinkVisitRepository, SharedLinkVisitRepository>();
+
+// ✅ 4. Auth Setup
 #if DEBUG
 if (builder.Configuration["UseTestAuth"] == "true")
 {
@@ -107,7 +117,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ✅ 6. CORS
+// ✅ 5. CORS
 var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGIN")?
                          .Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                      ?? ["http://localhost:5173"];
@@ -124,7 +134,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ✅ 7. Middleware
+// ✅ 6. Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
