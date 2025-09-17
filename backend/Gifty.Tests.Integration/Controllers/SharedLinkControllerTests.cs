@@ -91,7 +91,7 @@ public class SharedLinkControllerTests
         await ownerClient.PostAsJsonAsync("/api/users", new User
         {
             Id = ownerId,
-            Username = $"Owner_{Guid.NewGuid()}",
+            Username = $"Owner_{Guid.NewGuid()}", 
             Email = $"owner_{Guid.NewGuid()}@test.com",
             Bio = "integration test"
         });
