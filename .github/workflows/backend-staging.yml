@@ -45,7 +45,7 @@ jobs:
         with:
           dotnet-version: "8.x"
       - name: Run Tests
-        run: dotnet test backend/Gifty.Tests/Gifty.Tests.csproj --configuration Release
+        run: dotnet test backend/Gifty.sln --configuration Release
         env:
           UseTestAuth: "true"
           ASPNETCORE_ENVIRONMENT: "Development"
