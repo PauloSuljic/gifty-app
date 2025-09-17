@@ -1,0 +1,30 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.x"
+
+      - name: Restore
+        run: dotnet restore backend/Gifty.Api/Gifty.Api.csproj
+
+      - name: Build
+        run: dotnet build backend/Gifty.Api/Gifty.Api.csproj --configuration Release --no-restore
+
+      - name: Run Tests
+        run: dotnet test backend/Gifty.Tests.Integration/Gifty.Tests.Integration.csproj --configuration Release --no-build --logger trx
+        env:
+          ASPNETCORE_ENVIRONMENT: "Development"
+          UseTestAuth: "true"
