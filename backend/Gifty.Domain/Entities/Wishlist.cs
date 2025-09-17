@@ -7,17 +7,17 @@ namespace Gifty.Domain.Entities
     public class Wishlist
     {
         [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; init; } = Guid.NewGuid();
         [Required]
         public required string Name { get; set; }
-        public bool IsPublic { get; set; } = false;
+        public bool IsPublic { get; set; }
         [Required]
         [ForeignKey("User")]
-        public required string UserId { get; set; }
+        public required string UserId { get; init; }
         [JsonIgnore]
-        public User? User { get; set; }
-        public ICollection<WishlistItem> Items { get; set; } = new List<WishlistItem>();
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public User? User { get; init; }
+        public ICollection<WishlistItem> Items { get; init; } = new List<WishlistItem>();
+        public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
         public int Order { get; set; }
     }
 }

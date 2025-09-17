@@ -1,5 +1,6 @@
 ﻿using Gifty.Domain.Entities;
 using FirebaseAdmin.Auth;
+using Gifty.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
