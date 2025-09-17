@@ -26,7 +26,7 @@ namespace Gifty.Tests.Integration.Controllers
             var user = new User
             {
                 Id = userId,
-                Username = "Test User",
+                Username = $"TestUser_{userId}",
                 Email = $"{userId}@test.com",
                 Bio = "Test Bio"
             };
@@ -37,7 +37,7 @@ namespace Gifty.Tests.Integration.Controllers
             {
                 var body = await response.Content.ReadAsStringAsync();
 
-                if (response.StatusCode == HttpStatusCode.BadRequest && body.Contains("User already exists"))
+                if (response.StatusCode == HttpStatusCode.Conflict && body.Contains("already"))
                     return;
 
                 throw new Exception($"Failed to create user ({response.StatusCode}):\n{body}");
@@ -105,9 +105,8 @@ namespace Gifty.Tests.Integration.Controllers
 
             var created = await response.Content.ReadFromJsonAsync<WishlistDto>();
             
-            var content = new StringContent("\"Renamed List\"", Encoding.UTF8, "application/json");
-
-            var renameResponse = await _client.PatchAsync($"/api/wishlists/{created!.Id}", content);
+            var renameDto = new RenameWishlistDto { Name = "Renamed List" };
+            var renameResponse = await _client.PatchAsJsonAsync($"/api/wishlists/{created!.Id}", renameDto);
             renameResponse.EnsureSuccessStatusCode();
 
             var renamed = await renameResponse.Content.ReadFromJsonAsync<WishlistDto>();

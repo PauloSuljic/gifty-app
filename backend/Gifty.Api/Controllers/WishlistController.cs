@@ -181,7 +181,7 @@ namespace gifty_web_backend.Controllers
         }
         
         [HttpPatch("{id}")]
-        public async Task<ActionResult<WishlistDto>> RenameWishlist(Guid id, [FromBody] string newName)
+        public async Task<ActionResult<WishlistDto>> RenameWishlist(Guid id, [FromBody] RenameWishlistDto request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
@@ -189,7 +189,7 @@ namespace gifty_web_backend.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            var command = new RenameWishlistCommand(id, userId, newName);
+            var command = new RenameWishlistCommand(id, userId, request.Name);
 
             try
             {

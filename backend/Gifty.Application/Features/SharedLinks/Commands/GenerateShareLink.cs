@@ -23,7 +23,7 @@ public class GenerateShareLinkHandler(
 
         if (wishlist.UserId != request.UserId)
         {
-            throw new ForbiddenAccessException("You are not authorized to generate a share link for this wishlist.");
+            throw new ForbiddenAccessException();
         }
         
         var existingLink = await sharedLinkRepository.GetByWishlistIdAsync(request.WishlistId);

@@ -82,4 +82,29 @@ public class SharedLinkControllerTests
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task GenerateShareLink_ShouldReturn403_IfUserNotOwner()
+    {
+        var ownerId = "owner-user-id";
+        var ownerClient = _factory.CreateClientWithTestAuth(ownerId);
+
+        await ownerClient.PostAsJsonAsync("/api/users", new User
+        {
+            Id = ownerId,
+            Username = $"Owner_{Guid.NewGuid()}",
+            Email = $"owner_{Guid.NewGuid()}@test.com",
+            Bio = "integration test"
+        });
+
+        var dto = new { Name = "Owner's Wishlist", IsPublic = false };
+        var res = await ownerClient.PostAsJsonAsync("/api/wishlists", dto);
+        res.EnsureSuccessStatusCode();
+        var wishlist = await res.Content.ReadFromJsonAsync<Wishlist>();
+        
+        var otherUserClient = _factory.CreateClientWithTestAuth("other-user-id");
+        var response = await otherUserClient.PostAsync($"/api/shared-links/{wishlist!.Id}/generate", null);
+        
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
 }

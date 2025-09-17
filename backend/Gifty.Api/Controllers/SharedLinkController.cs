@@ -59,7 +59,7 @@ public class SharedLinkController(IMediator mediator) : ControllerBase
         }
         catch (ForbiddenAccessException ex)
         {
-            return Forbid(ex.Message);
+            return Forbid();
         }
         catch (Exception ex)
         {

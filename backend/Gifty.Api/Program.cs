@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using FirebaseAdmin;
+using FirebaseAdmin.Auth;
 using gifty_web_backend.Utils;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Domain.Interfaces;
@@ -10,6 +11,7 @@ using Gifty.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 [assembly: InternalsVisibleTo("Gifty.Tests.Integration")]
@@ -88,14 +90,17 @@ else
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
-            options.Authority = "https://securetoken.google.com/gifty-auth-71f71";
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidIssuer = "https://securetoken.google.com/gifty-auth-71f71",
-                ValidateAudience = true,
-                ValidAudience = "gifty-auth-71f71",
-                ValidateLifetime = true
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                SignatureValidator = (token, _) =>
+                {
+                    // Use Firebase Admin SDK instead
+                    FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token).GetAwaiter().GetResult();
+                    return new JsonWebToken(token);
+                }
             };
         });
 }
