@@ -1,143 +1,92 @@
 using System.Security.Claims;
-using gifty_web_backend.DTOs;
-using Gifty.Domain.Entities;
-using Gifty.Infrastructure;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Gifty.Application.Features.SharedLinks.Commands;
+using Gifty.Application.Features.SharedLinks.Queries;
+using Gifty.Application.Features.SharedLinks.Dtos;
+using Gifty.Application.Common.Exceptions;
 
 namespace gifty_web_backend.Controllers;
 
 [Route("api/shared-links")]
 [ApiController]
-public class SharedLinkController(GiftyDbContext context) : ControllerBase
+public class SharedLinkController(IMediator mediator) : ControllerBase
 {
     [Authorize]
     [HttpGet("shared-with-me")]
-    public async Task<IActionResult> GetWishlistsSharedWithMe()
+    public async Task<ActionResult<IEnumerable<SharedWithMeWishlistOwnerGroupDto>>> GetWishlistsSharedWithMe()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized("User not authenticated.");
-        
-        var visitedWishlists = await context.SharedLinkVisits
-            .Include(v => v.SharedLink!)
-                .ThenInclude(l => l.Wishlist!)
-                    .ThenInclude(w => w.Items)
-            .Include(v => v.SharedLink!.Wishlist!.User) 
-            .Where(v => v.UserId == userId && v.SharedLink!.Wishlist!.UserId != userId)
-            .ToListAsync();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("User not authenticated.");
+        }
 
-        if (!visitedWishlists.Any()) return Ok(new List<SharedWithMeWishlistOwnerGroupDto>());
+        var query = new GetWishlistsSharedWithMeQuery(userId);
 
-        var result = visitedWishlists
-            .GroupBy(v => new 
-            {
-                OwnerId = v.SharedLink!.Wishlist!.UserId,
-                OwnerUsername = v.SharedLink!.Wishlist!.User?.Username,
-                OwnerAvatarUrl = v.SharedLink!.Wishlist!.User?.AvatarUrl 
-            })
-            .Select(group => new SharedWithMeWishlistOwnerGroupDto
-            {
-                OwnerId = group.Key.OwnerId,
-                OwnerName = group.Key.OwnerUsername,
-                OwnerAvatar = group.Key.OwnerAvatarUrl,
-                Wishlists = group.Select(v => new SharedWithMeWishlistDto
-                {
-                    Id = v.SharedLink!.Wishlist!.Id,
-                    Name = v.SharedLink.Wishlist.Name,
-                    Items = v.SharedLink.Wishlist.Items
-                        .Select(i => new WishlistItemDto
-                        {
-                            Id = i.Id,
-                            Name = i.Name,
-                            Link = i.Link,
-                            IsReserved = i.IsReserved,
-                            ReservedBy = i.ReservedBy,
-                            CreatedAt = i.CreatedAt,
-                            WishlistId = i.WishlistId
-                        }).ToList()
-                }).ToList()
-            }).ToList();
-
-        return Ok(result);
+        try
+        {
+            var result = await mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while retrieving shared wishlists.", details = ex.Message });
+        }
     }
-
+    
     [Authorize]
     [HttpPost("{wishlistId}/generate")]
-    public async Task<IActionResult> GenerateShareLink(Guid wishlistId)
+    public async Task<ActionResult<ShareLinkResponseDto>> GenerateShareLink(Guid wishlistId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized("User not authenticated.");
-
-        var wishlist = await context.Wishlists.FindAsync(wishlistId);
-        if (wishlist == null) return NotFound("Wishlist not found.");
-        if (wishlist.UserId != userId) return Forbid();
-
-        var existingLink = await context.SharedLinks.FirstOrDefaultAsync(l => l.WishlistId == wishlistId);
-        if (existingLink != null)
+        if (string.IsNullOrEmpty(userId))
         {
-            return Ok(new ShareLinkResponseDto(existingLink.ShareCode));
+            return Unauthorized("User not authenticated.");
         }
 
-        var sharedLink = new SharedLink { WishlistId = wishlistId };
-        context.SharedLinks.Add(sharedLink);
-        await context.SaveChangesAsync();
+        var command = new GenerateShareLinkCommand(wishlistId, userId);
 
-        return Ok(new ShareLinkResponseDto(sharedLink.ShareCode));
+        try
+        {
+            var response = await mediator.Send(command);
+            return Ok(response);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ForbiddenAccessException ex)
+        {
+            return Forbid();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while generating the share link.", details = ex.Message });
+        }
     }
-
-
-    [AllowAnonymous] 
+    
+    [AllowAnonymous]
     [HttpGet("{shareCode}")]
-    public async Task<IActionResult> GetSharedWishlist(string shareCode)
+    public async Task<ActionResult<SharedWishlistResponseDto>> GetSharedWishlist(string shareCode)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        
-        var sharedLink = await context.SharedLinks
-            .Include(l => l.Wishlist!)
-                .ThenInclude(w => w.Items)
-            .Include(l => l.Wishlist!.User) 
-            .FirstOrDefaultAsync(l => l.ShareCode == shareCode);
 
-        if (sharedLink == null)
-            return NotFound(new { error = "Invalid shared link." });
-        
-        var response = new SharedWishlistResponseDto
+        var query = new GetSharedWishlistQuery(shareCode, userId);
+
+        try
         {
-            Id = sharedLink.Wishlist!.Id,
-            Name = sharedLink.Wishlist.Name,
-            OwnerId = sharedLink.Wishlist.UserId,
-            OwnerName = sharedLink.Wishlist.User?.Username,
-            OwnerAvatar = sharedLink.Wishlist.User?.AvatarUrl, 
-            Items = sharedLink.Wishlist.Items
-                .Select(i => new WishlistItemDto
-                {
-                    Id = i.Id,
-                    Name = i.Name,
-                    Link = i.Link,
-                    IsReserved = i.IsReserved,
-                    ReservedBy = i.ReservedBy,
-                    CreatedAt = i.CreatedAt,
-                    WishlistId = i.WishlistId
-                }).ToList()
-        };
-
-        if (!string.IsNullOrEmpty(userId) && userId != sharedLink.Wishlist!.UserId) 
-        {
-            var visited = await context.SharedLinkVisits
-                .FirstOrDefaultAsync(v => v.UserId == userId && v.SharedLinkId == sharedLink.Id);
-
-            if (visited == null)
-            {
-                context.SharedLinkVisits.Add(new SharedLinkVisit
-                {
-                    SharedLinkId = sharedLink.Id,
-                    UserId = userId
-                });
-                await context.SaveChangesAsync();
-            }
+            var response = await mediator.Send(query);
+            return Ok(response);
         }
-
-        return Ok(response);
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while retrieving the shared wishlist.", details = ex.Message });
+        }
     }
 }

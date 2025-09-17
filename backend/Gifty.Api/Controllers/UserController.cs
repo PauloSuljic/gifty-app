@@ -1,100 +1,138 @@
 using System.Security.Claims;
-using gifty_web_backend.DTOs;
-using Gifty.Domain.Entities;
+using Gifty.Application.Features.Users.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Gifty.Infrastructure;
+using MediatR; 
+using Gifty.Application.Features.Users.Queries; 
+using Gifty.Application.Features.Users.Commands;
+using Gifty.Application.Common.Exceptions;
 
 namespace gifty_web_backend.Controllers
 {
     [Authorize]
     [Route("api/users")]
     [ApiController]
-    public class UserController(GiftyDbContext context) : ControllerBase
+    public class UserController(IMediator mediator) : ControllerBase
     {
-        // Get user by Firebase UID
         [HttpGet("{firebaseUid}")]
         public async Task<IActionResult> GetUserByFirebaseUid(string firebaseUid)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
-
-            if (user == null)
-                return NotFound(new { message = "User not found" });
-
-            var response = new
+            var query = new GetUserByIdQuery(firebaseUid);
+            try
             {
-                id = user.Id,
-                username = user.Username,
-                bio = user.Bio,
-                email = user.Email,
-                avatarUrl = user.AvatarUrl
-            };
-            
-            return Ok(response);
+                var userDto = await mediator.Send(query);
+                return Ok(userDto);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving the user.", details = ex.Message });
+            }
         }
-    
+
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] User user)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto request)
         {
             var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(firebaseUid))
-                return Unauthorized("User not authenticated.");
-
-            if (firebaseUid != user.Id)
-                return Forbid("You can only create a profile for your own Firebase account.");
-
-            var exists = await context.Users.AnyAsync(u => u.Id == firebaseUid);
-            if (exists)
-                return BadRequest(new { message = "User already exists" });
-
-            // Add random avatar if needed
-            var avatarOptions = new List<string>
             {
-                "/avatars/avatar1.png", "/avatars/avatar2.png", "/avatars/avatar3.png",
-                "/avatars/avatar4.png", "/avatars/avatar5.png", "/avatars/avatar6.png",
-                "/avatars/avatar7.png", "/avatars/avatar8.png", "/avatars/avatar9.png",
-                "/avatars/avatar10.png"
-            };
+                return Unauthorized("User not authenticated.");
+            }
 
-            user.AvatarUrl = avatarOptions[new Random().Next(avatarOptions.Count)];
+            if (firebaseUid != request.Id)
+            {
+                return Forbid("You can only create a profile for your own Firebase account.");
+            }
 
-            context.Users.Add(user);
-            await context.SaveChangesAsync();
+            var command = new CreateUserCommand(
+                request.Id,
+                request.Username,
+                request.Email,
+                request.Bio,
+                request.AvatarUrl
+            );
 
-            return CreatedAtAction(nameof(GetUserByFirebaseUid), new { firebaseUid = user.Id }, user);
+            try
+            {
+                var userDto = await mediator.Send(command);
+                return CreatedAtAction(nameof(GetUserByFirebaseUid), new { firebaseUid = userDto.Id }, userDto);
+            }
+            catch (ConflictException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (NotFoundException ex) // If the associated Firebase user somehow doesn't exist
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while creating the user.", details = ex.Message });
+            }
         }
-        
+
         [HttpPut("{firebaseUid}")]
         public async Task<IActionResult> UpdateUserProfile(string firebaseUid, [FromBody] UpdateUserDto model)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
-            if (user == null) return NotFound("User not found.");
+            var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdFromToken) || userIdFromToken != firebaseUid)
+            {
+                return Forbid("You can only update your own profile.");
+            }
 
-            user.Username = model.Username!;
-            user.Bio = model.Bio;
-            user.AvatarUrl = model.AvatarUrl;
+            var command = new UpdateUserCommand(
+                firebaseUid,
+                model.Username!,
+                model.Bio,
+                model.AvatarUrl
+            );
 
-            await context.SaveChangesAsync();
-
-            return Ok(user);
+            try
+            {
+                var userDto = await mediator.Send(command);
+                return Ok(userDto);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ConflictException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the user profile.", details = ex.Message });
+            }
         }
-        
-        // DELETE: api/users/{firebaseUid}
+
         [HttpDelete("{firebaseUid}")]
         public async Task<IActionResult> DeleteUser(string firebaseUid)
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == firebaseUid);
-
-            if (user == null)
+            var userIdFromToken = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdFromToken) || userIdFromToken != firebaseUid)
             {
-                return NotFound(new { message = "User not found" });
+                return Forbid("You can only delete your own profile.");
             }
 
-            context.Users.Remove(user);
-            await context.SaveChangesAsync();
+            var command = new DeleteUserCommand(firebaseUid);
 
-            return NoContent();
+            try
+            {
+                await mediator.Send(command);
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while deleting the user.", details = ex.Message });
+            }
         }
     }    
 }
