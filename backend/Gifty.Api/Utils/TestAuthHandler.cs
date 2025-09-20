@@ -15,7 +15,7 @@ namespace gifty_web_backend.Utils
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             var authHeader = Context.Request.Headers["Authorization"].ToString();
-            string userId = null;
+            string? userId = null;
             const string bearerPrefix = $"{JwtBearerDefaults.AuthenticationScheme}";
             if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
             {
