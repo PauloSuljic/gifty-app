@@ -32,12 +32,6 @@ namespace Gifty.Tests.Integration.Integration
 
             builder.ConfigureServices(services =>
             {
-                services.AddAuthentication(options =>
-                    {
-                        options.DefaultAuthenticateScheme = "Test";
-                        options.DefaultChallengeScheme = "Test";
-                    })
-                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
 
                 var descriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(DbContextOptions<GiftyDbContext>));
@@ -90,7 +84,7 @@ namespace Gifty.Tests.Integration.Integration
         public HttpClient CreateClientWithTestAuth(string userId)
         {
             var client = CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test", userId);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userId);
             return client;
         }
     }

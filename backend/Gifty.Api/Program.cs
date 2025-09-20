@@ -79,10 +79,11 @@ builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<ISharedLinkVisitRepository, SharedLinkVisitRepository>();
 
 // ✅ 4. Auth Setup
-if (builder.Configuration["UseTestAuth"] == "true")
+if (builder.Environment.IsEnvironment("Testing") || builder.Configuration["UseTestAuth"] == "true")
 {
-    builder.Services.AddAuthentication("Test")
-        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+            JwtBearerDefaults.AuthenticationScheme, _ => { });
 }
 else
 {
