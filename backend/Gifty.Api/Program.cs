@@ -79,11 +79,11 @@ builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<ISharedLinkVisitRepository, SharedLinkVisitRepository>();
 
 // ✅ 4. Auth Setup
-#if DEBUG
-if (builder.Configuration["UseTestAuth"] == "true")
+if (builder.Environment.IsEnvironment("Testing") || builder.Configuration["UseTestAuth"] == "true")
 {
-    builder.Services.AddAuthentication("Test")
-        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+            JwtBearerDefaults.AuthenticationScheme, _ => { });
 }
 else
 {
@@ -104,21 +104,6 @@ else
             };
         });
 }
-#else
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = "https://securetoken.google.com/gifty-auth-71f71";
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = "https://securetoken.google.com/gifty-auth-71f71",
-            ValidateAudience = true,
-            ValidAudience = "gifty-auth-71f71",
-            ValidateLifetime = true
-        };
-    });
-#endif
 
 builder.Services.AddAuthorization();
 
