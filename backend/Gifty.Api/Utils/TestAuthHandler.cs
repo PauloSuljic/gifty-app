@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 
 namespace gifty_web_backend.Utils
@@ -15,10 +16,10 @@ namespace gifty_web_backend.Utils
         {
             var authHeader = Context.Request.Headers["Authorization"].ToString();
             string userId = null;
-            const string bearerPrefix = "Bearer ";
+            const string bearerPrefix = $"{JwtBearerDefaults.AuthenticationScheme}";
             if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                userId = authHeader.Substring(bearerPrefix.Length);
+                userId = authHeader.Substring(bearerPrefix.Length).Trim();
             }
 
             if (string.IsNullOrWhiteSpace(userId))
