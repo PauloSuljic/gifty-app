@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 
 namespace gifty_web_backend.Utils
@@ -13,7 +14,13 @@ namespace gifty_web_backend.Utils
     {
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var userId = Context.Request.Headers["Authorization"].ToString().Replace("Test ", "");
+            var authHeader = Context.Request.Headers["Authorization"].ToString();
+            string? userId = null;
+            const string bearerPrefix = $"{JwtBearerDefaults.AuthenticationScheme}";
+            if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                userId = authHeader.Substring(bearerPrefix.Length).Trim();
+            }
 
             if (string.IsNullOrWhiteSpace(userId))
                 return Task.FromResult(AuthenticateResult.Fail("Missing test user ID"));
@@ -21,7 +28,7 @@ namespace gifty_web_backend.Utils
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, "TestUser")
+                new Claim(ClaimTypes.Name, $"TestUser_{userId}")
             };
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);
