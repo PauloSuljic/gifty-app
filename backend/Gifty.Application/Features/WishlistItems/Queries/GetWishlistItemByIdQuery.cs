@@ -5,7 +5,7 @@ using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Application.Common.Exceptions;
 using Gifty.Domain.Entities;
 
-namespace Gifty.Application.Features.Wishlists.Queries;
+namespace Gifty.Application.Features.WishlistItems.Queries;
 
 public record GetWishlistItemByIdQuery(Guid Id, string UserId) : IRequest<WishlistItemDto>;
 

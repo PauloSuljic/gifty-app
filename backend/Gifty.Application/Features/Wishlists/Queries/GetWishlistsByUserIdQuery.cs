@@ -4,20 +4,14 @@ using Gifty.Application.Features.Wishlists.Dtos;
 
 namespace Gifty.Application.Features.Wishlists.Queries;
 
-public record GetWishlistsByUserIdQuery(string UserId) : IRequest<List<WishlistDto>>;
+public record  GetWishlistsByUserIdQuery(string UserId) : IRequest<List<WishlistDto>>;
 
-public class GetWishlistsByUserIdHandler : IRequestHandler<GetWishlistsByUserIdQuery, List<WishlistDto>>
+public class GetWishlistsByUserIdHandler(IWishlistRepository wishlistRepository)
+    : IRequestHandler<GetWishlistsByUserIdQuery, List<WishlistDto>>
 {
-    private readonly IWishlistRepository _wishlistRepository;
-
-    public GetWishlistsByUserIdHandler(IWishlistRepository wishlistRepository)
-    {
-        _wishlistRepository = wishlistRepository;
-    }
-
     public async Task<List<WishlistDto>> Handle(GetWishlistsByUserIdQuery request, CancellationToken cancellationToken)
     {
-        var wishlists = await _wishlistRepository.GetAllByUserIdAsync(request.UserId);
+        var wishlists = await wishlistRepository.GetAllByUserIdAsync(request.UserId);
 
         var enumerable = wishlists.ToList();
         if (enumerable.Count == 0)

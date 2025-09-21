@@ -3,7 +3,7 @@ using Gifty.Domain.Interfaces;
 using Gifty.Domain.Entities;
 using Gifty.Application.Common.Exceptions;
 
-namespace Gifty.Application.Features.Wishlists.Commands;
+namespace Gifty.Application.Features.WishlistItems.Commands;
 
 public record DeleteWishlistItemCommand(Guid Id, Guid WishlistId, string UserId) : IRequest<bool>;
 

@@ -5,9 +5,14 @@ using MediatR;
 
 namespace Gifty.Application.Features.Wishlists.Commands;
 
-public record CreateWishlistCommand(string UserId, string Name, bool IsPublic, int? Order) : IRequest<WishlistDto>;
+public record CreateWishlistCommand(
+    string UserId,
+    string Name,
+    bool IsPublic,
+    int? Order
+) : IRequest<WishlistDto>;
 
-public class CreateWishlistHandler(IWishlistRepository wishlistRepository)
+public class CreateWishlistCommandHandler(IWishlistRepository wishlistRepository)
     : IRequestHandler<CreateWishlistCommand, WishlistDto>
 {
     public async Task<WishlistDto> Handle(CreateWishlistCommand request, CancellationToken cancellationToken)
@@ -24,8 +29,8 @@ public class CreateWishlistHandler(IWishlistRepository wishlistRepository)
 
         await wishlistRepository.AddAsync(newWishlist);
         await wishlistRepository.SaveChangesAsync();
-        
-        return new WishlistDto 
+
+        return new WishlistDto
         {
             Id = newWishlist.Id,
             Name = newWishlist.Name,
@@ -33,7 +38,7 @@ public class CreateWishlistHandler(IWishlistRepository wishlistRepository)
             UserId = newWishlist.UserId,
             CreatedAt = newWishlist.CreatedAt,
             Order = newWishlist.Order,
-            Items = new List<WishlistItemDto>() 
+            Items = new List<WishlistItemDto>()
         };
     }
 }

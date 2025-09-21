@@ -4,7 +4,7 @@ using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Application.Common.Exceptions;
 using Gifty.Domain.Entities;
 
-namespace Gifty.Application.Features.Wishlists.Commands;
+namespace Gifty.Application.Features.WishlistItems.Commands;
 
 public record UpdateWishlistItemPartialCommand(
     Guid Id,

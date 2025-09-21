@@ -2,8 +2,8 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Gifty.Application.Features.Wishlists.Commands;
-using Gifty.Application.Features.Wishlists.Queries;
+using Gifty.Application.Features.WishlistItems.Commands;
+using Gifty.Application.Features.WishlistItems.Queries;
 using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Application.Common.Exceptions;
 

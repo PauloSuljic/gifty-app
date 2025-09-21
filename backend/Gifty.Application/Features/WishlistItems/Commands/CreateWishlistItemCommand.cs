@@ -4,7 +4,7 @@ using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Application.Common.Exceptions;
 
-namespace Gifty.Application.Features.Wishlists.Commands;
+namespace Gifty.Application.Features.WishlistItems.Commands;
 
 public record CreateWishlistItemCommand(
     Guid WishlistId,
