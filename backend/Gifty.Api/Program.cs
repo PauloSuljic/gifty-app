@@ -4,6 +4,7 @@ using Serilog.Context;
 using System.Security.Claims;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
+using gifty_web_backend.Middlewares;
 using gifty_web_backend.Utils;
 using Gifty.Application.Common.Behaviors;
 using Gifty.Application.Features.Users.Dtos;
@@ -141,23 +142,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// ✅ Global exception handler returning a JSON payload with correlation id
-app.UseExceptionHandler(errorApp =>
-{
-    errorApp.Run(async context =>
-    {
-        context.Response.ContentType = "application/json";
-        if (context.Response.StatusCode == 200) context.Response.StatusCode = 500;
-        var traceId = context.TraceIdentifier;
-        var correlationId = context.Request.Headers["X-Correlation-ID"].ToString();
-        var payload = System.Text.Json.JsonSerializer.Serialize(new
-        {
-            message = "An unexpected error occurred.",
-            correlationId = string.IsNullOrWhiteSpace(correlationId) ? traceId : correlationId
-        });
-        await context.Response.WriteAsync(payload);
-    });
-});
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // ✅ Correlation ID middleware (adds/propagates X-Correlation-ID and enriches Serilog scope)
 app.Use(async (ctx, next) =>

@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
 using FluentAssertions;
 using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Domain.Entities;

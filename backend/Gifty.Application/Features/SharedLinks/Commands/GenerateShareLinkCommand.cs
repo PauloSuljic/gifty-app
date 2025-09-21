@@ -23,7 +23,7 @@ public class GenerateShareLinkHandler(
 
         if (wishlist.UserId != request.UserId)
         {
-            throw new ForbiddenAccessException();
+            throw new ForbiddenAccessException("You are not the owner of this wishlist.");
         }
         
         var existingLink = await sharedLinkRepository.GetByWishlistIdAsync(request.WishlistId);

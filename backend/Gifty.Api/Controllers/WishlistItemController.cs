@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Gifty.Application.Features.WishlistItems.Commands;
 using Gifty.Application.Features.WishlistItems.Queries;
 using Gifty.Application.Features.Wishlists.Dtos;
-using Gifty.Application.Common.Exceptions;
 
 namespace gifty_web_backend.Controllers
 {
@@ -30,23 +29,8 @@ namespace gifty_web_backend.Controllers
                 request.Link
             );
 
-            try
-            {
-                var wishlistItemDto = await mediator.Send(command);
-                return Ok(wishlistItemDto); 
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while creating the wishlist item.", details = ex.Message });
-            }
+            var wishlistItemDto = await mediator.Send(command);
+            return Ok(wishlistItemDto); 
         }
         
         [HttpGet]
@@ -56,23 +40,8 @@ namespace gifty_web_backend.Controllers
 
             var query = new GetAllWishlistItemsQuery(wishlistId, userId);
 
-            try
-            {
-                var items = await mediator.Send(query);
-                return Ok(items);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while retrieving wishlist items.", details = ex.Message });
-            }
+            var items = await mediator.Send(query);
+            return Ok(items);
         }
         
         [HttpGet("{itemId}")] 
@@ -86,27 +55,12 @@ namespace gifty_web_backend.Controllers
 
             var query = new GetWishlistItemByIdQuery(itemId, userId); 
 
-            try
+            var item = await mediator.Send(query);
+            if (item.WishlistId != wishlistId)
             {
-                var item = await mediator.Send(query);
-                if (item.WishlistId != wishlistId)
-                {
-                    return NotFound(new { message = "Wishlist item not found in the specified wishlist." });
-                }
-                return Ok(item);
+                return NotFound(new { message = "Wishlist item not found in the specified wishlist." });
             }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while retrieving the wishlist item.", details = ex.Message });
-            }
+            return Ok(item);
         }
         
         [HttpPut("{itemId}")] 
@@ -128,27 +82,8 @@ namespace gifty_web_backend.Controllers
                 request.ReservedBy
             );
 
-            try
-            {
-                var updatedItem = await mediator.Send(command);
-                return Ok(updatedItem);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (BadRequestException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while updating the wishlist item.", details = ex.Message });
-            }
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
         }
         
         [HttpPatch("{itemId}")] 
@@ -168,27 +103,8 @@ namespace gifty_web_backend.Controllers
                 request.Link
             );
 
-            try
-            {
-                var updatedItem = await mediator.Send(command);
-                return Ok(updatedItem);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (BadRequestException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while partially updating the wishlist item.", details = ex.Message });
-            }
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
         }
         
         [HttpPatch("{itemId}/reserve")] 
@@ -202,27 +118,8 @@ namespace gifty_web_backend.Controllers
 
             var command = new ToggleWishlistItemReservationCommand(itemId, wishlistId, userId);
 
-            try
-            {
-                var updatedItem = await mediator.Send(command);
-                return Ok(updatedItem);
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (BadRequestException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while toggling reservation.", details = ex.Message });
-            }
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
         }
         
         [HttpDelete("{itemId}")]
@@ -236,27 +133,8 @@ namespace gifty_web_backend.Controllers
 
             var command = new DeleteWishlistItemCommand(itemId, wishlistId, userId);
 
-            try
-            {
-                await mediator.Send(command);
-                return NoContent();
-            }
-            catch (NotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (ForbiddenAccessException ex)
-            {
-                return Forbid(ex.Message);
-            }
-            catch (BadRequestException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while deleting the wishlist item.", details = ex.Message });
-            }
+            await mediator.Send(command);
+            return NoContent();
         }
     }
 }
