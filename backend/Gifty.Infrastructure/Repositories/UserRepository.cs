@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Collections.Generic;
 using Gifty.Domain.Entities;
 using Gifty.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +21,26 @@ namespace Gifty.Infrastructure.Repositories
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await dbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            return await dbContext.Users.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<IEnumerable<User>> SearchUsersAsync(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                return Enumerable.Empty<User>();
+
+            searchTerm = searchTerm.Trim();
+
+            return await dbContext.Users
+                .AsNoTracking()
+                .Where(u =>
+                    EF.Functions.ILike(u.Username, $"%{searchTerm}%") ||
+                    EF.Functions.ILike(u.Email, $"%{searchTerm}%"))
+                .ToListAsync();
         }
 
         public async Task AddAsync(User user)
