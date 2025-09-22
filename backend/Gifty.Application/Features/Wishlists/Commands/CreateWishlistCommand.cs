@@ -17,15 +17,12 @@ public class CreateWishlistCommandHandler(IWishlistRepository wishlistRepository
 {
     public async Task<WishlistDto> Handle(CreateWishlistCommand request, CancellationToken cancellationToken)
     {
-        var newWishlist = new Wishlist
-        {
-            Id = Guid.NewGuid(),
-            UserId = request.UserId,
-            Name = request.Name,
-            IsPublic = request.IsPublic,
-            Order = request.Order ?? 0,
-            CreatedAt = DateTime.UtcNow
-        };
+        var newWishlist = Wishlist.Create(
+            request.Name,
+            request.UserId,
+            request.IsPublic,
+            request.Order ?? 0
+        );
 
         await wishlistRepository.AddAsync(newWishlist);
         await wishlistRepository.SaveChangesAsync();

@@ -44,14 +44,9 @@ public class UpdateWishlistItemPartialHandler(
             throw new ForbiddenAccessException("You are not authorized to edit this wishlist item.");
         }
 
-        if (request.Name != null)
+        if (request.Name != null || request.Link != null)
         {
-            item.Name = request.Name;
-        }
-
-        if (request.Link != null)
-        {
-            item.Link = request.Link;
+            item.UpdatePartial(request.Name, request.Link);
         }
 
         await wishlistItemRepository.UpdateAsync(item);

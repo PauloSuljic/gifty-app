@@ -26,7 +26,7 @@ public class RenameWishlistHandler(IWishlistRepository wishlistRepository)
             throw new ForbiddenAccessException("You are not authorized to rename this wishlist.");
         }
         
-        existingWishlist.Name = request.NewName;
+        existingWishlist.Rename(request.NewName);
 
         await wishlistRepository.UpdateAsync(existingWishlist);
         await wishlistRepository.SaveChangesAsync();

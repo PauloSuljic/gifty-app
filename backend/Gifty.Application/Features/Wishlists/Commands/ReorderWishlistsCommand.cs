@@ -32,11 +32,11 @@ public record ReorderWishlistsCommand(
                 var wishlist = wishlistsToUpdate.FirstOrDefault(w => w.Id == reorderedDto.Id);
                 if (wishlist != null)
                 {
-                    wishlist.Order = reorderedDto.Order;
+                    wishlist.Reorder(reorderedDto.Order);
                     await wishlistRepository.UpdateAsync(wishlist);
                 }
             }
-
+            
             await wishlistRepository.SaveChangesAsync();
 
             return Unit.Value;

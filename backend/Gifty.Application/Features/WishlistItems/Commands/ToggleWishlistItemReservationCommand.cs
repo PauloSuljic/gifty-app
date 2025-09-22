@@ -25,8 +25,7 @@ public class ToggleWishlistItemReservationHandler(
         {
             throw new NotFoundException(nameof(WishlistItem), request.ItemId);
         }
-
-        // Validate that the item belongs to the specified wishlist
+        
         if (item.WishlistId != request.WishlistId)
         {
             throw new BadRequestException("Wishlist item not found in the specified wishlist.");
@@ -40,26 +39,13 @@ public class ToggleWishlistItemReservationHandler(
         
         var wishlistItems = await wishlistItemRepository.GetAllByWishlistIdAsync(request.WishlistId);
 
-        if (item.IsReserved)
+        var hasReservedItem = wishlistItems.Any(i => i.IsReserved && i.ReservedBy == request.UserId);
+        if (!item.IsReserved && hasReservedItem)
         {
-            if (item.ReservedBy != request.UserId)
-            {
-                throw new ForbiddenAccessException("You cannot unreserve an item reserved by someone else.");
-            }
-            item.IsReserved = false;
-            item.ReservedBy = null;
+            throw new BadRequestException("You can only reserve 1 item per wishlist.");
         }
-        else
-        {
-            var hasReservedItem = wishlistItems.Any(i => i.IsReserved && i.ReservedBy == request.UserId);
-            if (hasReservedItem)
-            {
-                throw new BadRequestException("You can only reserve 1 item per wishlist.");
-            }
 
-            item.IsReserved = true;
-            item.ReservedBy = request.UserId;
-        }
+        item.ToggleReservation(request.UserId);
 
         await wishlistItemRepository.UpdateAsync(item);
         await wishlistItemRepository.SaveChangesAsync();

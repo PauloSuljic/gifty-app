@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Gifty.Domain.Common.Events;
 using Gifty.Domain.Entities.Users.Events;
 
 namespace Gifty.Domain.Entities.Users

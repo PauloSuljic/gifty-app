@@ -32,16 +32,7 @@ public class CreateWishlistItemHandler(
             throw new ForbiddenAccessException("You are not authorized to add items to this wishlist.");
         }
         
-        var newItem = new WishlistItem
-        {
-            Id = Guid.NewGuid(),
-            WishlistId = request.WishlistId,
-            Name = request.Name,
-            Link = request.Link,
-            IsReserved = false,
-            ReservedBy = null, 
-            CreatedAt = DateTime.UtcNow
-        };
+        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link);
         
         await wishlistItemRepository.AddAsync(newItem);
         await wishlistItemRepository.SaveChangesAsync();

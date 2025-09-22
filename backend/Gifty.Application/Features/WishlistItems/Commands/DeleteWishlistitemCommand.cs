@@ -33,6 +33,8 @@ public class DeleteWishlistItemHandler(
             throw new ForbiddenAccessException("You are not authorized to delete this wishlist item.");
         }
         
+        existingItem.Delete();
+        
         await wishlistItemRepository.DeleteAsync(existingItem);
         await wishlistItemRepository.SaveChangesAsync();
         

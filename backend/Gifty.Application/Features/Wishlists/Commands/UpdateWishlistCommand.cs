@@ -30,11 +30,9 @@ public record UpdateWishlistCommand(
             {
                 throw new ForbiddenAccessException("You are not authorized to update this wishlist.");
             }
-
-            existingWishlist.Name = request.Name;
-            existingWishlist.IsPublic = request.IsPublic;
-            existingWishlist.Order = request.Order;
-
+            
+            existingWishlist.Update(request.Name, request.IsPublic, request.Order);
+            
             await wishlistRepository.UpdateAsync(existingWishlist);
             await wishlistRepository.SaveChangesAsync();
 
