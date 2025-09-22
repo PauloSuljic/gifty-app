@@ -1,7 +1,7 @@
 using Moq;
 using Gifty.Application.Features.Auth.Queries;
 using Gifty.Domain.Interfaces;
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using FluentAssertions;
 
 namespace Gifty.Tests.Unit.Features.Auth.Queries

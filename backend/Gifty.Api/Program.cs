@@ -1,13 +1,19 @@
 using System.Runtime.CompilerServices;
+using Serilog;
+using Serilog.Context;
+using System.Security.Claims;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
+using gifty_web_backend.Middlewares;
 using gifty_web_backend.Utils;
+using Gifty.Application.Common.Behaviors;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Domain.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Gifty.Infrastructure;
 using Gifty.Infrastructure.Repositories;
 using Gifty.Infrastructure.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +23,16 @@ using Microsoft.IdentityModel.Tokens;
 [assembly: InternalsVisibleTo("Gifty.Tests.Integration")]
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ✅ Serilog (console sink + enricher)
+builder.Host.UseSerilog((ctx, lc) =>
+{
+    lc.ReadFrom.Configuration(ctx.Configuration)
+      .Enrich.FromLogContext()
+      .Enrich.WithProperty("Application", "Gifty.Api")
+      .WriteTo.Console();
+});
+
 var configuration = builder.Configuration;
 
 // ✅ Load environment variables
@@ -78,6 +94,9 @@ builder.Services.AddScoped<ISharedLinkRepository, SharedLinkRepository>();
 builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<ISharedLinkVisitRepository, SharedLinkVisitRepository>();
 
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
 // ✅ 4. Auth Setup
 if (builder.Environment.IsEnvironment("Testing") || builder.Configuration["UseTestAuth"] == "true")
 {
@@ -124,6 +143,19 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+// ✅ Per-request logging with Serilog (status, route, timing)
+app.UseSerilogRequestLogging(opts =>
+{
+    opts.EnrichDiagnosticContext = (diag, http) =>
+    {
+        diag.Set("CorrelationId", http.Response.Headers["X-Correlation-ID"].ToString());
+        diag.Set("UserId", http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anonymous");
+    };
+});
+
 // ✅ 6. Middleware
 if (app.Environment.IsDevelopment())
 {
@@ -143,9 +175,19 @@ if (app.Environment.EnvironmentName != "Testing")
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<GiftyDbContext>();
-    if (db.Database.IsRelational())
+    try
     {
-        db.Database.Migrate();
+        Log.Information("Applying EF Core migrations (env={Environment})", app.Environment.EnvironmentName);
+        if (db.Database.IsRelational())
+        {
+            db.Database.Migrate();
+        }
+        Log.Information("Database ready");
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Database migration failed");
+        throw;
     }
 }
 

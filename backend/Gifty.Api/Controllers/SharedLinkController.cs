@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Gifty.Application.Features.SharedLinks.Commands;
 using Gifty.Application.Features.SharedLinks.Queries;
 using Gifty.Application.Features.SharedLinks.Dtos;
-using Gifty.Application.Common.Exceptions;
 
 namespace gifty_web_backend.Controllers;
 
@@ -24,16 +23,8 @@ public class SharedLinkController(IMediator mediator) : ControllerBase
         }
 
         var query = new GetWishlistsSharedWithMeQuery(userId);
-
-        try
-        {
-            var result = await mediator.Send(query);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while retrieving shared wishlists.", details = ex.Message });
-        }
+        var result = await mediator.Send(query);
+        return Ok(result);
     }
     
     [Authorize]
@@ -47,24 +38,8 @@ public class SharedLinkController(IMediator mediator) : ControllerBase
         }
 
         var command = new GenerateShareLinkCommand(wishlistId, userId);
-
-        try
-        {
-            var response = await mediator.Send(command);
-            return Ok(response);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (ForbiddenAccessException)
-        {
-            return Forbid();
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while generating the share link.", details = ex.Message });
-        }
+        var response = await mediator.Send(command);
+        return Ok(response);
     }
     
     [AllowAnonymous]
@@ -72,21 +47,8 @@ public class SharedLinkController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<SharedWishlistResponseDto>> GetSharedWishlist(string shareCode)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
         var query = new GetSharedWishlistQuery(shareCode, userId);
-
-        try
-        {
-            var response = await mediator.Send(query);
-            return Ok(response);
-        }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while retrieving the shared wishlist.", details = ex.Message });
-        }
+        var response = await mediator.Send(query);
+        return Ok(response);
     }
 }

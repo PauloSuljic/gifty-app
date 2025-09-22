@@ -1,4 +1,4 @@
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Domain.Interfaces
 {
