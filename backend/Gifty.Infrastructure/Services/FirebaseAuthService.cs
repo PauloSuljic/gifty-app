@@ -1,4 +1,4 @@
-﻿using Gifty.Domain.Entities;
+﻿using Gifty.Domain.Entities.Users;
 using FirebaseAdmin.Auth;
 using Gifty.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;

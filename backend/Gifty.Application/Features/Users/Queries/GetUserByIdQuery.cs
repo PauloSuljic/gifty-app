@@ -3,7 +3,7 @@ using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Application.Common.Exceptions;
-using Gifty.Domain.Entities; 
+using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Application.Features.Users.Queries;
 

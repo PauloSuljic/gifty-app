@@ -1,7 +1,7 @@
 using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Common.Exceptions;
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using FluentValidation;
 
 namespace Gifty.Application.Features.Users.Commands;
@@ -23,7 +23,9 @@ public record DeleteUserCommand(string Id) : IRequest<bool>
             // It DOES NOT delete their Firebase account.
             // If full Firebase account deletion is required, that would be a separate (and more complex) operation
             // involving the Firebase Admin SDK, potentially initiated from the client or with more explicit user confirmation.
-
+            
+            userToDelete.MarkAsDeleted();
+            
             await userRepository.DeleteAsync(userToDelete);
             await userRepository.SaveChangesAsync();
 

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using Gifty.Tests.Integration.Integration;
 
 namespace Gifty.Tests.Integration.Controllers;

@@ -1,6 +1,4 @@
-using System.Linq;
-using System.Collections.Generic;
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using Gifty.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

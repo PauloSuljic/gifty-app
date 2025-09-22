@@ -1,4 +1,4 @@
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using Gifty.Domain.Interfaces;
 using MediatR;
 

@@ -2,8 +2,7 @@ using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Application.Common.Exceptions;
-using Gifty.Domain.Entities; 
-using FluentValidation;
+using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Application.Features.Users.Commands;
 
@@ -34,9 +33,7 @@ public record UpdateUserCommand(
                 }
             }
 
-            existingUser.Username = request.Username;
-            existingUser.Bio = request.Bio;
-            existingUser.AvatarUrl = request.AvatarUrl;
+            existingUser.UpdateProfile(request.Username, request.Bio, request.AvatarUrl);
 
             await userRepository.UpdateAsync(existingUser);
             await userRepository.SaveChangesAsync();
@@ -51,16 +48,5 @@ public record UpdateUserCommand(
                 CreatedAt = existingUser.CreatedAt
             };
         }
-    }
-}
-
-public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
-{
-    public UpdateUserCommandValidator()
-    {
-        RuleFor(x => x.Id).NotEmpty();
-        RuleFor(x => x.Username)
-            .NotEmpty()
-            .MaximumLength(50);
     }
 }

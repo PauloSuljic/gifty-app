@@ -1,9 +1,8 @@
 using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.Users.Dtos;
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using Gifty.Application.Common.Exceptions;
-using FluentValidation;
 
 namespace Gifty.Application.Features.Users.Commands;
 
@@ -47,6 +46,8 @@ public record CreateUserCommand(
                 AvatarUrl = request.AvatarUrl,
                 CreatedAt = DateTime.UtcNow
             };
+            
+            
 
             await userRepository.AddAsync(user);
             await userRepository.SaveChangesAsync();
