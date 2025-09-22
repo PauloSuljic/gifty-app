@@ -1,4 +1,4 @@
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Domain.Interfaces
 {
@@ -6,7 +6,9 @@ namespace Gifty.Domain.Interfaces
     {
         Task<User?> GetByIdAsync(string id);
         Task<User?> GetUserByUsernameAsync(string username); 
-        Task<User?> GetUserByEmailAsync(string email); 
+        Task<User?> GetUserByEmailAsync(string email);
+        Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<IEnumerable<User>> SearchUsersAsync(string searchTerm);
         Task AddAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(User user);

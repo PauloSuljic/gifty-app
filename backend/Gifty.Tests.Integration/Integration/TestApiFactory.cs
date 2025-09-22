@@ -1,10 +1,8 @@
 using System.Net.Http.Headers;
 using gifty_web_backend;
-using gifty_web_backend.Utils;
-using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 using Gifty.Domain.Interfaces;
 using Gifty.Infrastructure;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Infrastructure
 {
