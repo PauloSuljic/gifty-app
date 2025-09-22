@@ -32,6 +32,7 @@ builder.Host.UseSerilog((ctx, lc) =>
       .Enrich.WithProperty("Application", "Gifty.Api")
       .WriteTo.Console();
 });
+
 var configuration = builder.Configuration;
 
 // ✅ Load environment variables
@@ -143,21 +144,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-// ✅ Correlation ID middleware (adds/propagates X-Correlation-ID and enriches Serilog scope)
-app.Use(async (ctx, next) =>
-{
-    var cid = ctx.Request.Headers.ContainsKey("X-Correlation-ID")
-        ? ctx.Request.Headers["X-Correlation-ID"].ToString()
-        : Guid.NewGuid().ToString("n");
-    ctx.Response.Headers["X-Correlation-ID"] = cid;
-
-    using (LogContext.PushProperty("CorrelationId", cid))
-    using (LogContext.PushProperty("UserId", ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anonymous"))
-    {
-        await next();
-    }
-});
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // ✅ Per-request logging with Serilog (status, route, timing)
 app.UseSerilogRequestLogging(opts =>

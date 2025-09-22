@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Gifty.Domain.Entities;
+using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Domain.Entities.Users;
 using Gifty.Tests.Integration.Integration;
 
@@ -20,9 +20,8 @@ public class SharedLinkControllerTests
         _client = factory.CreateClientWithTestAuth(_userId);
     }
 
-    private async Task<Wishlist> CreateWishlistAsync(string name = "Shared Wishlist")
+    private async Task<WishlistDto> CreateWishlistAsync(string name = "Shared Wishlist")
     {
-        // ✅ Step 1: Make sure user exists
         await _client.PostAsJsonAsync("/api/users", new User
         {
             Id = _userId,
@@ -30,14 +29,12 @@ public class SharedLinkControllerTests
             Email = "test@example.com",
             Bio = "integration test"
         });
-
-        // ✅ Step 2: Send DTO (no custom ID)
+        
         var dto = new { Name = name, IsPublic = false };
         var res = await _client.PostAsJsonAsync("/api/wishlists", dto);
         res.EnsureSuccessStatusCode();
-
-        // ✅ Step 3: Parse actual wishlist with generated ID
-        var wishlist = await res.Content.ReadFromJsonAsync<Wishlist>();
+        
+        var wishlist = await res.Content.ReadFromJsonAsync<WishlistDto>();
         return wishlist!;
     }
 
@@ -59,12 +56,12 @@ public class SharedLinkControllerTests
         var wishlist = await CreateWishlistAsync();
 
         var first = await _client.PostAsync($"/api/shared-links/{wishlist.Id}/generate", null);
-        first.EnsureSuccessStatusCode(); // ✅
+        first.EnsureSuccessStatusCode();
 
         var firstCode = (await first.Content.ReadFromJsonAsync<Dictionary<string, string>>())?["shareCode"];
 
         var second = await _client.PostAsync($"/api/shared-links/{wishlist.Id}/generate", null);
-        second.EnsureSuccessStatusCode(); // ✅
+        second.EnsureSuccessStatusCode();
 
         var secondCode = (await second.Content.ReadFromJsonAsync<Dictionary<string, string>>())?["shareCode"];
 
@@ -76,10 +73,8 @@ public class SharedLinkControllerTests
     {
         var anonClient = _factory.CreateClient();
 
-        // Act
         var response = await anonClient.GetAsync("/api/shared-links/invalid-code");
 
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -92,7 +87,7 @@ public class SharedLinkControllerTests
         await ownerClient.PostAsJsonAsync("/api/users", new User
         {
             Id = ownerId,
-            Username = $"Owner_{Guid.NewGuid()}", 
+            Username = $"Owner_{Guid.NewGuid()}",
             Email = $"owner_{Guid.NewGuid()}@test.com",
             Bio = "integration test"
         });
@@ -100,11 +95,12 @@ public class SharedLinkControllerTests
         var dto = new { Name = "Owner's Wishlist", IsPublic = false };
         var res = await ownerClient.PostAsJsonAsync("/api/wishlists", dto);
         res.EnsureSuccessStatusCode();
-        var wishlist = await res.Content.ReadFromJsonAsync<Wishlist>();
-        
+
+        var wishlist = await res.Content.ReadFromJsonAsync<WishlistDto>();
+
         var otherUserClient = _factory.CreateClientWithTestAuth("other-user-id");
         var response = await otherUserClient.PostAsync($"/api/shared-links/{wishlist!.Id}/generate", null);
-        
+
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 

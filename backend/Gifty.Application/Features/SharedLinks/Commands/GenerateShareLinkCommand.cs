@@ -32,13 +32,7 @@ public class GenerateShareLinkHandler(
             return new ShareLinkResponseDto(existingLink.ShareCode);
         }
         
-        var newSharedLink = new SharedLink
-        {
-            Id = Guid.NewGuid(),
-            ShareCode = Guid.NewGuid().ToString(),
-            WishlistId = request.WishlistId,
-            CreatedAt = DateTime.UtcNow
-        };
+        var newSharedLink = new SharedLink(request.WishlistId);
 
         await sharedLinkRepository.AddAsync(newSharedLink);
         await sharedLinkRepository.SaveChangesAsync();

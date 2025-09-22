@@ -29,13 +29,8 @@ public class GetSharedWishlistHandler(
 
             if (existingVisit == null)
             {
-                var newVisit = new SharedLinkVisit
-                {
-                    Id = Guid.NewGuid(),
-                    SharedLinkId = sharedLink.Id,
-                    UserId = request.CurrentUserId,
-                    VisitedAt = DateTime.UtcNow
-                };
+                var newVisit = new SharedLinkVisit(sharedLink.Id, request.CurrentUserId);
+
                 await sharedLinkVisitRepository.AddAsync(newVisit);
                 await sharedLinkVisitRepository.SaveChangesAsync();
             }
