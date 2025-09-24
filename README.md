@@ -66,7 +66,7 @@ gifty-app/
 - Node.js 20+
 - .NET SDK 8.x
 - PostgreSQL
-- Redis
+- Redis (Currently disabled, but recommended for future use)
 
 ---
 
@@ -141,9 +141,9 @@ CI/CD is fully automated using **GitHub Actions** + **Azure**:
 
 Workflows are separated by:
 
-- `build` → `test` → `deploy`
-- Artifact caching + reuse
-- Automatic per-path triggers
+- CI (pull requests) → build & test both frontend + backend
+- CD (staging/master) → build, test, deploy to Azure
+- Artifact caching + per-path triggers for faster builds
 
 ---
 
@@ -168,7 +168,7 @@ Workflows are separated by:
 
 ---
 
-## 🧠 Rate Limiting & Caching
+## 🧠 Rate Limiting & Caching (Currently disabled)
 
 - Redis-backed rate limiting for unauthenticated requests
 - Caching for common GETs (e.g. shared links)
@@ -183,7 +183,7 @@ Workflows are separated by:
 | Backend  | ASP.NET Core 8 Web API                 |
 | Auth     | Firebase Auth (Google + Email)         |
 | DB       | PostgreSQL + EF Core                   |
-| Caching  | Redis                                  |
+| Caching  | Redis (planned, currently disabled)    |
 | CI/CD    | GitHub Actions                         |
 | Hosting  | Azure Web Apps + Azure Static Web Apps |
 
