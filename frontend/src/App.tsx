@@ -14,6 +14,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import SettingsPage from "./pages/Settings";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import WishlistDetail from "./pages/WishlistDetails";
 
 const App = () => {
   return (
@@ -64,6 +65,7 @@ const App = () => {
 
         <Route path="/shared/:shareCode" element={<SharedWishlist />} />
         <Route path="/shared-with-me" element={<PrivateRoute><SharedWithMe /></PrivateRoute>} />
+        <Route path="/wishlist/:id" element={<PrivateRoute><WishlistDetail /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
 
