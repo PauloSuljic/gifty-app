@@ -65,15 +65,15 @@ const WishlistItem = ({
         <img
           src={imageToShow}
           alt={name}
-          className="w-14 h-14 object-cover rounded-lg"
+          className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
         />
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium">{name}</h3>
-          {link && !isImage && (
-            <p className="text-xs text-gray-400 truncate">{link}</p>
-          )}
+          <p className="text-xs text-gray-400 truncate">
+            A thoughtful gift idea for your wishlist.
+          </p>
         </div>
-        <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex gap-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
           {onEdit && (
             <button onClick={onEdit} className="text-gray-400 hover:text-purple-400">
               <FiEdit className="text-large" />
