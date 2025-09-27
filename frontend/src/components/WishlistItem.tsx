@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy } from "react-icons/fi";
 import ConfirmReserveModal from "./ui/modals/ConfirmReserveModal";
+import Modal from "./ui/Modal";
 
 type WishlistItemProps = {
   id: string;
@@ -23,14 +24,14 @@ const WishlistItem = ({
   reservedBy,
   wishlistOwner,
   currentUser,
-  context="own",
+  context = "own",
   onToggleReserve,
   onDelete,
   onEdit,
 }: WishlistItemProps) => {
   const [, setIsMobile] = useState(false);
   const [modalAction, setModalAction] = useState<"reserve" | "unreserve" | null>(null);
-  const [showActions, setShowActions] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
   const isGuest = !currentUser;
   const isOwner = wishlistOwner === currentUser;
@@ -38,7 +39,6 @@ const WishlistItem = ({
 
   const canReserve = !isGuest && !isReserved && !isOwner;
   const canUnreserve = !isGuest && isReserved && isReserver;
-  const canDelete = isOwner && onDelete;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -51,88 +51,69 @@ const WishlistItem = ({
     setModalAction(type);
   };
 
-  const baseBtn =
-  "h-7 w-[90px] sm:w-[120px] flex items-center justify-center gap-1 text-xs sm:text-sm rounded-md transition";
-
-  const purpleBtn =
-    "border border-purple-500 text-purple-400 hover:bg-purple-600 hover:text-white";
+  const isImage = link && /\.(jpeg|jpg|gif|png|webp)$/i.test(link);
+  const imageToShow = isImage
+    ? link
+    : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
   return (
     <>
       <div
-        className="relative p-4 bg-slate-800 text-white rounded-2xl shadow-md border border-slate-600 hover:border-purple-500 transition mb-4"
-        onClick={() => setShowActions((prev) => !prev)}
+        className="flex items-center gap-4 p-4 min-h-[80px] rounded-xl bg-[#232336] hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
+        onClick={() => link && setIsLinkModalOpen(true)}
       >
-        {canDelete && showActions && (
-          <button
-            onClick={onDelete}
-            className="absolute top-3 right-3 text-red-500 hover:text-red-600"
-            title="Delete Item"
-          >
-            <FiTrash2 className="text-lg" />
-          </button>
-        )}
-
-        <h3 className="sm:text-lg font-semibold flex items-center justify-between mb-2">
-          <span className="flex items-center gap-2">
-            {name}
-          </span>
-          {context === "shared" && isReserved && (
-            showActions ? (
-              <div className="absolute top-3 right-3 text-purple-400">
-                <FiLock />
-              </div>
-            ) : (
-              <div className="text-purple-400">
-                <FiLock />
-              </div>
-            )
+        <img
+          src={imageToShow}
+          alt={name}
+          className="w-14 h-14 object-cover rounded-lg"
+        />
+        <div className="flex-1">
+          <h3 className="text-sm font-medium">{name}</h3>
+          {link && !isImage && (
+            <p className="text-xs text-gray-400 truncate">{link}</p>
           )}
-        </h3>
-
-        <div
-          className={`flex flex-wrap justify-center items-center gap-3 transition-all ${
-            !showActions ? "opacity-0 h-0 overflow-hidden" : "opacity-100 h-auto mt-2"
-          }`}
-        >
-          {link && (
-            <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${baseBtn} ${purpleBtn}`}
-              title="View Item"
-            >
-              <FiExternalLink />
-              View
-            </a>
-          )}
-
-          {canReserve && (
-            <button onClick={() => handleConfirmClick("reserve")} className={`${baseBtn} ${purpleBtn}`}>
-              <FiUnlock />
-              Reserve
+        </div>
+        <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
+          {onEdit && (
+            <button onClick={onEdit} className="text-gray-400 hover:text-purple-400">
+              <FiEdit className="text-large" />
             </button>
           )}
-
-          {canUnreserve && (
-            <button onClick={() => handleConfirmClick("unreserve")} className={`${baseBtn} ${purpleBtn}`}>
-              <FiLock />
-              Unreserve
+          {onDelete && (
+            <button onClick={onDelete} className="text-red-500 hover:text-red-600">
+              <FiTrash2 className="text-large" />
             </button>
-          )}
-
-          {canDelete && (
-            <>
-              <button onClick={onEdit} className={`${baseBtn} ${purpleBtn}`} title="Edit Item">
-                <FiEdit />
-                Edit
-              </button>
-            </>
           )}
         </div>
       </div>
 
+      {/* Modal for link actions */}
+      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
+        <h2 className="text-lg font-semibold mb-4">Open Link</h2>
+        <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
+        <div className="flex gap-3">
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
+            onClick={() => setIsLinkModalOpen(false)}
+          >
+            <FiExternalLink className="inline mr-1" /> Open
+          </a>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(link);
+              setIsLinkModalOpen(false);
+            }}
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
+          >
+            <FiCopy className="inline mr-1" /> Copy
+          </button>
+        </div>
+      </Modal>
+
+      {/* Reserve/Unreserve modal */}
       <ConfirmReserveModal
         isOpen={modalAction !== null}
         onClose={() => setModalAction(null)}

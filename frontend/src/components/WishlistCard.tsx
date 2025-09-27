@@ -21,8 +21,11 @@ export const WishlistCard = ({
   onRename,
   onDelete,
 }: WishlistCardProps) => {
-  const fallbackImage =
-    coverImage || "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  const isValidImage = coverImage && /\.(jpeg|jpg|gif|png|webp)$/i.test(coverImage);
+  const imageToShow =
+    isValidImage
+      ? coverImage
+      : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
   return (
     <div
@@ -31,14 +34,17 @@ export const WishlistCard = ({
     >
       <div className="relative">
         <img
-          src={fallbackImage}
+          src={imageToShow}
           alt={name}
           className="w-full h-32 object-cover rounded-t-xl"
         />
 
         {/* Dropdown menu */}
         <Menu as="div" className="absolute top-2 right-2 text-left">
-          <Menu.Button className="p-1 bg-black/40 rounded-full text-white hover:bg-black/60">
+          <Menu.Button
+            onClick={(e) => e.stopPropagation()}
+            className="p-1 bg-black/40 rounded-full text-white hover:bg-black/60"
+          >
             <FiMoreVertical size={16} />
           </Menu.Button>
           <Menu.Items className="absolute right-0 mt-2 w-36 origin-top-right rounded-md bg-[#2e2e3f] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
