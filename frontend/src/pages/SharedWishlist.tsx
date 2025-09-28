@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
-import Card from "../components/ui/Card";
 import { apiFetch } from "../api";
 import toast from "react-hot-toast";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
+import Layout from "../components/layout/Layout";
+import UserHeader from "../components/UserHeader";
 
 type WishlistItemType = {
   id: string;
@@ -22,6 +23,8 @@ type WishlistType = {
   ownerId: string;
   ownerName: string;
   ownerAvatar: string;
+  ownerBio?: string;
+  coverImage?: string;
 };
 
 const SharedWishlist = () => {
@@ -29,6 +32,7 @@ const SharedWishlist = () => {
   const [wishlist, setWishlist] = useState<WishlistType | null>(null);
   const [loading, setLoading] = useState(true);
   const { firebaseUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSharedWishlist = async () => {
@@ -60,80 +64,7 @@ const SharedWishlist = () => {
     fetchSharedWishlist();
   }, [shareCode, firebaseUser]);
 
-  const toggleReservation = async (wishlistId: string, itemId: string) => { 
-    const token = await firebaseUser?.getIdToken();
-    if (!token) {
-      toast.error("You need to be logged in to reserve items.", {
-        duration: 3000,
-        position: "bottom-center",
-      });
-      return;
-    }
-
-    try {
-      const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}/reserve`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        if (errorData.error === "You can only reserve 1 item per wishlist.") {
-          toast.error("You can only reserve 1 item per wishlist.", {
-            duration: 3000,
-            position: "bottom-center",
-            style: {
-              background: "#333",
-              color: "#fff",
-              border: "1px solid #555",
-            },
-          });
-        }
-        return;
-      }
-
-      const updatedItem = await response.json();
-
-      toast.success(
-        updatedItem.isReserved
-          ? "Item reserved successfully! 🎁"
-          : "Reservation removed ✅",
-        {
-          duration: 3000,
-          position: "bottom-center",
-          style: {
-            background: "#333",
-            color: "#fff",
-            border: "1px solid #555",
-          },
-        }
-      );
-
-      setWishlist((prev) =>
-        prev
-          ? {
-              ...prev,
-              items: prev.items.map((item) =>
-                item.id === itemId
-                  ? {
-                      ...item,
-                      isReserved: updatedItem.isReserved,
-                      reservedBy: updatedItem.reservedBy,
-                    }
-                  : item
-              ),
-            }
-          : null
-      );
-    } catch (error) {
-      console.error("Error toggling reservation:", error);
-      toast.error("Something went wrong!", {
-        duration: 3000,
-        position: "bottom-center",
-      });
-    }
-  };
+  // Disabled reservation actions for read-only presentation
 
   if (loading) return <Spinner />;
   if (!wishlist) {
@@ -144,73 +75,60 @@ const SharedWishlist = () => {
     );
   }
 
+  if (firebaseUser && firebaseUser.uid === wishlist.ownerId) {
+    navigate(`/wishlist/${wishlist.id}`);
+    return null;
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 text-white">
-      {/* 🎁 Gifty Logo */}
-      <div className="text-center mb-6">
-        <h1 className="text-5xl text-purple-400 font-tually border border-purple rounded-2xl inline-block px-6 py-2">
-          Gifty
-        </h1>
+    <Layout hideHeader>
+      <UserHeader
+        avatarUrl={wishlist.ownerAvatar}
+        username={wishlist.ownerName}
+        bio={wishlist.ownerBio || ""}
+      />
+      {/* <div className="px-4 py-3 text-center">
+        <h2 className="text-lg font-semibold">{wishlist.name}</h2>
+        <p className="text-sm text-gray-400">{wishlist.items.length} items</p>
+      </div> */}
+
+      {/* Cover */}
+      <div className="p-4">
+        <div className="rounded-xl overflow-hidden shadow-md bg-[#232336]">
+          <img
+            src={
+              wishlist.coverImage ||
+              "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            }
+            alt={wishlist.name}
+            className="w-full h-32 object-cover"
+          />
+        </div>
       </div>
 
-      {/* 📋 Wishlist Card */}
-      <Card className="p-6 bg-gray-800">
-        {/* Sharer Info */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-6">
-          <img
-            src={wishlist.ownerAvatar || "/avatars/avatar1.png"}
-            alt="Sharer Avatar"
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/20"
-          />
-          <div className="text-center sm:text-left">
-            <h2 className="text-2xl sm:text-3xl font-bold text-purple-400">
-              {wishlist.name}
-            </h2>
-            <p className="text-gray-300 mt-1">
-              Shared by:{" "}
-              <span className="text-white font-medium">
-                {wishlist.ownerId === firebaseUser?.uid
-                  ? "You"
-                  : wishlist.ownerName || "Unknown"}
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="text-center mb-6">
-          <Link
-            to={firebaseUser ? "/dashboard" : "/"}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition text-lg font-medium shadow-md inline-block"
-          >
-            {firebaseUser ? "Go to Dashboard" : "Open Gifty App"}
-          </Link>
-        </div>
-
-        {/* Items */}
+      {/* Items */}
+      <div className="px-4 mt-6 space-y-3">
         {wishlist.items.length > 0 ? (
-          <div className="space-y-4">
-            {wishlist.items.map((item) => (
-              <WishlistItem
-                key={item.id}
-                id={item.id}
-                name={item.name}
-                link={item.link}
-                isReserved={item.isReserved}
-                reservedBy={item.reservedBy}
-                wishlistOwner={wishlist.ownerId}
-                currentUser={firebaseUser?.uid}
-                context="shared"
-                onToggleReserve={() => toggleReservation(wishlist.id, item.id)}              />
-            ))}
-          </div>
+          wishlist.items.map((item) => (
+            <WishlistItem
+              key={item.id}
+              id={item.id}
+              name={item.name}
+              link={item.link}
+              isReserved={item.isReserved}
+              reservedBy={item.reservedBy}
+              wishlistOwner={wishlist.ownerId}
+              currentUser={firebaseUser?.uid}
+              context="guest"
+            />
+          ))
         ) : (
           <p className="text-gray-400 text-center">
             No items in this wishlist.
           </p>
         )}
-      </Card>
-    </div>
+      </div>
+    </Layout>
   );
 };
 

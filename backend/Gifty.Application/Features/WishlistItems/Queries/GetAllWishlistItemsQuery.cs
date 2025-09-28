@@ -22,11 +22,7 @@ public class GetAllWishlistItemsHandler(
             throw new NotFoundException(nameof(Wishlist), request.WishlistId);
         }
 
-        // Authorization: User can view if they are the owner OR if the wishlist is public
-        if (!wishlist.IsPublic && wishlist.UserId != request.UserId)
-        {
-            throw new ForbiddenAccessException("You do not have permission to view this wishlist's items.");
-        }
+        var isOwner = wishlist.UserId == request.UserId;
 
         var items = await wishlistItemRepository.GetAllByWishlistIdAsync(request.WishlistId);
 
@@ -38,7 +34,8 @@ public class GetAllWishlistItemsHandler(
             IsReserved = item.IsReserved,
             ReservedBy = item.ReservedBy,
             CreatedAt = item.CreatedAt,
-            WishlistId = item.WishlistId
+            WishlistId = item.WishlistId,
+            IsOwner = isOwner,
         }).OrderBy(x => x.CreatedAt).ToList(); // Ensure consistent ordering
 
         return itemDtos;

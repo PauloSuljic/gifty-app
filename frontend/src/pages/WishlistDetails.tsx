@@ -55,7 +55,46 @@ const WishlistDetail = () => {
     fetchWishlist();
   }, [id, firebaseUser]);
 
+  const toggleReservation = async (itemId: string) => {
+    if (!firebaseUser) return;
+    const token = await firebaseUser.getIdToken();
+    if (!token) return;
+
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
+
+    // Guess common REST endpoints for reserve/unreserve
+    const isUsersReservation = item.reservedBy === firebaseUser.uid;
+    const endpoint = isUsersReservation
+      ? `/api/wishlists/${id}/items/${itemId}/unreserve`
+      : `/api/wishlists/${id}/items/${itemId}/reserve`;
+
+    const response = await apiFetch(endpoint, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      // Update local state
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === itemId
+            ? {
+                ...i,
+                isReserved: !isUsersReservation,
+                reservedBy: isUsersReservation ? null : firebaseUser.uid,
+              }
+            : i
+        )
+      );
+    }
+  };
+
   if (!wishlist) return <Layout>Loading...</Layout>;
+
+  const isOwner = !!firebaseUser && wishlist?.userId === firebaseUser.uid;
+  const isGuest = !firebaseUser;
+  const isOtherUser = !!firebaseUser && !isOwner;
 
   const handleShareClick = async () => {
     const token = await firebaseUser?.getIdToken();
@@ -93,18 +132,23 @@ const WishlistDetail = () => {
           />
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 mt-4">
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex-1 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white"
-        >
-          + Add Item
-        </button>
-          <button onClick={handleShareClick} className="px-4 py-2 rounded-full border border-gray-500 text-white">
-            Share
-          </button>
-        </div>
+        {/* Actions (owner only) */}
+        {isOwner && (
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex-1 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+            >
+              + Add Item
+            </button>
+            <button
+              onClick={handleShareClick}
+              className="px-4 py-2 rounded-full border border-gray-500 text-white"
+            >
+              Share
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Items */}
@@ -119,16 +163,26 @@ const WishlistDetail = () => {
             reservedBy={item.reservedBy}
             wishlistOwner={wishlist.userId}
             currentUser={firebaseUser?.uid}
-            context="own"
-            onToggleReserve={() => { /* implement toggleReservation later */ }}
-            onDelete={() => {
-              setItemToDelete(item);
-              setIsDeleteModalOpen(true);
-            }}
-            onEdit={() => {
-              setItemToEdit(item);
-              setIsEditModalOpen(true);
-            }}
+            context={isOwner ? "own" : isOtherUser ? "shared" : "guest"}
+            onToggleReserve={
+              isOtherUser ? () => toggleReservation(item.id) : undefined
+            }
+            onDelete={
+              isOwner
+                ? () => {
+                    setItemToDelete(item);
+                    setIsDeleteModalOpen(true);
+                  }
+                : undefined
+            }
+            onEdit={
+              isOwner
+                ? () => {
+                    setItemToEdit(item);
+                    setIsEditModalOpen(true);
+                  }
+                : undefined
+            }
           />
         ))}
       </div>

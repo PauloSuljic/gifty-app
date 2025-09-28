@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../components/AuthProvider";
 import { GiftyUser } from "../components/PrivateRoute";
 import { apiFetch } from "../api";
+import UserHeader from "./UserHeader";
 
 const DashboardHeader = () => {
   const { firebaseUser } = useAuth();
@@ -26,15 +27,11 @@ const DashboardHeader = () => {
   }, [firebaseUser]);
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-800 text-white rounded-lg shadow-lg">
-    <div className="flex items-center">
-      <img src={databaseUser?.avatarUrl} alt="Avatar" className="w-15 h-15 rounded-full mr-3" />
-      <div>
-        <h2 className="text-xl font-bold">{databaseUser?.username || "Guest"}</h2>
-        <p className="text-gray-400">{databaseUser?.bio || "No bio available"}</p>
-      </div>
-    </div>
-  </div>
+    <UserHeader
+      avatarUrl={databaseUser?.avatarUrl}
+      username={databaseUser?.username || "Guest"}
+      bio={databaseUser?.bio || "No bio available"}
+    />
   );
 };
 

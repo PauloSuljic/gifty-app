@@ -33,6 +33,7 @@ namespace gifty_web_backend.Controllers
             return Ok(wishlistItemDto); 
         }
         
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<WishlistItemDto>>> GetWishlistItems(Guid wishlistId)
         {
