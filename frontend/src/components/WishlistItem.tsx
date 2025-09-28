@@ -69,7 +69,7 @@ const WishlistItem = ({
         />
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium">{name}</h3>
-          <p className="text-xs text-gray-400 truncate">
+          <p className="text-xs text-gray-400 line-clamp-2">
             A thoughtful gift idea for your wishlist.
           </p>
         </div>
