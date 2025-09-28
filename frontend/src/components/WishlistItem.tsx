@@ -59,7 +59,7 @@ const WishlistItem = ({
   return (
     <>
       <div
-        className="flex items-center gap-4 p-4 min-h-[80px] rounded-xl bg-[#232336] hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
+        className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-[#232336] hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
         onClick={() => link && setIsLinkModalOpen(true)}
       >
         <img
@@ -79,7 +79,7 @@ const WishlistItem = ({
               <FiEdit className="text-large" />
             </button>
           )}
-          {onDelete && (
+          {onDelete && (            
             <button onClick={onDelete} className="text-red-500 hover:text-red-600">
               <FiTrash2 className="text-large" />
             </button>
