@@ -29,7 +29,7 @@ export const WishlistCard = ({
 
   return (
     <div
-      className="rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow border border-purple-500/20 bg-[#232336]"
+      className="rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow border border-purple-500/20 bg-gray-800"
       onClick={onClick}
     >
       <div className="relative">
@@ -47,7 +47,7 @@ export const WishlistCard = ({
           >
             <FiMoreVertical size={16} />
           </Menu.Button>
-          <Menu.Items className="absolute right-0 mt-2 w-36 origin-top-right rounded-md bg-[#2e2e3f] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+          <Menu.Items className="absolute right-0 mt-2 w-36 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
             <div className="py-1">
               <Menu.Item>
                 {({ active }) => (

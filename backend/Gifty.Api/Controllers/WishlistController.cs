@@ -27,6 +27,7 @@ namespace gifty_web_backend.Controllers
             return Ok(wishlists);
         }
 
+        [AllowAnonymous]
         [HttpGet("{id}")]
         public async Task<ActionResult<WishlistDto>> GetWishlistById(Guid id)
         {

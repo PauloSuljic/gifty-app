@@ -8,5 +8,6 @@ public record WishlistDto
     public required string UserId { get; init; }
     public DateTime CreatedAt { get; init; }
     public int Order { get; init; }
+    public bool IsOwner { get; init; }
     public List<WishlistItemDto> Items { get; init; } = new();
 }

@@ -11,8 +11,8 @@ type WishlistItemProps = {
   reservedBy?: string | null;
   wishlistOwner: string;
   currentUser?: string;
-  context: "own" | "shared";
-  onToggleReserve: () => void;
+  context: "own" | "shared" | "guest";
+  onToggleReserve?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
 };
@@ -59,8 +59,15 @@ const WishlistItem = ({
   return (
     <>
       <div
-        className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-[#232336] hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
-        onClick={() => link && setIsLinkModalOpen(true)}
+        className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
+        onClick={() => {
+          if (context === "own" && link) {
+            setIsLinkModalOpen(true);
+          }
+          if (context === "shared") {
+            handleConfirmClick(isReserved ? "unreserve" : "reserve");
+          }
+        }}
       >
         <img
           src={imageToShow}
@@ -74,44 +81,60 @@ const WishlistItem = ({
           </p>
         </div>
         <div className="flex gap-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          {onEdit && (
-            <button onClick={onEdit} className="text-gray-400 hover:text-purple-400">
-              <FiEdit className="text-large" />
-            </button>
-          )}
-          {onDelete && (            
-            <button onClick={onDelete} className="text-red-500 hover:text-red-600">
-              <FiTrash2 className="text-large" />
+          {context === "own" ? (
+            <>
+              {onEdit && (
+                <button onClick={onEdit} className="text-gray-400 hover:text-purple-400">
+                  <FiEdit className="text-large" />
+                </button>
+              )}
+              {onDelete && (
+                <button onClick={onDelete} className="text-red-500 hover:text-red-600">
+                  <FiTrash2 className="text-large" />
+                </button>
+              )}
+            </>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleConfirmClick(isReserved ? "unreserve" : "reserve");
+              }}
+              className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
+            >
+              {isReserved ? <FiLock className="text-large" /> : <FiUnlock className="text-large" />}
             </button>
           )}
         </div>
       </div>
 
-      {/* Modal for link actions */}
-      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
-        <h2 className="text-lg font-semibold mb-4">Open Link</h2>
-        <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
-        <div className="flex gap-3">
-          <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
-            onClick={() => setIsLinkModalOpen(false)}
-          >
-            <FiExternalLink className="inline mr-1" /> Open
-          </a>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(link);
-              setIsLinkModalOpen(false);
-            }}
-            className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
-          >
-            <FiCopy className="inline mr-1" /> Copy
-          </button>
-        </div>
-      </Modal>
+      {/* Modal for link actions (only in 'own' context) */}
+      {context === "own" && (
+        <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
+          <h2 className="text-lg font-semibold mb-4">Open Link</h2>
+          <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
+          <div className="flex gap-3">
+            <a
+              href={link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
+              onClick={() => setIsLinkModalOpen(false)}
+            >
+              <FiExternalLink className="inline mr-1" /> Open
+            </a>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(link);
+                setIsLinkModalOpen(false);
+              }}
+              className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
+            >
+              <FiCopy className="inline mr-1" /> Copy
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* Reserve/Unreserve modal */}
       <ConfirmReserveModal
@@ -119,7 +142,7 @@ const WishlistItem = ({
         onClose={() => setModalAction(null)}
         onConfirm={() => {
           setModalAction(null);
-          onToggleReserve();
+          onToggleReserve && onToggleReserve();
         }}
         itemName={name}
         actionType={modalAction || "reserve"}

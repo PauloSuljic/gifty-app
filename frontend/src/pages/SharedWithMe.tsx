@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
-import Card from "../components/ui/Card";
-import WishlistItem from "../components/WishlistItem";
 import Layout from "../components/layout/Layout";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
+import { FiMoreVertical } from "react-icons/fi";
 
 type SharedWishlistItem = {
   id: string;
@@ -18,6 +18,8 @@ type SharedWishlist = {
   id: string;
   name: string;
   items: SharedWishlistItem[];
+  coverImage?: string;
+  shareCode: string;
 };
 
 type GroupedWishlists = {
@@ -30,7 +32,16 @@ type GroupedWishlists = {
 const SharedWithMe = () => {
   const { firebaseUser } = useAuth();
   const [sharedWishlists, setSharedWishlists] = useState<GroupedWishlists[]>([]);
-  const [expandedWishlistIds, setExpandedWishlistIds] = useState<string[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const navigate = useNavigate();
+
+  const toggleGroup = (ownerId: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(ownerId)
+        ? prev.filter((id) => id !== ownerId)
+        : [...prev, ownerId]
+    );
+  };
 
   useEffect(() => {
     if (!firebaseUser) return;
@@ -133,14 +144,6 @@ const SharedWithMe = () => {
     }
   };  
 
-  const toggleWishlistDropdown = (wishlistId: string) => {
-    setExpandedWishlistIds(prev =>
-      prev.includes(wishlistId)
-        ? prev.filter(id => id !== wishlistId)
-        : [...prev, wishlistId]
-    );
-  };
-
   return (
     <Layout>
       <h2 className="text-2xl sm:text-3xl font-semibold pt-6 text-center">Wishlists Shared With Me</h2>
@@ -149,49 +152,54 @@ const SharedWithMe = () => {
         <p className="text-gray-300 text-center mt-6">No shared wishlists yet.</p>
       ) : (
         sharedWishlists.map(group => (
-          <div key={group.ownerId} className="mt-6">
-            <div className="flex items-center space-x-3 pb-2">
-              <img
-                src={group.ownerAvatar || "/avatars/avatar1.png"}
-                alt={`${group.ownerName}'s avatar`}
-                className="w-10 h-10 rounded-full border border-gray-600"
-              />
-              <h3 className="text-2xl font-semibold">{group.ownerName}</h3>
+          <div key={group.ownerId} className="bg-gray-800 rounded-xl p-4 mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-3">
+                <img
+                  src={group.ownerAvatar || "/avatars/avatar1.png"}
+                  alt={`${group.ownerName}'s avatar`}
+                  className="w-10 h-10 rounded-full border border-gray-600"
+                />
+                <div>
+                  <h3 className="font-medium">{group.ownerName}</h3>
+                  <p className="text-xs text-gray-400">45 days until birthday</p>
+                </div>
+              </div>
+              <button className="px-3 py-1 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-full">
+                Remove
+              </button>
             </div>
-            <div className="columns-1 md:columns-2 gap-6 space-y-6">
-              {group.wishlists.map(wishlist => (
-                <Card key={wishlist.id} className="break-inside-avoid">
-                  <button
-                    onClick={() => toggleWishlistDropdown(wishlist.id)}
-                    className="w-full flex justify-between items-center text-left text-xl font-semibold text-white"
-                  >
-                    {wishlist.name}
-                    <span className="text-sm text-gray-400">
-                      {expandedWishlistIds.includes(wishlist.id) ? "▲" : "▼"}
-                    </span>
-                  </button>
-                
-                  {expandedWishlistIds.includes(wishlist.id) && (
-                    <div className="mt-4 space-y-3">
-                      {wishlist.items.map(item => (
-                        <WishlistItem
-                          key={item.id}
-                          id={item.id}
-                          name={item.name}
-                          link={item.link || ""}
-                          isReserved={item.isReserved}
-                          reservedBy={item.reservedBy}
-                          wishlistOwner={group.ownerId}
-                          context="shared"
-                          currentUser={firebaseUser?.uid || ""}
-                          onToggleReserve={() => toggleReservation(wishlist.id, item.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </Card>              
-              ))}
-            </div>
+
+            {(expandedGroups.includes(group.ownerId) ? group.wishlists : group.wishlists.slice(0, 1)).map(wl => (
+              <div
+                key={wl.id}
+                className="bg-gray-700/20 rounded-lg flex justify-between items-center p-3 mb-2 cursor-pointer hover:bg-gray-700"
+                onClick={() => navigate(`/wishlist/${wl.id}`)}
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={wl.coverImage || "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop"}
+                    alt={wl.name}
+                    className="w-12 h-12 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="text-sm font-medium">{wl.name}</p>
+                    <p className="text-xs text-gray-400">{wl.items.length} items · Updated 2 days ago</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {group.wishlists.length > 1 && (
+              <button
+                className="w-full text-center text-sm text-gray-400 hover:text-gray-200 mt-1"
+                onClick={() => toggleGroup(group.ownerId)}
+              >
+                {expandedGroups.includes(group.ownerId)
+                  ? "Show less"
+                  : `Show ${group.wishlists.length - 1} more`}
+              </button>
+            )}
           </div>
         ))
       )}

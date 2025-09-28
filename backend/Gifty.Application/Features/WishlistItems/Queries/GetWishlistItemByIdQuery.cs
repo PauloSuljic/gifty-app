@@ -30,11 +30,6 @@ public class GetWishlistItemByIdHandler(
             throw new NotFoundException($"Parent Wishlist for Item ({request.Id}) not found.");
         }
         
-        if (parentWishlist.UserId != request.UserId && !parentWishlist.IsPublic)
-        {
-            throw new ForbiddenAccessException("You are not authorized to view this wishlist item.");
-        }
-        
         return new WishlistItemDto
         {
             Id = wishlistItem.Id,

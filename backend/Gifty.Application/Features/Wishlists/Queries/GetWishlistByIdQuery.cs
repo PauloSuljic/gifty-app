@@ -20,10 +20,8 @@ public class GetWishlistByIdHandler(IWishlistRepository wishlistRepository)
             throw new NotFoundException(nameof(Wishlist), request.Id);
         }
         
-        if (!wishlist.IsPublic && wishlist.UserId != request.UserId)
-        {
-            throw new ForbiddenAccessException("You are not authorized to view this private wishlist.");
-        }
+        // Allow non-owners to view wishlist, but mark whether current user is the owner
+        var isOwner = wishlist.UserId == request.UserId;
 
         var wishlistItemDtos = wishlist.Items.Select(item => new WishlistItemDto
         {
@@ -44,7 +42,8 @@ public class GetWishlistByIdHandler(IWishlistRepository wishlistRepository)
             UserId = wishlist.UserId,
             CreatedAt = wishlist.CreatedAt,
             Order = wishlist.Order,
-            Items = wishlistItemDtos
+            Items = wishlistItemDtos,
+            IsOwner = isOwner,
         };
     }
 }

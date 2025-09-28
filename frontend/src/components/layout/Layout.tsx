@@ -4,7 +4,12 @@ import DashboardHeader from "../DashboardHeader";
 import { FiMenu } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+interface LayoutProps {
+  children: React.ReactNode;
+  hideHeader?: boolean;
+}
+
+const Layout = ({ children, hideHeader }: LayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -40,7 +45,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* ✅ Main Content */}
         <div className="flex-1 flex flex-col lg:pr-6 p-4 pt-4 lg:pt-6">
-          <DashboardHeader />
+          {!hideHeader && <DashboardHeader />}
           <div className="flex-1 overflow-y-auto p-4">
             {children}
           </div>
