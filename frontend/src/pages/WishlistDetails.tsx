@@ -10,6 +10,7 @@ import EditItemModal from "../components/ui/modals/EditItemModal";
 import RenameWishlistModal from "../components/ui/modals/RenameWishlistModal";
 import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import ShareLinkModal from "../components/ui/modals/ShareLinkModal";
+import { toast } from "react-hot-toast";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,33 +61,69 @@ const WishlistDetail = () => {
     const token = await firebaseUser.getIdToken();
     if (!token) return;
 
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
+    try {
+      const response = await apiFetch(`/api/wishlists/${id}/items/${itemId}/reserve`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Guess common REST endpoints for reserve/unreserve
-    const isUsersReservation = item.reservedBy === firebaseUser.uid;
-    const endpoint = isUsersReservation
-      ? `/api/wishlists/${id}/items/${itemId}/unreserve`
-      : `/api/wishlists/${id}/items/${itemId}/reserve`;
+      if (!response.ok) {
+        const errorData = await response.json();
 
-    const response = await apiFetch(endpoint, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+        if (errorData.error[0] === "You can only reserve 1 item per wishlist.") {
+          toast.error("Max 1 item per wishlist.", {
+            duration: 3000,
+            position: "bottom-center",
+            style: {
+              background: "#333",
+              color: "#fff",
+              border: "1px solid #555",
+            },
+          });
+        } else {
+          toast.error("Failed to toggle reservation.", {
+            duration: 3000,
+            position: "bottom-center",
+          });
+        }
+        return;
+      }
 
-    if (response.ok) {
-      // Update local state
+      const updatedItem = await response.json();
+
+      toast.success(
+        updatedItem.isReserved
+          ? "Item reserved successfully! 🎁"
+          : "Reservation removed ✅",
+        {
+          duration: 3000,
+          position: "bottom-center",
+          style: {
+            background: "#333",
+            color: "#fff",
+            border: "1px solid #555",
+          },
+        }
+      );
+
+      // Update UI
       setItems((prev) =>
         prev.map((i) =>
           i.id === itemId
             ? {
                 ...i,
-                isReserved: !isUsersReservation,
-                reservedBy: isUsersReservation ? null : firebaseUser.uid,
+                isReserved: updatedItem.isReserved,
+                reservedBy: updatedItem.reservedBy,
               }
             : i
         )
       );
+    } catch (error) {
+      console.error("Error toggling reservation:", error);
+      toast.error("Something went wrong!", {
+        duration: 3000,
+        position: "bottom-center",
+      });
     }
   };
 
