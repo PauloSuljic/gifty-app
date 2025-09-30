@@ -54,5 +54,18 @@ namespace Gifty.Infrastructure.Repositories
         {
             await dbContext.SaveChangesAsync();
         }
+        
+        public async Task<IEnumerable<SharedLink>> GetByOwnerAndUserAsync(string ownerId, string currentUserId)
+        {
+            return await dbContext.SharedLinks
+                .Include(sl => sl.Wishlist)
+                .Where(sl => sl.Wishlist!.UserId == ownerId) 
+                .ToListAsync();
+        }
+
+        public void RemoveRange(IEnumerable<SharedLink> sharedLinks)
+        {
+            dbContext.SharedLinks.RemoveRange(sharedLinks);
+        }
     }
 }

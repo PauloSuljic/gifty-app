@@ -5,6 +5,8 @@ import Layout from "../components/layout/Layout";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
 import { FiMoreVertical } from "react-icons/fi";
+import { FiTrash2 } from "react-icons/fi";
+import ConfirmRemoveSharedModal from "../components/ui/modals/ConfirmRemoveSharedModal";
 
 type SharedWishlistItem = {
   id: string;
@@ -33,6 +35,7 @@ const SharedWithMe = () => {
   const { firebaseUser } = useAuth();
   const [sharedWishlists, setSharedWishlists] = useState<GroupedWishlists[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [removeModalOwnerId, setRemoveModalOwnerId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const toggleGroup = (ownerId: string) => {
@@ -153,7 +156,7 @@ const SharedWithMe = () => {
       ) : (
         sharedWishlists.map(group => (
           <div key={group.ownerId} className="bg-gray-800 rounded-xl p-4 mb-6">
-            <div className="flex justify-between items-center mb-3">
+            <div className="relative mb-3">
               <div className="flex items-center gap-3">
                 <img
                   src={group.ownerAvatar || "/avatars/avatar1.png"}
@@ -165,8 +168,12 @@ const SharedWithMe = () => {
                   <p className="text-xs text-gray-400">45 days until birthday</p>
                 </div>
               </div>
-              <button className="px-3 py-1 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-full">
-                Remove
+              <button
+                onClick={() => setRemoveModalOwnerId(group.ownerId)}
+                className="absolute top-0 right-0 p-2 text-red-400 hover:text-red-500"
+                aria-label="Remove"
+              >
+                <FiTrash2 className="w-4 h-4" />
               </button>
             </div>
 
@@ -204,6 +211,26 @@ const SharedWithMe = () => {
         ))
       )}
       </div>
+      <ConfirmRemoveSharedModal
+        isOpen={!!removeModalOwnerId}
+        onClose={() => setRemoveModalOwnerId(null)}
+        onConfirm={async () => {
+          if (!removeModalOwnerId) return;
+          const token = await firebaseUser?.getIdToken();
+          if (!token) return;
+          const response = await apiFetch(`/api/shared-links/shared-with-me/${removeModalOwnerId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            setSharedWishlists(prev => prev.filter(g => g.ownerId !== removeModalOwnerId));
+            toast.success("Removed shared wishlists");
+          } else {
+            toast.error("Failed to remove shared wishlists");
+          }
+        }}
+        ownerName={sharedWishlists.find(g => g.ownerId === removeModalOwnerId)?.ownerName || ""}
+      />
     </Layout>
   );
 };
