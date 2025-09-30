@@ -11,5 +11,7 @@ namespace Gifty.Domain.Interfaces
         Task UpdateAsync(SharedLink sharedLink); 
         Task DeleteAsync(SharedLink sharedLink); 
         Task SaveChangesAsync();
+        Task<IEnumerable<SharedLink>> GetByOwnerAndUserAsync(string ownerId, string currentUserId);
+        void RemoveRange(IEnumerable<SharedLink> sharedLinks);
     }
 }

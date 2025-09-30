@@ -51,4 +51,20 @@ public class SharedLinkController(IMediator mediator) : ControllerBase
         var response = await mediator.Send(query);
         return Ok(response);
     }
+    
+    [Authorize]
+    [HttpDelete("shared-with-me/{ownerId}")]
+    public async Task<IActionResult> RemoveWishlistsSharedWithMe(string ownerId)
+    {
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Unauthorized("User not authenticated.");
+        }
+
+        var command = new RemoveSharedWishlistsFromOwnerCommand(currentUserId, ownerId);
+        await mediator.Send(command);
+
+        return NoContent();
+    }
 }
