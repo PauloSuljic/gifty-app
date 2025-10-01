@@ -1,3 +1,4 @@
+import { toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import Modal from "../Modal";
 import { apiFetch } from "../../../api";
@@ -41,12 +42,21 @@ const RenameWishlistModal = ({ isOpen, onClose, wishlist, onWishlistRenamed }: R
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(newName),
+      body: JSON.stringify({ name: newName }),
     });
 
     if (response.ok) {
       const updatedWishlist = await response.json();
       onWishlistRenamed(updatedWishlist);
+      toast.success("Wishlist renamed! ✏️", {
+        duration: 3000,
+        position: "bottom-center",
+        style: {
+          background: "#333",
+          color: "#fff",
+          border: "1px solid #555",
+        },
+      });
       onClose();
       setNewName("");
       setError(null);

@@ -464,7 +464,7 @@ const Wishlist = () => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(newWishlistName)
+      body: JSON.stringify({ name: newWishlistName })
     });
   
     if (response.ok) {

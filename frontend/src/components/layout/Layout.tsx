@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Sidebar from "../Sidebar";
+import GuestSidebar from "../ui/GuestSidebar";
 import DashboardHeader from "../DashboardHeader";
 import { FiMenu } from "react-icons/fi";
 import { Link } from "react-router-dom";
@@ -7,15 +8,20 @@ import { Link } from "react-router-dom";
 interface LayoutProps {
   children: React.ReactNode;
   hideHeader?: boolean;
+  guest?: boolean;
 }
 
-const Layout = ({ children, hideHeader }: LayoutProps) => {
+const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen relative overflow-x-hidden">
       {/* ✅ Sidebar (Always in DOM) */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      {guest ? (
+        <GuestSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      ) : (
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      )}
 
       {/* ✅ Main Area */}
       <div className="flex flex-1 flex-col lg:flex-row">
