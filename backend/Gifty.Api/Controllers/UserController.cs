@@ -40,7 +40,8 @@ namespace gifty_web_backend.Controllers
                 request.Username,
                 request.Email,
                 request.Bio,
-                request.AvatarUrl
+                request.AvatarUrl,
+                request.DateOfBirth
             );
 
             var userDto = await mediator.Send(command);
@@ -60,7 +61,8 @@ namespace gifty_web_backend.Controllers
                 firebaseUid,
                 model.Username!,
                 model.Bio,
-                model.AvatarUrl
+                model.AvatarUrl,
+                model.DateOfBirth
             );
 
             var userDto = await mediator.Send(command);

@@ -11,7 +11,8 @@ public record CreateUserCommand(
     string Username,
     string Email,
     string? Bio,
-    string? AvatarUrl
+    string? AvatarUrl,
+    DateTime DateOfBirth
 ) : IRequest<UserDto>
 {
     public class CreateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<CreateUserCommand, UserDto>
@@ -37,17 +38,14 @@ public record CreateUserCommand(
                 throw new ConflictException($"Email '{request.Email}' is already registered.");
             }
 
-            var user = new User
-            {
-                Id = request.Id,
-                Username = request.Username,
-                Email = request.Email,
-                Bio = request.Bio,
-                AvatarUrl = request.AvatarUrl,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            
+            var user = User.Create(
+                request.Id,
+                request.Username,
+                request.Email,
+                request.Bio,
+                request.AvatarUrl,
+                request.DateOfBirth
+            );
 
             await userRepository.AddAsync(user);
             await userRepository.SaveChangesAsync();
@@ -59,7 +57,8 @@ public record CreateUserCommand(
                 Email = user.Email,
                 Bio = user.Bio,
                 AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+                DateOfBirth = user.DateOfBirth,
             };
         }
     }
