@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FiGift, FiHome, FiUserPlus, FiLogIn, FiX, FiInfo } from "react-icons/fi";
+import { FiUserPlus, FiLogIn, FiX, FiInfo } from "react-icons/fi";
 
 type GuestSidebarProps = {
   isOpen: boolean;

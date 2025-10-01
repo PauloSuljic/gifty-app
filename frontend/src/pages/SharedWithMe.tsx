@@ -4,7 +4,6 @@ import { useAuth } from "../components/AuthProvider";
 import Layout from "../components/layout/Layout";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
-import { FiMoreVertical } from "react-icons/fi";
 import { FiTrash2 } from "react-icons/fi";
 import ConfirmRemoveSharedModal from "../components/ui/modals/ConfirmRemoveSharedModal";
 

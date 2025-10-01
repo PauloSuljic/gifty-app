@@ -93,6 +93,15 @@ const Profile = () => {
                 maxLength={70}
               />
             </div>
+            <div className="mb-4">
+              <label className="block text-gray-400">Date of Birth</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white outline-none"
+                placeholder="01/01/1990 (coming soon)"
+                disabled
+              />
+            </div>
           </div>
   
           {/* Right: Avatars */}

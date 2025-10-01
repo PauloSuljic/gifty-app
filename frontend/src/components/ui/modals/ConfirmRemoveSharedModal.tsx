@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import { FiTrash2 } from "react-icons/fi";
 
 interface ConfirmRemoveSharedModalProps {
   isOpen: boolean;
@@ -46,7 +45,10 @@ const ConfirmRemoveSharedModal = ({ isOpen, onClose, onConfirm, ownerName }: Con
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
             className="px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 text-white transition"
           >
             Remove
