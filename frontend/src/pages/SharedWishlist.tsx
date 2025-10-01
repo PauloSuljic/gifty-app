@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
 import { apiFetch } from "../api";
-import toast from "react-hot-toast";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
 import Layout from "../components/layout/Layout";
@@ -75,22 +74,22 @@ const SharedWishlist = () => {
     );
   }
 
-  if (firebaseUser && firebaseUser.uid === wishlist.ownerId) {
+  if (firebaseUser) {
     navigate(`/wishlist/${wishlist.id}`);
     return null;
   }
 
   return (
-    <Layout hideHeader>
+    <Layout hideHeader guest>
       <UserHeader
         avatarUrl={wishlist.ownerAvatar}
         username={wishlist.ownerName}
         bio={wishlist.ownerBio || ""}
       />
-      {/* <div className="px-4 py-3 text-center">
+      <div className="px-4 py-3 text-center">
         <h2 className="text-lg font-semibold">{wishlist.name}</h2>
         <p className="text-sm text-gray-400">{wishlist.items.length} items</p>
-      </div> */}
+      </div>
 
       {/* Cover */}
       <div className="p-4">
@@ -118,7 +117,7 @@ const SharedWishlist = () => {
               isReserved={item.isReserved}
               reservedBy={item.reservedBy}
               wishlistOwner={wishlist.ownerId}
-              currentUser={firebaseUser?.uid}
+              currentUser={firebaseUser ? (firebaseUser as any).uid : undefined}
               context="guest"
             />
           ))

@@ -98,6 +98,10 @@ const WishlistItem = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (context === "guest") {
+                  window.location.href = "/login";
+                  return;
+                }
                 handleConfirmClick(isReserved ? "unreserve" : "reserve");
               }}
               className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}

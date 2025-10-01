@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FiArrowLeft, FiMoreVertical } from "react-icons/fi";
 import Layout from "../components/layout/Layout";
 import WishlistItem from "../components/WishlistItem";
 import { useAuth } from "../components/AuthProvider";
@@ -227,7 +226,18 @@ const WishlistDetail = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         wishlistId={wishlist.id}
-        onItemAdded={(item) => setItems((prev) => [...prev, item])}
+        onItemAdded={(item) => {
+          setItems((prev) => [...prev, item]);
+          toast.success("Item added to wishlist! 🎁", {
+            duration: 3000,
+            position: "bottom-center",
+            style: {
+              background: "#333",
+              color: "#fff",
+              border: "1px solid #555",
+            },
+          });
+        }}
       />
 
       <EditItemModal
@@ -237,6 +247,15 @@ const WishlistDetail = () => {
         item={itemToEdit}
         onItemUpdated={(updated) => {
           setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+          toast.success("Item updated!", {
+            duration: 3000,
+            position: "bottom-center",
+            style: {
+              background: "#333",
+              color: "#fff",
+              border: "1px solid #555",
+            },
+          });
         }}
       />
 
@@ -244,7 +263,9 @@ const WishlistDetail = () => {
         isOpen={isRenameModalOpen}
         onClose={() => setIsRenameModalOpen(false)}
         wishlist={wishlist}
-        onWishlistRenamed={(updated) => setWishlist(updated)}
+        onWishlistRenamed={(updated) => {
+          setWishlist(updated);
+        }}
       />
 
       <ConfirmDeleteModal
@@ -261,6 +282,15 @@ const WishlistDetail = () => {
           if (response.ok) {
             setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
             setIsDeleteModalOpen(false);
+            toast.success(`Deleted "${itemToDelete.name}" from wishlist 🗑️`, {
+              duration: 3000,
+              position: "bottom-center",
+              style: {
+                background: "#333",
+                color: "#fff",
+                border: "1px solid #555",
+              },
+            });
           }
         }}
         itemName={itemToDelete?.name || ""}
