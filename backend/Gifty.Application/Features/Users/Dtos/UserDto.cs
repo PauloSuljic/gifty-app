@@ -8,6 +8,6 @@ namespace Gifty.Application.Features.Users.Dtos
         public string? Email { get; set; }
         public string? AvatarUrl { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public DateTime DateOfBirth { get; set; }
+        public DateOnly DateOfBirth { get; set; }
     }
 }

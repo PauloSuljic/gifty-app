@@ -11,7 +11,7 @@ public record UpdateUserCommand(
     string Username,
     string? Bio,
     string? AvatarUrl,
-    DateTime DateOfBirth
+    DateOnly DateOfBirth
 ) : IRequest<UserDto>
 {
     public class UpdateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<UpdateUserCommand, UserDto>
@@ -34,7 +34,7 @@ public record UpdateUserCommand(
                 }
             }
 
-            existingUser.UpdateProfile(request.Username, request.Bio, request.AvatarUrl);
+            existingUser.UpdateProfile(request.Username, request.Bio, request.AvatarUrl, request.DateOfBirth);
 
             await userRepository.UpdateAsync(existingUser);
             await userRepository.SaveChangesAsync();
@@ -46,7 +46,8 @@ public record UpdateUserCommand(
                 Email = existingUser.Email,
                 AvatarUrl = existingUser.AvatarUrl,
                 Bio = existingUser.Bio,
-                CreatedAt = existingUser.CreatedAt
+                CreatedAt = existingUser.CreatedAt,
+                DateOfBirth = existingUser.DateOfBirth
             };
         }
     }

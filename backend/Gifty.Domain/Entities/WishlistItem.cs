@@ -10,7 +10,7 @@ namespace Gifty.Domain.Entities
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public string? Link { get; set; }
         public bool IsReserved { get; set; } = false;
         public string? ReservedBy { get; set; }

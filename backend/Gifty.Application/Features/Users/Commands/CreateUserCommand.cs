@@ -12,7 +12,7 @@ public record CreateUserCommand(
     string Email,
     string? Bio,
     string? AvatarUrl,
-    DateTime DateOfBirth
+    DateOnly DateOfBirth
 ) : IRequest<UserDto>
 {
     public class CreateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<CreateUserCommand, UserDto>
