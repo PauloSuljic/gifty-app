@@ -14,8 +14,8 @@ namespace Gifty.Domain.Entities.Users
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public List<Wishlist> Wishlists { get; set; } = new();
         [Required]
-        public DateTime DateOfBirth { get; set; }
-        public static User Create(string id, string username, string email, string? bio, string? avatarUrl, DateTime dateOfBirth)
+        public DateOnly DateOfBirth { get; set; }
+        public static User Create(string id, string username, string email, string? bio, string? avatarUrl, DateOnly dateOfBirth)
         {
             var user = new User
             {
@@ -32,11 +32,12 @@ namespace Gifty.Domain.Entities.Users
             return user;
         }
         
-        public void UpdateProfile(string username, string? bio, string? avatarUrl)
+        public void UpdateProfile(string username, string? bio, string? avatarUrl, DateOnly dateOfBirth)
         {
             Username = username;
             Bio = bio;
             AvatarUrl = avatarUrl;
+            DateOfBirth = dateOfBirth;
 
             RaiseDomainEvent(new UserUpdatedEvent(this));
         }
