@@ -18,7 +18,7 @@ const avatarOptions = [
 
 const Profile = () => {
   const { firebaseUser, refreshDatabaseUser } = useAuth();
-  const [user, setUser] = useState({ username: "", bio: "", avatarUrl: "" });
+  const [user, setUser] = useState({ username: "", bio: "", avatarUrl: "", dateOfBirth: "" });
   const [selectedAvatar, setSelectedAvatar] = useState("");
 
   useEffect(() => {
@@ -33,7 +33,12 @@ const Profile = () => {
       if (!response.ok) throw new Error("Failed to fetch user data");
 
       const userData = await response.json();
-      setUser(userData);
+      setUser({
+        username: userData.username,
+        bio: userData.bio,
+        avatarUrl: userData.avatarUrl,
+        dateOfBirth: userData.dateOfBirth || ""
+      });
       setSelectedAvatar(userData.avatarUrl);
     };
 
@@ -52,7 +57,8 @@ const Profile = () => {
       body: JSON.stringify({
         username: user.username,
         bio: user.bio,
-        avatarUrl: selectedAvatar
+        avatarUrl: selectedAvatar,
+        dateOfBirth: user.dateOfBirth
       })
     });
 
@@ -96,10 +102,10 @@ const Profile = () => {
             <div className="mb-4">
               <label className="block text-gray-400">Date of Birth</label>
               <input
-                type="text"
+                type="date"
                 className="w-full px-4 py-2 rounded-lg bg-white/20 text-white outline-none"
-                placeholder="01/01/1990 (coming soon)"
-                disabled
+                value={user.dateOfBirth}
+                onChange={(e) => setUser({ ...user, dateOfBirth: e.target.value })}
               />
             </div>
           </div>
