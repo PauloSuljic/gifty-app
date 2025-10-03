@@ -28,13 +28,15 @@ public class GetWishlistsSharedWithMeHandler(ISharedLinkVisitRepository sharedLi
             {
                 OwnerId = v.SharedLink!.Wishlist!.UserId,
                 OwnerUsername = v.SharedLink.Wishlist.User?.Username,
-                OwnerAvatarUrl = v.SharedLink.Wishlist.User?.AvatarUrl
+                OwnerAvatarUrl = v.SharedLink.Wishlist.User?.AvatarUrl,
+                OwnerDateOfBirth = v.SharedLink.Wishlist.User?.DateOfBirth
             })
             .Select(group => new SharedWithMeWishlistOwnerGroupDto
             {
                 OwnerId = group.Key.OwnerId,
                 OwnerName = group.Key.OwnerUsername,
                 OwnerAvatar = group.Key.OwnerAvatarUrl,
+                OwnerDateOfBirth = group.Key.OwnerDateOfBirth,
                 Wishlists = group.Select(v => new SharedWithMeWishlistDto
                 {
                     Id = v.SharedLink!.Wishlist!.Id,

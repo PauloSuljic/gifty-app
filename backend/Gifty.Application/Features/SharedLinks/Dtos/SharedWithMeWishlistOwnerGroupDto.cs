@@ -8,6 +8,7 @@ public record SharedWithMeWishlistOwnerGroupDto
     public string? OwnerName { get; init; }
     public string? OwnerAvatar { get; init; }
     public List<SharedWithMeWishlistDto> Wishlists { get; init; } = new();
+    public DateOnly? OwnerDateOfBirth { get; init; }
 }
 
 public record SharedWithMeWishlistDto

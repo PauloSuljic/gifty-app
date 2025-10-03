@@ -11,6 +11,7 @@ export type GiftyUser = {
   bio: string;
   email: string;
   avatarUrl: string;
+  dateOfBirth?: string;
 };
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +47,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
               email: firebaseUser.email,
               avatarUrl: "",
               bio: "",
+              dateOfBirth: ""
             }),
           });
 
@@ -64,6 +66,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
           bio: userData.bio || "",
           email: userData.email,
           avatarUrl: userData.avatarUrl || "",
+          dateOfBirth: userData.dateOfBirth || ""
         });
       } catch (error) {
         console.error("Error fetching user:", error);

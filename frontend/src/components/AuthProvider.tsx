@@ -22,6 +22,7 @@ export type GiftyUser = {
   username: string;
   bio: string;
   avatarUrl: string;
+  dateOfBirth?: string;
 };
 
 // ✅ Define context type

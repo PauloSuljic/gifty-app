@@ -27,7 +27,21 @@ type GroupedWishlists = {
   ownerId: string;
   ownerName: string;
   ownerAvatar: string;
+  ownerDateOfBirth?: string;
   wishlists: SharedWishlist[];
+};
+
+const calculateDaysUntilBirthday = (dateOfBirth: string) => {
+  const today = new Date();
+  const dob = new Date(dateOfBirth);
+  if (isNaN(dob.getTime())) return null;
+
+  const thisYearBirthday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+  if (thisYearBirthday < today) {
+    thisYearBirthday.setFullYear(today.getFullYear() + 1);
+  }
+  const diffTime = thisYearBirthday.getTime() - today.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
 const SharedWithMe = () => {
@@ -164,7 +178,13 @@ const SharedWithMe = () => {
                 />
                 <div>
                   <h3 className="font-medium">{group.ownerName}</h3>
-                  <p className="text-xs text-gray-400">45 days until birthday</p>
+                  {group.ownerDateOfBirth ? (
+                    <p className="text-xs text-gray-400">
+                      {calculateDaysUntilBirthday(group.ownerDateOfBirth)} days until birthday
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-400">No birthday set</p>
+                  )}
                 </div>
               </div>
               <button
