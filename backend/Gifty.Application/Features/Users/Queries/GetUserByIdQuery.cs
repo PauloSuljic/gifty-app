@@ -27,7 +27,8 @@ public class GetUserByIdHandler(IUserRepository userRepository) : IRequestHandle
             Email = user.Email,
             AvatarUrl = user.AvatarUrl,
             Bio = user.Bio,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            DateOfBirth = user.DateOfBirth
         };
     }
 }

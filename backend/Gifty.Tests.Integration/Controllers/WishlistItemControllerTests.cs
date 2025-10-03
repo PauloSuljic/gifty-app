@@ -36,7 +36,7 @@ public class WishlistItemControllerTests
         {
             Username = $"TestUser_{userId}",
             Bio = "Test Bio",
-            AvatarUrl = "http://example.com/avatar.png" 
+            AvatarUrl = "http://example.com/avatar.png"
         };
         
         var updateProfileResponse = await client.PutAsJsonAsync($"/api/users/{userId}", userUpdateDto);

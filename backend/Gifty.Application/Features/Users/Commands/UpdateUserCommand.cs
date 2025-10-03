@@ -10,7 +10,8 @@ public record UpdateUserCommand(
     string Id,
     string Username,
     string? Bio,
-    string? AvatarUrl
+    string? AvatarUrl,
+    DateTime DateOfBirth
 ) : IRequest<UserDto>
 {
     public class UpdateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<UpdateUserCommand, UserDto>

@@ -61,11 +61,8 @@ const WishlistItem = ({
       <div
         className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
         onClick={() => {
-          if (context === "own" && link) {
+          if (link) {
             setIsLinkModalOpen(true);
-          }
-          if (context === "shared") {
-            handleConfirmClick(isReserved ? "unreserve" : "reserve");
           }
         }}
       >
@@ -112,33 +109,31 @@ const WishlistItem = ({
         </div>
       </div>
 
-      {/* Modal for link actions (only in 'own' context) */}
-      {context === "own" && (
-        <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
-          <h2 className="text-lg font-semibold mb-4">Open Link</h2>
-          <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
-          <div className="flex gap-3">
-            <a
-              href={link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
-              onClick={() => setIsLinkModalOpen(false)}
-            >
-              <FiExternalLink className="inline mr-1" /> Open
-            </a>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(link);
-                setIsLinkModalOpen(false);
-              }}
-              className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
-            >
-              <FiCopy className="inline mr-1" /> Copy
-            </button>
-          </div>
-        </Modal>
-      )}
+      {/* Modal for link actions (available for all contexts) */}
+      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
+        <h2 className="text-lg font-semibold mb-4">Open Link</h2>
+        <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
+        <div className="flex gap-3">
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
+            onClick={() => setIsLinkModalOpen(false)}
+          >
+            <FiExternalLink className="inline mr-1" /> Open
+          </a>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(link);
+              setIsLinkModalOpen(false);
+            }}
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
+          >
+            <FiCopy className="inline mr-1" /> Copy
+          </button>
+        </div>
+      </Modal>
 
       {/* Reserve/Unreserve modal */}
       <ConfirmReserveModal
