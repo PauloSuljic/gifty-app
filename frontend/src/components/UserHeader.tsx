@@ -2,9 +2,10 @@ interface UserHeaderProps {
   avatarUrl?: string;
   username: string;
   bio?: string;
+  subtitle?: string;
 }
 
-const UserHeader = ({ avatarUrl, username, bio }: UserHeaderProps) => {
+const UserHeader = ({ avatarUrl, username, bio, subtitle }: UserHeaderProps) => {
   return (
     <div className="flex items-center justify-between p-4 bg-gray-800 text-white rounded-lg shadow-lg">
       <div className="flex items-center">
@@ -16,8 +17,9 @@ const UserHeader = ({ avatarUrl, username, bio }: UserHeaderProps) => {
           className="w-15 h-15 rounded-full mr-3"
         />
         <div>
-          <h2 className="text-xl font-bold">{username || "Guest"}</h2>
-          <p className="text-gray-400">{bio || "No bio available"}</p>
+          <h2 className="text-large">{username || "Guest"}</h2>
+          {subtitle && <p className="text-gray-400 text-sm">{subtitle}</p>}
+          <p className="pt-1">{bio || "No bio available"}</p>
         </div>
       </div>
     </div>
