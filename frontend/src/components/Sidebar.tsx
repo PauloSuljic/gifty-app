@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FiGift, FiLogOut, FiHome, FiUser, FiX, FiSettings } from "react-icons/fi";
+import { FiGift, FiLogOut, FiHome, FiUser, FiX, FiSettings, FiCalendar } from "react-icons/fi";
 import { useAuth } from "../components/AuthProvider";
 
 type SidebarProps = {
@@ -58,14 +58,21 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <Link to="/profile" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
             <FiUser size={20} /> <span>Profile</span>
           </Link>
+          <Link to="/calendar" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+            <FiCalendar size={20} /> <span>Calendar</span>
+          </Link>
+          <Link to="/settings" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+            
+          </Link>
+        </nav>
+        <div className="mt-auto flex flex-col space-y-2">
           <Link to="/settings" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
             <FiSettings size={20} /> <span>Settings</span>
           </Link>
-        </nav>
-
-        <button onClick={logout} className="mt-auto flex items-center space-x-2 p-3 hover:bg-red-600 rounded-md">
-          <FiLogOut size={20} /> <span>Logout</span>
-        </button>
+          <button onClick={logout} className="flex items-center space-x-2 p-3 hover:bg-red-600 rounded-md">
+            <FiLogOut size={20} /> <span>Logout</span>
+          </button>
+        </div>
       </div>
     </>
   );
