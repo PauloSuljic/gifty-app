@@ -103,7 +103,7 @@ const Profile = () => {
               <label className="block text-gray-400">Date of Birth</label>
               <input
                 type="date"
-                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white outline-none"
+                className="w-full px-4 py-2 rounded-lg bg-white/20 text-white outline-none appearance-none [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 value={user.dateOfBirth}
                 onChange={(e) => setUser({ ...user, dateOfBirth: e.target.value })}
               />
