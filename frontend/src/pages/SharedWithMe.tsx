@@ -79,7 +79,7 @@ const SharedWithMe = () => {
 
   return (
     <Layout>
-      <h2 className="text-2xl sm:text-3xl font-semibold pt-6 text-center">Wishlists Shared With Me</h2>
+      <h2 className="text-xl sm:text-3xl font-semibold pt-3 text-center">Wishlists Shared With Me</h2>
       <div className="mx-auto p-4 text-white w-full max-w-4xl">
       {sharedWishlists.length === 0 ? (
         <p className="text-gray-300 text-center mt-6">No shared wishlists yet.</p>
