@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Gifty.Domain.Entities;
+using Gifty.Domain.Entities.Notifications;
 using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Infrastructure
@@ -11,6 +12,7 @@ namespace Gifty.Infrastructure
         public DbSet<WishlistItem> WishlistItems { get; set; }
         public DbSet<SharedLink> SharedLinks { get; set; }
         public DbSet<SharedLinkVisit> SharedLinkVisits { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

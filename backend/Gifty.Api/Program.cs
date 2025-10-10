@@ -11,6 +11,7 @@ using Gifty.Application.Features.Users.Dtos;
 using Gifty.Domain.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Gifty.Infrastructure;
+using Gifty.Infrastructure.Jobs;
 using Gifty.Infrastructure.Repositories;
 using Gifty.Infrastructure.Services;
 using MediatR;
@@ -93,6 +94,10 @@ builder.Services.AddScoped<IWishlistItemRepository, WishlistItemRepository>();
 builder.Services.AddScoped<ISharedLinkRepository, SharedLinkRepository>();
 builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<ISharedLinkVisitRepository, SharedLinkVisitRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IBirthdayReminderService, BirthdayReminderService>();
+
+builder.Services.AddHostedService<BirthdayReminderJob>();
 
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
