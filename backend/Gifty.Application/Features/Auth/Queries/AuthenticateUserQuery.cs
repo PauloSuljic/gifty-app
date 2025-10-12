@@ -25,7 +25,8 @@ public class AuthenticateUserHandler(IFirebaseAuthService firebaseAuthService)
             Email = userEntity.Email,
             AvatarUrl = userEntity.AvatarUrl,
             Bio = userEntity.Bio,
-            CreatedAt = userEntity.CreatedAt
+            CreatedAt = userEntity.CreatedAt,
+            DateOfBirth = userEntity.DateOfBirth
         };
     }
 }

@@ -7,6 +7,7 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,15 +24,20 @@ const Register = () => {
       return;
     }
 
+    if (!dateOfBirth) {
+      setError("Please select your date of birth.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await register(email, password, username);
+      await register(email, password, username, dateOfBirth);
     } catch (err: any) {
       if (err.message.includes("auth/email-already-in-use")) {
         setError("This email is already registered.");
       } else {
-        setError("Failed to register. Please try again.");
+        setError  ("Failed to register. Please try again.");
       }
     }
 
@@ -90,6 +96,19 @@ const Register = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 rounded-md bg-gray-700 text-white border border-gray-600"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="dateOfBirth" className="sr-only">Date of Birth</label>
+            <input
+              id="dateOfBirth"
+              type="date"
+              placeholder="Date of Birth"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-full p-2 rounded-md bg-gray-700 text-white border border-gray-600"
               required
             />

@@ -10,6 +10,7 @@ using Gifty.Application.Features.Users.Dtos;
 using Gifty.Domain.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Gifty.Infrastructure;
+using Gifty.Infrastructure.Converters;
 using Gifty.Infrastructure.Jobs;
 using Gifty.Infrastructure.Repositories;
 using Gifty.Infrastructure.Services;
@@ -80,7 +81,11 @@ if (useTestAuth != "true")
 }
 
 // ✅ 3. Services
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
