@@ -247,7 +247,7 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
         {/* ✅ Main Content */}
         <div className="flex-1 flex flex-col lg:pr-6 p-4 pt-4 lg:pt-6">
           {!hideHeader && <DashboardHeader />}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto">
             {children}
           </div>
         </div>
