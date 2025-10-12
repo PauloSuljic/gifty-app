@@ -8,10 +8,11 @@ public class UserCreatedEventHandler(ILogger<UserCreatedEventHandler> logger) : 
 {
     public Task Handle(UserCreatedEvent notification, CancellationToken cancellationToken)
     {
-        logger.LogInformation("User created: {UserId}, {Username}, {Email}",
+        logger.LogInformation("User created: {UserId}, {Username}, {Email}, {DateOfBirth}",
             notification.User.Id,
             notification.User.Username,
-            notification.User.Email);
+            notification.User.Email,
+            notification.User.DateOfBirth);
 
         return Task.CompletedTask;
     }

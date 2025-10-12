@@ -30,7 +30,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  register: (email: string, password: string, username: string, dateOfBirth: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshFirebaseUser: () => Promise<void>;
   databaseUser: GiftyUser | null;
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (email: string, password: string, username: string, dateOfBirth: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -107,12 +107,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await updateProfile(user, { displayName: username });
       await sendEmailVerification(user);
 
+      // Get Firebase token
+      const token = await user.getIdToken();
+
+      // ✅ Assign random avatar if Firebase doesn't have one
+      const randomAvatar = `/avatars/avatar${Math.floor(Math.random() * 9) + 1}.png`;
+      const avatar = user.photoURL || randomAvatar;
+
+      // ✅ Create DB user in backend
+      await apiFetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: user.uid,
+          username,
+          email,
+          bio: "",
+          avatarUrl: avatar,
+          dateOfBirth, // e.g. "1996-06-29"
+        }),
+      });
+
       navigate("/verify-email");
     } catch (error) {
       console.error("Registration Error:", error);
       toast.error("Failed to register. Please try again.", {
         duration: 3000,
-        position: "bottom-center"
+        position: "bottom-center",
       });
     }
   };

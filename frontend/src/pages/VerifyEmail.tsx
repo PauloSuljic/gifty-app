@@ -24,7 +24,7 @@ const VerifyEmail = () => {
   
     if (refreshedUser?.emailVerified) {
       toast.success("Email verified! 🎉");
-      navigate("/dashboard");
+      navigate("/");
     } else {
       toast.error("Still not verified. Check your inbox.");
     }
@@ -32,7 +32,7 @@ const VerifyEmail = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full text-center">
+      <div className="bg-gray-800 p-6 rounded-lg w-[90%] max-w-sm text-center shadow-lg border border-gray-700">
         <h2 className="text-2xl font-bold mb-4">Verify Your Email</h2>
         <p className="mb-2">
           We've sent a verification email to <strong>{firebaseUser?.email}</strong>.

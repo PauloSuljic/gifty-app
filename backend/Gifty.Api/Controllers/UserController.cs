@@ -20,9 +20,9 @@ namespace gifty_web_backend.Controllers
             var userDto = await mediator.Send(query);
             return Ok(userDto);
         }
-
+        
         [HttpPost]
-        public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto request)
+        public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto dto)
         {
             var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(firebaseUid))
@@ -30,18 +30,18 @@ namespace gifty_web_backend.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            if (firebaseUid != request.Id)
+            if (firebaseUid != dto.Id)
             {
                 return Forbid("You can only create a profile for your own Firebase account.");
             }
 
             var command = new CreateUserCommand(
-                request.Id,
-                request.Username,
-                request.Email,
-                request.Bio,
-                request.AvatarUrl,
-                request.DateOfBirth
+                dto.Id,
+                dto.Username,
+                dto.Email,
+                dto.Bio,
+                dto.AvatarUrl,
+                dto.DateOfBirth
             );
 
             var userDto = await mediator.Send(command);
