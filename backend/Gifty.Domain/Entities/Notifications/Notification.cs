@@ -1,4 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using Gifty.Domain.Entities.Users;
 
 namespace Gifty.Domain.Entities.Notifications
 {
@@ -7,7 +10,11 @@ namespace Gifty.Domain.Entities.Notifications
         [Key]
         public Guid Id { get; init; } = Guid.NewGuid();
         [Required]
+        [ForeignKey("User")]
         public required string UserId { get; init; }
+
+        [JsonIgnore]
+        public User? User { get; init; }
         [Required]
         public required string Type { get; set; } // "Birthday", "GiftReserved", "WishlistShared"
         [Required]

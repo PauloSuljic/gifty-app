@@ -1,7 +1,7 @@
 using Gifty.Domain.Interfaces;
 using MediatR;
 
-namespace Gifty.Application.Notifications.Commands;
+namespace Gifty.Application.Features.Notifications.Commands;
 
 public record MarkNotificationAsReadCommand(Guid Id) : IRequest<bool>;
 

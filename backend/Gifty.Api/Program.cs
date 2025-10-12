@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Serilog;
-using Serilog.Context;
 using System.Security.Claims;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;

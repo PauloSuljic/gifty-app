@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../Sidebar";
 import GuestSidebar from "../ui/GuestSidebar";
 import DashboardHeader from "../DashboardHeader";
-import { FiMenu, FiBell, FiGift, FiX } from "react-icons/fi";
+import { FiMenu, FiBell, FiGift, FiX, FiUser } from "react-icons/fi";
 import { Link } from "react-router-dom";
+
+// If you use a custom useAuth hook for Firebase authentication, import it:
+import { useAuth } from "../AuthProvider"; // Adjust path as needed
+import { apiFetch } from "../../api";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,33 +15,16 @@ interface LayoutProps {
   guest?: boolean;
 }
 
-const notifications = [
-  {
-    id: 1,
-    type: "gift",
-    title: "Sarah’s birthday in 3 days",
-    time: "2 hours ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    type: "gift",
-    title: "Benjamin reserved an item",
-    time: "1 day ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    type: "gift",
-    title: "John reserved an item from your wishlist",
-    time: "3 days ago",
-    unread: false,
-  },
-];
 
 const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [markingRead, setMarkingRead] = useState(false);
+
+  const { firebaseUser } = useAuth();
 
   const toggleNotifications = () => {
     setIsNotificationsOpen((prev) => !prev);
@@ -46,6 +33,82 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
   const closeNotifications = () => {
     setIsNotificationsOpen(false);
   };
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    let ignore = false;
+    const fetchNotifications = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        let token = "";
+        if (firebaseUser && firebaseUser.getIdToken) {
+          token = await firebaseUser.getIdToken();
+        }
+        const res = await apiFetch(
+          "/api/notifications",
+          {
+            method: "GET",
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
+          }
+        );
+        if (!res.ok) throw new Error("Failed to fetch notifications");
+        const data = await res.json();
+        console.log("Fetched notifications:", data); // Debug
+        if (!ignore) setNotifications(Array.isArray(data) ? data : []);
+      } catch (err: any) {
+        if (!ignore) setError(err.message || "Error loading notifications");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+    if (!guest && firebaseUser) {
+      fetchNotifications();
+    }
+    return () => {
+      ignore = true;
+    };
+    // eslint-disable-next-line
+  }, [guest, firebaseUser]);
+
+  // Mark all notifications as read when modal opens
+  useEffect(() => {
+    const markAllRead = async () => {
+      if (!isNotificationsOpen || notifications.length === 0) return;
+      setMarkingRead(true);
+      try {
+        let token = "";
+        if (firebaseUser && firebaseUser.getIdToken) {
+          token = await firebaseUser.getIdToken();
+        }
+        const res = await apiFetch("/api/notifications/mark-read", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
+        if (!res.ok) throw new Error("Failed to mark notifications as read");
+        // Optionally update local state
+        setNotifications((prev) =>
+          prev.map((n) => ({ ...n, isRead: true }))
+        );
+      } catch (err) {
+        // swallow error for marking read
+      } finally {
+        setMarkingRead(false);
+      }
+    };
+    if (isNotificationsOpen && notifications.some((n) => !n.isRead)) {
+      markAllRead();
+    }
+    // Only run when modal opens
+    // eslint-disable-next-line
+  }, [isNotificationsOpen]);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <div className="flex h-screen relative overflow-x-hidden" onClick={closeNotifications}>
@@ -83,7 +146,11 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
             className="p-2 bg-gray-800 rounded-lg shadow-lg text-white relative"
           >
             <FiBell size={24} />
-            <span className="absolute -top-1 -right-1 bg-purple-500 text-xs text-white rounded-full px-1">2</span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-purple-500 text-xs text-white rounded-full px-1">
+                {unreadCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -96,8 +163,8 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
             <div className="fixed right-1/2 top-1/2 translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl max-w-md w-[90%] sm:w-96 mx-auto max-h-[80vh] overflow-y-auto z-50 p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2">
-                  <FiBell className="text-purple-500" size={24} />
-                  <h2 className="text-xl font-semibold text-gray-100">Notifications</h2>
+                  <FiBell className="text-purple-500" size={20} />
+                  <h2 className="text-large font-semibold text-gray-100">Notifications</h2>
                 </div>
                 <button
                   onClick={closeNotifications}
@@ -107,32 +174,71 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
                   <FiX size={24} />
                 </button>
               </div>
-              <ul className="flex flex-col space-y-3">
-                {notifications.map(({ id, type, title, time, unread }) => (
-                  <li
-                    key={id}
-                    className={`relative flex space-x-3 p-3 rounded-md cursor-pointer text-gray-300 ${
-                      unread ? "bg-gray-800" : "bg-transparent"
-                    } hover:bg-gray-700/50`}
-                  >
-                    <div className="flex-shrink-0 text-purple-500 mt-1">
-                      <FiGift size={20} />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm">{title}</span>
-                      <span className="text-xs text-gray-500">{time}</span>
-                    </div>
-                    {unread && (
-                      <span className="absolute right-2 top-2 w-2 h-2 bg-purple-500 rounded-full" />
-                    )}
-                  </li>
-                ))}
-              </ul>
+              {loading ? (
+                <div className="text-gray-400 text-center py-6">Loading notifications...</div>
+              ) : error ? (
+                <div className="text-red-400 text-center py-6">{error}</div>
+              ) : notifications.length === 0 ? (
+                <div className="text-gray-400 text-center py-6">No notifications</div>
+              ) : (
+                <ul className="flex flex-col space-y-3">
+                  {notifications.map((n) => (
+                    <li
+                      key={n.id}
+                      className={`flex items-start justify-between p-4 rounded-lg transition-colors ${
+                        n.isRead ? "bg-gray-800" : "bg-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        {n.type === "BirthdayReminder" && <FiGift className="text-purple-400 flex-shrink-0" size={18} />}
+                        {n.type === "ItemReserved" && <FiGift className="text-purple-400 flex-shrink-0" size={18} />}
+                        {n.type === "WishlistShared" && <FiUser className="text-purple-400 flex-shrink-0" size={18} />}
+                        {n.type === "EventTomorrow" && <FiBell className="text-purple-400 flex-shrink-0" size={18} />}
+                        <div>
+                          <p className="text-purple-300 text-xs">{n.title}</p>
+                          <p className="text-gray-400 text-xs">{n.message}</p>
+                          <p className="text-xs text-gray-500 mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      {!n.isRead && <span className="h-2 w-2 bg-purple-500 rounded-full mt-2 ml-3"></span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <button
+                disabled={markingRead}
                 onClick={() => setIsNotificationsOpen(false)}
-                className="w-full rounded border border-gray-600 hover:bg-gray-700/50 text-purple-400 text-sm font-medium text-center py-2 mt-4"
+                className={`w-full rounded border border-gray-600 hover:bg-gray-700/50 text-purple-400 text-sm font-medium text-center py-2 mt-4 ${
+                  markingRead ? "opacity-70 cursor-not-allowed" : ""
+                }`}
               >
-                View All Notifications
+                {markingRead ? (
+                  <span className="flex justify-center items-center gap-2">
+                    <svg
+                      className="animate-spin h-4 w-4 text-purple-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      />
+                    </svg>
+                    Marking...
+                  </span>
+                ) : (
+                  "View All Notifications"
+                )}
               </button>
             </div>
           </>

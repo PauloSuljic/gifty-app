@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Gifty.Application.Features.WishlistItems.Commands;
 using Gifty.Application.Features.WishlistItems.Queries;
 using Gifty.Application.Features.Wishlists.Dtos;
+using Gifty.Domain.Interfaces;
 
 namespace gifty_web_backend.Controllers
 {
