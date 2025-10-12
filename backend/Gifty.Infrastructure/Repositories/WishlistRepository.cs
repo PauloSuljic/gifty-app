@@ -13,6 +13,14 @@ namespace Gifty.Infrastructure.Repositories
                 .SingleOrDefaultAsync(w => w.Id == id);
         }
 
+        public async Task<string?> GetOwnerUserIdByWishlistId(Guid wishlistId, CancellationToken cancellationToken)
+        {
+            return await dbContext.Wishlists
+                .Where(w => w.Id == wishlistId)
+                .Select(w => w.UserId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<Wishlist>> GetAllByUserIdAsync(string userId)
         {
             return await dbContext.Wishlists

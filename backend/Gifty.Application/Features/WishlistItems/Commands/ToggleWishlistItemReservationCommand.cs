@@ -14,7 +14,8 @@ public record ToggleWishlistItemReservationCommand(
 
 public class ToggleWishlistItemReservationHandler(
     IWishlistItemRepository wishlistItemRepository,
-    IWishlistRepository wishlistRepository)
+    IWishlistRepository wishlistRepository,
+    IUserRepository userRepository)
     : IRequestHandler<ToggleWishlistItemReservationCommand, WishlistItemDto>
 {
     public async Task<WishlistItemDto> Handle(ToggleWishlistItemReservationCommand request, CancellationToken cancellationToken)
@@ -44,7 +45,8 @@ public class ToggleWishlistItemReservationHandler(
         {
             throw new BadRequestException("You can only reserve 1 item per wishlist.");
         }
-
+        
+        // Use internal user GUID directly (Firebase UID is only for login)
         item.ToggleReservation(request.UserId);
 
         await wishlistItemRepository.UpdateAsync(item);

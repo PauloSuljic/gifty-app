@@ -70,6 +70,10 @@ namespace Gifty.Domain.Entities
                 ReservedBy = userId;
             }
 
+            // Specific event (used by notifications)
+            RaiseDomainEvent(new WishlistItemReservationToggledEvent(this));
+
+            // Generic event (used by audit/admin/analytics)
             RaiseDomainEvent(new WishlistItemUpdatedEvent(this));
         }
     }
