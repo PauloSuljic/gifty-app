@@ -76,7 +76,7 @@ const Profile = () => {
     <Layout>
       <h2 className="text-xl sm:text-3xl font-semibold pt-3 text-center">Edit Profile</h2>
       <div className="mx-auto p-4 text-white w-full max-w-4xl">
-        <div className="flex flex-col md:flex-row justify-center gap-10">
+        <div className="flex flex-col md:flex-row justify-center gap-5">
           {/* Left: Username & Bio */}
           <div className="w-full md:w-1/2">
             <div className="mb-4">

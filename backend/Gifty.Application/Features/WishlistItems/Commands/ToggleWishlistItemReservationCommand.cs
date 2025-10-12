@@ -14,8 +14,7 @@ public record ToggleWishlistItemReservationCommand(
 
 public class ToggleWishlistItemReservationHandler(
     IWishlistItemRepository wishlistItemRepository,
-    IWishlistRepository wishlistRepository,
-    IUserRepository userRepository)
+    IWishlistRepository wishlistRepository)
     : IRequestHandler<ToggleWishlistItemReservationCommand, WishlistItemDto>
 {
     public async Task<WishlistItemDto> Handle(ToggleWishlistItemReservationCommand request, CancellationToken cancellationToken)

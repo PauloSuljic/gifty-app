@@ -246,7 +246,7 @@ const Wishlist = () => {
       </div>
   
       {wishlists.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 p-4">
           {wishlistOrder.map((id) => {
             const wishlist = wishlists.find((w) => w.id === id);
             if (!wishlist) return null;

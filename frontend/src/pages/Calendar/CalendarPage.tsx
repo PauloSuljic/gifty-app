@@ -4,6 +4,7 @@ import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
 import Layout from "../../components/layout/Layout";
 import { useAuth } from "../../components/AuthProvider";
 import { apiFetch } from "../../api";
+import { useNavigate } from "react-router-dom";
 
 interface EventItem {
   id: number;
@@ -29,6 +30,7 @@ const occursOn = (eventDate: Date, day: Date) =>
 
 export default function CalendarPage() {
   const { firebaseUser } = useAuth();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -187,7 +189,8 @@ export default function CalendarPage() {
             {(selectedDate && eventsForSelectedDate.length > 0 ? eventsForSelectedDate : !selectedDate ? events : []).map((event) => (
               <div
                 key={event.id}
-                className="flex justify-between items-center bg-gray-700/50 rounded-xl p-3"
+                onClick={() => navigate("/shared-with-me")}
+                className="flex justify-between items-center bg-gray-700/50 rounded-xl p-3 cursor-pointer hover:bg-gray-700 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <div className="bg-gray-600/20 p-2 rounded-full">
