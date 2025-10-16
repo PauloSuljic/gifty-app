@@ -27,7 +27,8 @@ namespace Gifty.Tests.Integration.Controllers
                 Id = userId,
                 Username = $"TestUser_{userId}",
                 Email = $"{userId}@test.com",
-                Bio = "Test Bio"
+                Bio = "Test Bio",
+                DateOfBirth = new DateOnly(2000, 1, 1)
             };
 
             var response = await client.PostAsJsonAsync("/api/users", user);

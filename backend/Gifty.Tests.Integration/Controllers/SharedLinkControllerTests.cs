@@ -27,7 +27,8 @@ public class SharedLinkControllerTests
             Id = _userId,
             Username = "Test",
             Email = "test@example.com",
-            Bio = "integration test"
+            Bio = "integration test",
+            DateOfBirth = new DateOnly(2000, 1, 1)
         });
         
         var dto = new { Name = name, IsPublic = false };
