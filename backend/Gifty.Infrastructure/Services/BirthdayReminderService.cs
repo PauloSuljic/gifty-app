@@ -21,7 +21,7 @@ public class BirthdayReminderService(GiftyDbContext dbContext) : IBirthdayRemind
 
         foreach (var user in allUsers)
         {
-            var nextBirthday = new DateTime(today.Year, user.DateOfBirth.Month, user.DateOfBirth.Day);
+            var nextBirthday = new DateTime(today.Year, user.DateOfBirth!.Value.Month, user.DateOfBirth!.Value.Day);
 
             // If birthday already passed this year, shift to next year
             if (nextBirthday < today)

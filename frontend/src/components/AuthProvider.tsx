@@ -89,15 +89,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const loginWithGoogle = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      auth.useDeviceLanguage();
-      await signInWithPopup(auth, provider);
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Google Sign-In Error", error);
+  try {
+    const provider = new GoogleAuthProvider();
+    auth.useDeviceLanguage();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    const token = await user.getIdToken();
+
+    // Try fetching existing user
+    const response = await apiFetch(`/api/users/${user.uid}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // If user doesn’t exist → create it
+    if (response.status === 404) {
+      const randomAvatar = `/avatars/avatar${Math.floor(Math.random() * 9) + 1}.png`;
+      const avatar = user.photoURL || randomAvatar;
+
+      await apiFetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          id: user.uid,
+          username: user.displayName || `user_${user.uid.substring(0, 6)}`,
+          email: user.email,
+          bio: "",
+          avatarUrl: avatar,
+          dateOfBirth: "2000-01-01", // placeholder if Google doesn’t supply one
+        }),
+      });
     }
-  };
+
+    navigate("/dashboard");
+  } catch (error) {
+    console.error("Google Sign-In Error", error);
+  }
+};
 
   const register = async (email: string, password: string, username: string, dateOfBirth: string) => {
     try {
