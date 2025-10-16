@@ -4,6 +4,7 @@ using FluentAssertions;
 using Gifty.Application.Features.Auth.Dtos;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Application.Features.Wishlists.Dtos;
+using Gifty.Domain.Entities.Users;
 using Gifty.Tests.Integration.Integration;
 
 namespace Gifty.Tests.Integration.Controllers;
@@ -22,28 +23,24 @@ public class WishlistItemControllerTests
     
     private async Task CreateTestUser(string userId, HttpClient client)
     {
-        var mockFirebaseIdToken = $"mock-firebase-token-for-{userId}";
-        var loginDto = new TokenRequestDto { Token = mockFirebaseIdToken };
-        var onboardingResponse = await client.PostAsJsonAsync("/api/auth/login", loginDto);
-
-        if (!onboardingResponse.IsSuccessStatusCode && onboardingResponse.StatusCode != HttpStatusCode.Conflict)
+        var user = new User
         {
-            var body = await onboardingResponse.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to onboard test user via /api/auth/login ({onboardingResponse.StatusCode}):\n{body}");
-        }
-        
-        var userUpdateDto = new UpdateUserDto 
-        {
+            Id = userId,
             Username = $"TestUser_{userId}",
+            Email = $"{userId}@test.com",
             Bio = "Test Bio",
-            AvatarUrl = "http://example.com/avatar.png"
+            DateOfBirth = new DateOnly(2000, 1, 1)
         };
-        
-        var updateProfileResponse = await client.PutAsJsonAsync($"/api/users/{userId}", userUpdateDto);
-        if (!updateProfileResponse.IsSuccessStatusCode)
+
+        var response = await client.PostAsJsonAsync("/api/users", user);
+
+        if (!response.IsSuccessStatusCode)
         {
-            var updateBody = await updateProfileResponse.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to update test user profile ({updateProfileResponse.StatusCode}):\n{updateBody}");
+            var body = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode == HttpStatusCode.Conflict && body.Contains("already"))
+                return;
+
+            throw new Exception($"Failed to create user ({response.StatusCode}):\n{body}");
         }
     }
 

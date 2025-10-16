@@ -12,7 +12,7 @@ public record CreateUserCommand(
     string Email,
     string? Bio,
     string? AvatarUrl,
-    DateOnly DateOfBirth
+    DateOnly? DateOfBirth
 ) : IRequest<UserDto>
 {
     public class CreateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<CreateUserCommand, UserDto>
@@ -25,13 +25,17 @@ public record CreateUserCommand(
                 throw new ConflictException($"User with ID '{request.Id}' already exists.");
             }
 
-            
-            var existingUserByUsername = await userRepository.GetUserByUsernameAsync(request.Username);
-            if (existingUserByUsername != null)
+            // ✅ TEMP HOTFIX: allow duplicate full names by auto-incrementing
+            var baseUsername = request.Username.Trim();
+            var uniqueUsername = baseUsername;
+            int counter = 1;
+
+            while (await userRepository.GetUserByUsernameAsync(uniqueUsername) != null)
             {
-                throw new ConflictException($"Username '{request.Username}' is already taken.");
+                uniqueUsername = $"{baseUsername}{counter}";
+                counter++;
             }
-            
+
             var existingUserByEmail = await userRepository.GetUserByEmailAsync(request.Email);
             if (existingUserByEmail != null)
             {
@@ -40,7 +44,7 @@ public record CreateUserCommand(
 
             var user = User.Create(
                 request.Id,
-                request.Username,
+                uniqueUsername,
                 request.Email,
                 request.Bio,
                 request.AvatarUrl,

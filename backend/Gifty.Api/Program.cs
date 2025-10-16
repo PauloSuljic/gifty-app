@@ -118,6 +118,8 @@ else
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
+            options.Authority = "https://securetoken.google.com/gifty-auth-71f71";
+            options.MetadataAddress = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys";
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,
