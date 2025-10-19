@@ -6,6 +6,8 @@ import {
   useSensors,
   useSensor,
   PointerSensor,
+  TouchSensor,
+  MouseSensor,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -70,14 +72,48 @@ const WishlistDetail = () => {
     };
     fetchWishlist();
   }, [id, firebaseUser]);
+  // Mobile detection
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+    navigator.userAgent
+  );
+
+  // Disable body scroll
+  const disableBodyScroll = () => {
+    document.body.style.overflow = "hidden";
+  };
+
+  // Enable body scroll
+  const enableBodyScroll = () => {
+    document.body.style.overflow = "";
+  };
+
   // DnD Kit sensors
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
+    isMobile
+      ? useSensor(TouchSensor, {
+          activationConstraint: {
+            delay: 350,
+            tolerance: 8,
+          },
+        })
+      : useSensor(PointerSensor, {
+          activationConstraint: {
+            delay: 250,
+            tolerance: 5,
+          },
+        }),
+    useSensor(MouseSensor)
   );
+
+  // Handlers for drag start and end to manage body scroll
+  const handleDragStart = () => {
+    disableBodyScroll();
+  };
+
+  const handleDragEndWrapper = async (event: any) => {
+    enableBodyScroll();
+    await handleDragEnd(event);
+  };
 
   // DnD Kit drag end handler
   const handleDragEnd = async (event: any) => {
@@ -247,11 +283,12 @@ const WishlistDetail = () => {
       </div>
 
       {/* Items with DnD */}
-      <div className="px-4 mt-6 space-y-3">
+      <div className="px-4 mt-6 space-y-3 touch-none select-none">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEndWrapper}
         >
           <SortableContext
             items={items.map((item) => item.id)}
