@@ -1,7 +1,7 @@
 using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.SharedLinks.Dtos;
-using Gifty.Application.Features.Wishlists.Dtos;
+using Gifty.Application.Features.WishlistItems.Dtos;
 
 namespace Gifty.Application.Features.SharedLinks.Queries;
 

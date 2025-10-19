@@ -1,4 +1,4 @@
-namespace Gifty.Application.Features.Wishlists.Dtos;
+namespace Gifty.Application.Features.WishlistItems.Dtos;
 
 public record WishlistItemDto
 {
@@ -10,4 +10,5 @@ public record WishlistItemDto
     public bool IsOwner { get; init; }
     public DateTime CreatedAt { get; set; }
     public Guid WishlistId { get; set; }
+    public int Order { get; set; }
 }

@@ -15,12 +15,13 @@ namespace Gifty.Domain.Entities
         public bool IsReserved { get; set; } = false;
         public string? ReservedBy { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int Order { get; set; } 
         [ForeignKey("Wishlist")]
         public Guid WishlistId { get; set; }
         [JsonIgnore]
         public Wishlist? Wishlist { get; set; }
         private WishlistItem() { }
-        public static WishlistItem Create(Guid wishlistId, string name, string? link)
+        public static WishlistItem Create(Guid wishlistId, string name, string? link, int order)
         {
             var item = new WishlistItem
             {
@@ -29,7 +30,8 @@ namespace Gifty.Domain.Entities
                 Link = link,
                 CreatedAt = DateTime.UtcNow,
                 IsReserved = false,
-                ReservedBy = null
+                ReservedBy = null,
+                Order = order
             };
 
             item.RaiseDomainEvent(new WishlistItemCreatedEvent(item));
@@ -50,6 +52,12 @@ namespace Gifty.Domain.Entities
             if (link != null) Link = link;
 
             RaiseDomainEvent(new WishlistItemPartiallyUpdatedEvent(this));
+        }
+        
+        public void Reorder(int newOrder)
+        {
+            Order = newOrder;
+            //RaiseDomainEvent(new WishlistItemReorderedEvent(this));
         }
 
         public void Delete()

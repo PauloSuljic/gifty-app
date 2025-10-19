@@ -1,8 +1,8 @@
 using MediatR;
 using Gifty.Domain.Entities;
 using Gifty.Domain.Interfaces;
-using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Application.Common.Exceptions;
+using Gifty.Application.Features.WishlistItems.Dtos;
 
 namespace Gifty.Application.Features.WishlistItems.Commands;
 
@@ -10,7 +10,8 @@ public record CreateWishlistItemCommand(
     Guid WishlistId,
     string UserId,
     string Name,
-    string? Link
+    string? Link,
+    int Order
 ) : IRequest<WishlistItemDto>;
 
 public class CreateWishlistItemHandler(
@@ -32,7 +33,7 @@ public class CreateWishlistItemHandler(
             throw new ForbiddenAccessException("You are not authorized to add items to this wishlist.");
         }
         
-        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link);
+        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, request.Order);
         
         await wishlistItemRepository.AddAsync(newItem);
         await wishlistItemRepository.SaveChangesAsync();

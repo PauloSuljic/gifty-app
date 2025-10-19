@@ -3,9 +3,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Gifty.Application.Features.WishlistItems.Commands;
+using Gifty.Application.Features.WishlistItems.Dtos;
 using Gifty.Application.Features.WishlistItems.Queries;
 using Gifty.Application.Features.Wishlists.Dtos;
-using Gifty.Domain.Interfaces;
 
 namespace gifty_web_backend.Controllers
 {
@@ -27,7 +27,8 @@ namespace gifty_web_backend.Controllers
                 wishlistId,
                 userId,
                 request.Name,
-                request.Link
+                request.Link,
+                request.Order
             );
 
             var wishlistItemDto = await mediator.Send(command);
@@ -137,6 +138,21 @@ namespace gifty_web_backend.Controllers
 
             await mediator.Send(command);
             return NoContent();
+        }
+        
+        [HttpPut("reorder")]
+        public async Task<IActionResult> ReorderWishlistItems(Guid wishlistId, [FromBody] List<ReorderWishlistItemDto> reordered)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var command = new ReorderWishlistItemsCommand(wishlistId, userId, reordered);
+
+            await mediator.Send(command);
+            return Ok();
         }
     }
 }

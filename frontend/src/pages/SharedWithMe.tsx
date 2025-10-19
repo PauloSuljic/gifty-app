@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
 import Layout from "../components/layout/Layout";
 import { toast } from "react-hot-toast";
@@ -50,6 +50,8 @@ const SharedWithMe = () => {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [removeModalOwnerId, setRemoveModalOwnerId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const highlightUserId = location.state?.highlightUserId;
 
   const toggleGroup = (ownerId: string) => {
     setExpandedGroups((prev) =>
@@ -70,12 +72,20 @@ const SharedWithMe = () => {
 
       if (response.ok) {
         const data = await response.json();
+
+        // ✅ Move the highlighted user to the top
+        if (highlightUserId) {
+          data.sort((a: any, b: any) =>
+            a.ownerId === highlightUserId ? -1 : b.ownerId === highlightUserId ? 1 : 0
+          );
+        }
+
         setSharedWishlists(data);
       }
     };
 
     fetchSharedWishlists();
-  }, [firebaseUser]);
+  }, [firebaseUser, highlightUserId]);
 
   return (
     <Layout>

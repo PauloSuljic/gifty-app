@@ -15,6 +15,8 @@ type WishlistItemProps = {
   onToggleReserve?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
+  listeners?: any;
+  attributes?: any;
 };
 
 const WishlistItem = ({
@@ -27,6 +29,8 @@ const WishlistItem = ({
   onToggleReserve,
   onDelete,
   onEdit,
+  listeners,
+  attributes,
 }: WishlistItemProps) => {
   const [, setIsMobile] = useState(false);
   const [modalAction, setModalAction] = useState<"reserve" | "unreserve" | null>(null);
@@ -53,7 +57,9 @@ const WishlistItem = ({
   return (
     <>
       <div
-        className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer"
+        {...listeners}
+        {...attributes}
+        className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer transition-transform duration-200 ease-in-out active:scale-95 active:shadow-lg"
         onClick={() => {
           if (link) {
             setIsLinkModalOpen(true);
@@ -75,12 +81,12 @@ const WishlistItem = ({
           {context === "own" ? (
             <>
               {onEdit && (
-                <button onClick={onEdit} className="text-gray-400 hover:text-purple-400">
+                <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="text-gray-400 hover:text-purple-400">
                   <FiEdit className="text-large" />
                 </button>
               )}
               {onDelete && (
-                <button onClick={onDelete} className="text-red-500 hover:text-red-600">
+                <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-red-500 hover:text-red-600">
                   <FiTrash2 className="text-large" />
                 </button>
               )}

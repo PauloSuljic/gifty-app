@@ -1,8 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Gifty.Application.Features.Auth.Dtos;
-using Gifty.Application.Features.Users.Dtos;
+using Gifty.Application.Features.WishlistItems.Dtos;
 using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Domain.Entities.Users;
 using Gifty.Tests.Integration.Integration;
