@@ -21,6 +21,7 @@ namespace Gifty.Infrastructure
         public DbSet<SharedLink> SharedLinks { get; set; }
         public DbSet<SharedLinkVisit> SharedLinkVisits { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
