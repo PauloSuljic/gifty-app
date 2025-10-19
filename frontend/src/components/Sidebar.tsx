@@ -1,14 +1,33 @@
-import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FiGift, FiLogOut, FiHome, FiUser, FiX, FiSettings, FiCalendar } from "react-icons/fi";
 import { useAuth } from "../components/AuthProvider";
+import { useState, useEffect } from "react";
 
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+const Sidebar = ({ isOpen: isOpenProp, onClose }: SidebarProps) => {
   const { logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [isOpen, setIsOpen] = useState(isOpenProp);
+  const [activePath, setActivePath] = useState(location.pathname);
+
+  useEffect(() => {
+    setIsOpen(isOpenProp);
+  }, [isOpenProp]);
+
+  const handleLinkClick = (path: string) => {
+    setActivePath(path);
+    setIsOpen(false);
+    setTimeout(() => {
+      navigate(path);
+      onClose();
+    }, 200);
+  };
 
   return (
     <>
@@ -37,8 +56,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <FiX size={24} />
         </button>
 
-        <Link
-          to="/dashboard"
+        <button
+          onClick={() => handleLinkClick("/dashboard")}
           className="p-3 m-3 flex items-center justify-center text-center"
         >
           <img
@@ -46,30 +65,52 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             alt="Gifty"
             className="h-[65px] w-auto"
           />
-        </Link>
+        </button>
 
         <nav className="mt-10 space-y-4">
-          <Link to="/dashboard" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+          <button
+            onClick={() => handleLinkClick("/dashboard")}
+            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
+              activePath === "/dashboard" ? "font-bold bg-gray-800" : ""
+            }`}
+          >
             <FiHome size={20} /> <span>My Wishlists</span>
-          </Link>
-          <Link to="/shared-with-me" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+          </button>
+          <button
+            onClick={() => handleLinkClick("/shared-with-me")}
+            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
+              activePath === "/shared-with-me" ? "font-bold bg-gray-800" : ""
+            }`}
+          >
             <FiGift size={20} /> <span>Shared With Me</span>
-          </Link>
-          <Link to="/profile" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+          </button>
+          <button
+            onClick={() => handleLinkClick("/profile")}
+            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
+              activePath === "/profile" ? "font-bold bg-gray-800" : ""
+            }`}
+          >
             <FiUser size={20} /> <span>Profile</span>
-          </Link>
-          <Link to="/calendar" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+          </button>
+          <button
+            onClick={() => handleLinkClick("/calendar")}
+            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
+              activePath === "/calendar" ? "font-bold bg-gray-800" : ""
+            }`}
+          >
             <FiCalendar size={20} /> <span>Calendar</span>
-          </Link>
-          <Link to="/settings" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
-            
-          </Link>
+          </button>
         </nav>
         <div className="mt-auto flex flex-col space-y-2">
-          <Link to="/settings" className="flex items-center space-x-2 p-3 hover:bg-gray-800 rounded-md">
+          <button
+            onClick={() => handleLinkClick("/settings")}
+            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
+              activePath === "/settings" ? "font-bold bg-gray-800" : ""
+            }`}
+          >
             <FiSettings size={20} /> <span>Settings</span>
-          </Link>
-          <button onClick={logout} className="flex items-center space-x-2 p-3 hover:bg-red-600 rounded-md">
+          </button>
+          <button onClick={logout} className="flex items-center space-x-2 p-3 rounded-md w-full hover:bg-red-600 hover:text-white text-white">
             <FiLogOut size={20} /> <span>Logout</span>
           </button>
         </div>
