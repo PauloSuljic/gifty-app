@@ -106,8 +106,16 @@ const Wishlist = () => {
     }
   };
 
+  const handleDragStart = () => {
+    // Disable body scroll during drag to prevent Safari bounce
+    document.body.style.overflow = "hidden";
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const {active, over} = event;
+    // Re-enable body scroll
+    document.body.style.overflow = "";
+
     if (!over || active.id === over.id) return;
   
     const oldIndex = wishlistOrder.indexOf(active.id as string);
@@ -231,10 +239,13 @@ const Wishlist = () => {
     }
   };
 
+  // Detect mobile device (iOS) for optimized sensors
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 300,
-      tolerance: 5,
+      delay: 350,
+      tolerance: 8,
     },
   });
   
@@ -244,7 +255,7 @@ const Wishlist = () => {
     },
   }); // Optional: desktop support
 
-  const sensors = useSensors(touchSensor, mouseSensor);
+  const sensors = isMobile ? useSensors(touchSensor) : useSensors(touchSensor, mouseSensor);
   
   return (
     <div className="max-w-4xl mx-auto text-white">
@@ -264,9 +275,10 @@ const Wishlist = () => {
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}
+          onDragStart={handleDragStart}
         >
           <SortableContext items={wishlistOrder} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 gap-4 p-4">
+            <div className="grid grid-cols-2 gap-4 p-4 touch-none select-none">
               {wishlistOrder.map((id) => {
                 const wishlist = wishlists.find((w) => w.id === id);
                 if (!wishlist) return null;
