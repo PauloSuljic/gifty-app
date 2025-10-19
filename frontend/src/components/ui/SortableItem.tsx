@@ -17,21 +17,29 @@ export const SortableItem = ({ id, children }: SortableItemProps) => {
     setNodeRef,
     transform,
     transition,
-    isDragging
+    isDragging,
   } = useSortable({ id });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    cursor: isDragging ? "grabbing" : "default"
+    transition: transition ?? "transform 0.25s ease, box-shadow 0.25s ease",
+    opacity: isDragging ? 0.9 : 1,
+    zIndex: isDragging ? 50 : 1,
+    cursor: isDragging ? "grabbing" : "grab",
+    boxShadow: isDragging
+      ? "0 8px 20px rgba(0,0,0,0.25)"
+      : "0 2px 6px rgba(0,0,0,0.15)",
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="relative select-none"
+      {...attributes}
+      {...listeners}
+      className={`relative select-none touch-none transition-transform duration-300 ease-in-out ${
+        isDragging ? "shadow-xl scale-[1.03]" : "hover:scale-[1.02]"
+      }`}
     >
       {children({ listeners, attributes })}
     </div>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import AddItemModal from "./ui/modals/AddItemModal";
-import EditItemModal from "./ui/modals/EditItemModal";
 import RenameWishlistModal from "./ui/modals/RenameWishlistModal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
@@ -16,6 +15,7 @@ import {
   DndContext,
   closestCenter,
   DragEndEvent,
+  DragOverEvent,
   useSensor,
   useSensors,
   TouchSensor,
@@ -24,7 +24,7 @@ import {
 
 import {
   SortableContext,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable';
 import {SortableItem} from './ui/SortableItem';
@@ -65,9 +65,6 @@ const Wishlist = () => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // 🔽 New state for edit functionality
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [wishlistToRename, setWishlistToRename] = useState<{ id: string; name: string } | null>(null);
 
@@ -94,6 +91,18 @@ const Wishlist = () => {
       // if (data.length > 0) {
       //   setExpandedWishlistIds([data[0].id]);
       // }
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const {active, over} = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = wishlistOrder.indexOf(active.id as string);
+    const newIndex = wishlistOrder.indexOf(over.id as string);
+
+    if (oldIndex !== newIndex) {
+      setWishlistOrder((items) => arrayMove(items, oldIndex, newIndex));
     }
   };
 
@@ -229,7 +238,11 @@ const Wishlist = () => {
     },
   });
   
-  const mouseSensor = useSensor(MouseSensor); // Optional: desktop support
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 8,
+    },
+  }); // Optional: desktop support
 
   const sensors = useSensors(touchSensor, mouseSensor);
   
@@ -246,32 +259,46 @@ const Wishlist = () => {
       </div>
   
       {wishlists.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 p-4">
-          {wishlistOrder.map((id) => {
-            const wishlist = wishlists.find((w) => w.id === id);
-            if (!wishlist) return null;
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+        >
+          <SortableContext items={wishlistOrder} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 gap-4 p-4">
+              {wishlistOrder.map((id) => {
+                const wishlist = wishlists.find((w) => w.id === id);
+                if (!wishlist) return null;
 
-            return (
-              <WishlistCard
-                key={wishlist.id}
-                id={wishlist.id}
-                name={wishlist.name}
-                itemCount={wishlistItems[wishlist.id]?.length || 0}
-                coverImage={wishlistItems[wishlist.id]?.[0]?.link}
-                onClick={() => navigate(`/wishlist/${wishlist.id}`)}
-                onShare={() => generateShareLink(wishlist.id)}
-                onRename={() => {
-                  setWishlistToRename({ id: wishlist.id, name: wishlist.name });
-                  setIsRenameModalOpen(true);
-                }}
-                onDelete={() => {
-                  setWishlistToDelete({ id: wishlist.id, name: wishlist.name });
-                  setIsWishlistDeleteModalOpen(true);
-                }}
-              />
-            );
-          })}
-        </div>
+                return (
+                  <SortableItem key={wishlist.id} id={wishlist.id}>
+                    {({ listeners, attributes }) => (
+                      <WishlistCard
+                        id={wishlist.id}
+                        name={wishlist.name}
+                        itemCount={wishlistItems[wishlist.id]?.length || 0}
+                        coverImage={wishlistItems[wishlist.id]?.[0]?.link}
+                        onClick={() => navigate(`/wishlist/${wishlist.id}`)}
+                        onShare={() => generateShareLink(wishlist.id)}
+                        onRename={() => {
+                          setWishlistToRename({ id: wishlist.id, name: wishlist.name });
+                          setIsRenameModalOpen(true);
+                        }}
+                        onDelete={() => {
+                          setWishlistToDelete({ id: wishlist.id, name: wishlist.name });
+                          setIsWishlistDeleteModalOpen(true);
+                        }}
+                        {...listeners}
+                        {...attributes}
+                      />
+                    )}
+                  </SortableItem>
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
       ) : (
         <p className="text-gray-300 text-center">No wishlists found. Create one to get started!</p>
       )}

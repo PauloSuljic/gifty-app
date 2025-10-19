@@ -1,4 +1,18 @@
 import { useEffect, useState } from "react";
+// DnD Kit imports
+import {
+  DndContext,
+  closestCenter,
+  useSensors,
+  useSensor,
+  PointerSensor,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { SortableItem } from "../components/ui/SortableItem";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../components/layout/Layout";
 import WishlistItem from "../components/WishlistItem";
@@ -49,11 +63,56 @@ const WishlistDetail = () => {
       });
       if (resItems.ok) {
         const data = await resItems.json();
-        setItems(data);
+        // Sort items by order property if present
+        const sorted = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        setItems(sorted);
       }
     };
     fetchWishlist();
   }, [id, firebaseUser]);
+  // DnD Kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  // DnD Kit drag end handler
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const newItems = arrayMove(items, oldIndex, newIndex).map((item, idx) => ({
+      ...item,
+      order: idx,
+    }));
+    setItems(newItems);
+    // Persist new order to API
+    try {
+      const token = await firebaseUser?.getIdToken();
+      if (!token) return;
+      await apiFetch(`/api/wishlists/${id}/items/reorder`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          order: newItems.map((item) => item.id),
+        }),
+      });
+    } catch (err) {
+      // Optionally handle error
+      toast.error("Failed to reorder items.", {
+        duration: 3000,
+        position: "bottom-center",
+      });
+    }
+  };
 
   const toggleReservation = async (itemId: string) => {
     if (!firebaseUser) return;
@@ -129,7 +188,7 @@ const WishlistDetail = () => {
   if (!wishlist) return <Layout>Loading...</Layout>;
 
   const isOwner = !!firebaseUser && wishlist?.userId === firebaseUser.uid;
-  const isGuest = !firebaseUser;
+
   const isOtherUser = !!firebaseUser && !isOwner;
 
   const handleShareClick = async () => {
@@ -187,40 +246,56 @@ const WishlistDetail = () => {
         )}
       </div>
 
-      {/* Items */}
+      {/* Items with DnD */}
       <div className="px-4 mt-6 space-y-3">
-        {items.map((item) => (
-          <WishlistItem
-            key={item.id}
-            id={item.id}
-            name={item.name}
-            link={item.link}
-            isReserved={item.isReserved}
-            reservedBy={item.reservedBy}
-            wishlistOwner={wishlist.userId}
-            currentUser={firebaseUser?.uid}
-            context={isOwner ? "own" : isOtherUser ? "shared" : "guest"}
-            onToggleReserve={
-              isOtherUser ? () => toggleReservation(item.id) : undefined
-            }
-            onDelete={
-              isOwner
-                ? () => {
-                    setItemToDelete(item);
-                    setIsDeleteModalOpen(true);
-                  }
-                : undefined
-            }
-            onEdit={
-              isOwner
-                ? () => {
-                    setItemToEdit(item);
-                    setIsEditModalOpen(true);
-                  }
-                : undefined
-            }
-          />
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={items.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {items.map((item) => (
+              <SortableItem key={item.id} id={item.id}>
+                {({ listeners, attributes }) => (
+                  <WishlistItem
+                    {...listeners}
+                    {...attributes}
+                    id={item.id}
+                    name={item.name}
+                    link={item.link}
+                    isReserved={item.isReserved}
+                    reservedBy={item.reservedBy}
+                    wishlistOwner={wishlist.userId}
+                    currentUser={firebaseUser?.uid}
+                    context={isOwner ? "own" : isOtherUser ? "shared" : "guest"}
+                    onToggleReserve={
+                      isOtherUser ? () => toggleReservation(item.id) : undefined
+                    }
+                    onDelete={
+                      isOwner
+                        ? () => {
+                            setItemToDelete(item);
+                            setIsDeleteModalOpen(true);
+                          }
+                        : undefined
+                    }
+                    onEdit={
+                      isOwner
+                        ? () => {
+                            setItemToEdit(item);
+                            setIsEditModalOpen(true);
+                          }
+                        : undefined
+                    }
+                  />
+                )}
+              </SortableItem>
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
       <AddItemModal
         isOpen={isAddModalOpen}

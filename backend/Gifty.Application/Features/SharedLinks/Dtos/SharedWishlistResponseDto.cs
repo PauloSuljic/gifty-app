@@ -1,4 +1,4 @@
-using Gifty.Application.Features.Wishlists.Dtos;
+using Gifty.Application.Features.WishlistItems.Dtos;
 
 namespace Gifty.Application.Features.SharedLinks.Dtos;
 

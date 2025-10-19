@@ -1,3 +1,4 @@
+using Gifty.Application.Features.WishlistItems.Dtos;
 using Gifty.Application.Features.Wishlists.Dtos;
 using Gifty.Domain.Entities;
 using Gifty.Domain.Interfaces;

@@ -1,3 +1,5 @@
+using Gifty.Application.Features.WishlistItems.Dtos;
+
 namespace Gifty.Application.Features.Wishlists.Dtos;
 
 public record WishlistDto

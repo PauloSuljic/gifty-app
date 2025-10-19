@@ -55,7 +55,8 @@ export default function CalendarPage() {
             type: "birthday",
             date: new Date(user.ownerDateOfBirth),
             daysLeft: calculateDaysUntilBirthday(user.ownerDateOfBirth),
-          }));
+          }))
+          .sort((a: EventItem, b: EventItem) => a.daysLeft - b.daysLeft);
         setEvents(fetchedEvents);
       } else {
         console.error("Error fetching shared users:", response.statusText);
@@ -95,10 +96,6 @@ export default function CalendarPage() {
   const prependDaysCount = (startDay === 0 ? 6 : startDay - 1);
 
   // Get days from previous month to prepend
-  const prevMonthDays = eachDayOfInterval({
-    start: subMonths(startOfMonth(currentDate), 1),
-    end: subMonths(endOfMonth(currentDate), 1),
-  });
   const prevMonthEndDay = endOfMonth(subMonths(currentDate, 1));
 
   const prependDays = [];
@@ -189,7 +186,7 @@ export default function CalendarPage() {
             {(selectedDate && eventsForSelectedDate.length > 0 ? eventsForSelectedDate : !selectedDate ? events : []).map((event) => (
               <div
                 key={event.id}
-                onClick={() => navigate("/shared-with-me")}
+                onClick={() => navigate("/shared-with-me", { state: { highlightUserId: event.id } })}
                 className="flex justify-between items-center bg-gray-700/50 rounded-xl p-3 cursor-pointer hover:bg-gray-700 transition-colors"
               >
                 <div className="flex items-center space-x-3">
