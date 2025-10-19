@@ -8,12 +8,16 @@ public class BirthdayReminderService(GiftyDbContext dbContext) : IBirthdayRemind
     {
         var today = DateTime.UtcNow.Date;
         var allUsers = await dbContext.Users
-            .Where(u => true)
             .Select(u => new
             {
                 u.Id,
                 u.Username,
-                u.DateOfBirth
+                u.DateOfBirth,
+                FriendUserIds = dbContext.SharedLinkVisits
+                    .Where(v => v.SharedLink!.Wishlist!.UserId == u.Id)
+                    .Select(v => v.UserId)
+                    .Distinct()
+                    .ToList()
             })
             .ToListAsync(cancellationToken);
 
@@ -32,7 +36,7 @@ public class BirthdayReminderService(GiftyDbContext dbContext) : IBirthdayRemind
             // Only include birthdays within the next 7 days
             if (daysUntil <= 7)
             {
-                upcoming.Add(new BirthdayUser(user.Id, user.Username, daysUntil));
+                upcoming.Add(new BirthdayUser(user.Id, user.Username, daysUntil, user.FriendUserIds));
             }
         }
 

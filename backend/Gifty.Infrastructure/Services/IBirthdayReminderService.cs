@@ -5,5 +5,5 @@ namespace Gifty.Infrastructure.Services
         Task<List<BirthdayUser>> GetUpcomingBirthdaysAsync(CancellationToken cancellationToken);
     }
 
-    public record BirthdayUser(string UserId, string Name, int DaysUntil);
+    public record BirthdayUser(string UserId, string Name, int DaysUntil, List<string>? FriendUserIds = null);
 }
