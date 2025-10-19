@@ -73,10 +73,12 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
     // eslint-disable-next-line
   }, [guest, firebaseUser]);
 
-  // Mark all notifications as read when modal opens
+  // ✅ Mark all notifications as read after modal closes
   useEffect(() => {
     const markAllRead = async () => {
-      if (!isNotificationsOpen || notifications.length === 0) return;
+      if (isNotificationsOpen) return; // don't mark while it's open
+      if (notifications.length === 0 || notifications.every((n) => n.isRead)) return;
+
       setMarkingRead(true);
       try {
         let token = "";
@@ -91,20 +93,20 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
           },
         });
         if (!res.ok) throw new Error("Failed to mark notifications as read");
-        // Optionally update local state
-        setNotifications((prev) =>
-          prev.map((n) => ({ ...n, isRead: true }))
-        );
+
+        // Update local state to reflect read status
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       } catch (err) {
-        // swallow error for marking read
+        console.error("Failed to mark notifications as read:", err);
       } finally {
         setMarkingRead(false);
       }
     };
-    if (isNotificationsOpen && notifications.some((n) => !n.isRead)) {
+
+    // 🔁 Run when modal closes (i.e., was open and now closed)
+    if (!isNotificationsOpen) {
       markAllRead();
     }
-    // Only run when modal opens
     // eslint-disable-next-line
   }, [isNotificationsOpen]);
 
