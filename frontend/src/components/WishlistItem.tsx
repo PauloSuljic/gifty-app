@@ -22,7 +22,6 @@ const WishlistItem = ({
   link,
   isReserved,
   reservedBy,
-  wishlistOwner,
   currentUser,
   context = "own",
   onToggleReserve,
@@ -33,12 +32,7 @@ const WishlistItem = ({
   const [modalAction, setModalAction] = useState<"reserve" | "unreserve" | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
-  const isGuest = !currentUser;
-  const isOwner = wishlistOwner === currentUser;
   const isReserver = reservedBy === currentUser;
-
-  const canReserve = !isGuest && !isReserved && !isOwner;
-  const canUnreserve = !isGuest && isReserved && isReserver;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -95,10 +89,28 @@ const WishlistItem = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
+
                 if (context === "guest") {
                   window.location.href = "/login";
                   return;
                 }
+
+                // 🧠 New logic: handle third-person reserved items
+                if (isReserved && !isReserver) {
+                  import("react-hot-toast").then(({ toast }) => {
+                    toast.error("This item is already reserved by someone else.", {
+                      duration: 3000,
+                      position: "bottom-center",
+                      style: {
+                        background: "#333",
+                        color: "#fff",
+                        border: "1px solid #555",
+                      },
+                    });
+                  });
+                  return;
+                }
+
                 handleConfirmClick(isReserved ? "unreserve" : "reserve");
               }}
               className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
