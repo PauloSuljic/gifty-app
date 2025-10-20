@@ -283,7 +283,7 @@ const WishlistDetail = () => {
       </div>
 
       {/* Items with DnD */}
-      <div className="px-4 mt-6 space-y-3 touch-none select-none">
+      <div className="px-4 mt-6 space-y-3">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

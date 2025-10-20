@@ -57,20 +57,25 @@ const WishlistItem = ({
   return (
     <>
       <div
-        {...listeners}
         {...attributes}
         className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer transition-transform duration-200 ease-in-out active:scale-95 active:shadow-lg"
         onClick={() => {
-          if (link) {
-            setIsLinkModalOpen(true);
-          }
+          if (link) setIsLinkModalOpen(true);
         }}
       >
-        <img
-          src={imageToShow}
-          alt={name}
-          className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-        />
+        {/* Drag handle (only this part is draggable) */}
+        <div
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing flex-shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={imageToShow}
+            alt={name}
+            className="w-14 h-14 object-cover rounded-lg select-none"
+            draggable={false}
+          />
+        </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium">{name}</h3>
           <p className="text-xs text-gray-400 line-clamp-2">
