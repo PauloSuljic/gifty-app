@@ -283,55 +283,69 @@ const WishlistDetail = () => {
       </div>
 
       {/* Items with DnD */}
-      <div className="px-4 mt-6 space-y-3 touch-none select-none">
+      <div className="px-4 mt-6 space-y-3 select-none">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEndWrapper}
         >
-          <SortableContext
-            items={items.map((item) => item.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {items.map((item) => (
-              <SortableItem key={item.id} id={item.id}>
-                {({ listeners, attributes }) => (
-                  <WishlistItem
-                    {...listeners}
-                    {...attributes}
-                    id={item.id}
-                    name={item.name}
-                    link={item.link}
-                    isReserved={item.isReserved}
-                    reservedBy={item.reservedBy}
-                    wishlistOwner={wishlist.userId}
-                    currentUser={firebaseUser?.uid}
-                    context={isOwner ? "own" : isOtherUser ? "shared" : "guest"}
-                    onToggleReserve={
-                      isOtherUser ? () => toggleReservation(item.id) : undefined
-                    }
-                    onDelete={
-                      isOwner
-                        ? () => {
-                            setItemToDelete(item);
-                            setIsDeleteModalOpen(true);
-                          }
-                        : undefined
-                    }
-                    onEdit={
-                      isOwner
-                        ? () => {
-                            setItemToEdit(item);
-                            setIsEditModalOpen(true);
-                          }
-                        : undefined
-                    }
-                  />
-                )}
-              </SortableItem>
-            ))}
-          </SortableContext>
+          {isOwner ? (
+            <SortableContext
+              items={items.map((item) => item.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {items.map((item) => (
+                <SortableItem key={item.id} id={item.id}>
+                  {({ setNodeRef,listeners, attributes }) => (
+                    <WishlistItem
+                      setNodeRef={setNodeRef}
+                      listeners={listeners}
+                      attributes={attributes}
+                      id={item.id}
+                      name={item.name}
+                      link={item.link}
+                      isReserved={item.isReserved}
+                      reservedBy={item.reservedBy}
+                      wishlistOwner={wishlist.userId}
+                      currentUser={firebaseUser?.uid}
+                      context="own"
+                      onToggleReserve={undefined}
+                      onDelete={() => {
+                        setItemToDelete(item);
+                        setIsDeleteModalOpen(true);
+                      }}
+                      onEdit={() => {
+                        setItemToEdit(item);
+                        setIsEditModalOpen(true);
+                      }}
+                    />
+                  )}
+                </SortableItem>
+              ))}
+            </SortableContext>
+          ) : (
+            <>
+              {items.map((item) => (
+                <WishlistItem
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  link={item.link}
+                  isReserved={item.isReserved}
+                  reservedBy={item.reservedBy}
+                  wishlistOwner={wishlist.userId}
+                  currentUser={firebaseUser?.uid}
+                  context={isOtherUser ? "shared" : "guest"}
+                  onToggleReserve={
+                    isOtherUser ? () => toggleReservation(item.id) : undefined
+                  }
+                  onDelete={undefined}
+                  onEdit={undefined}
+                />
+              ))}
+            </>
+          )}
         </DndContext>
       </div>
       <AddItemModal

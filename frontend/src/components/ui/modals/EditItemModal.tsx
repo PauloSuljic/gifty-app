@@ -59,13 +59,26 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
       />
       {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
-      <input
-        type="text"
-        placeholder="Item Link"
-        value={link}
-        onChange={(e) => setLink(e.target.value)}
-        className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
-      />
+      <div className="relative mb-2">
+        <input
+          type="text"
+          placeholder="Item Link"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          className="w-full px-4 py-2 rounded bg-gray-700 text-white pr-10"
+        />
+        {link && (
+          <button
+            type="button"
+            aria-label="Clear link"
+            onClick={() => setLink("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+            tabIndex={0}
+          >
+            &#10005;
+          </button>
+        )}
+      </div>
       {errors.link && <p className="text-red-400 text-sm">{errors.link}</p>}
       <button onClick={handleSubmit} className="w-full px-4 py-2 bg-purple-500 rounded-lg">
         Save Changes

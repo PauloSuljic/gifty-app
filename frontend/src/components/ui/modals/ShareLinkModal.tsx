@@ -1,5 +1,6 @@
-import React, { useRef, useState } from "react";
+import { useState } from "react";
 import { FiCopy, FiCheck } from "react-icons/fi";
+import Modal from "../Modal";
 
 interface ShareLinkModalProps {
   isOpen: boolean;
@@ -8,15 +9,7 @@ interface ShareLinkModalProps {
 }
 
 const ShareLinkModal = ({ isOpen, onClose, shareUrl }: ShareLinkModalProps) => {
-  const modalRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = useState(false); // ✅ Track if link is copied
-
-  // ✅ Close modal when clicking outside
-  const handleClickOutside = (e: React.MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
-    }
-  };
 
   // ✅ Copy to clipboard & show "Copied!" temporarily
   const copyToClipboard = async () => {
@@ -32,13 +25,13 @@ const ShareLinkModal = ({ isOpen, onClose, shareUrl }: ShareLinkModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50" onClick={handleClickOutside}>
-      <div ref={modalRef} className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md mx-4 relative">
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <div className="flex flex-col items-center text-center space-y-4 w-full max-w-md">
         <h2 className="text-xl font-semibold text-white">Share Wishlist</h2>
-        <p className="text-gray-300 mt-2">Share this link with others:</p>
+        <p className="text-gray-300">Share this link with others:</p>
         
         {/* ✅ Share Link Input */}
-        <div className="flex items-center mt-3 bg-gray-700 p-2 rounded-lg">
+        <div className="flex items-center w-full bg-gray-700 p-2 rounded-lg">
           <input 
             type="text" 
             value={shareUrl} 
@@ -55,7 +48,7 @@ const ShareLinkModal = ({ isOpen, onClose, shareUrl }: ShareLinkModalProps) => {
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 
