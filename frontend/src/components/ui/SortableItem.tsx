@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 type SortableItemProps = {
   id: string;
   children: (props: {
-    listeners: ReturnType<typeof useSortable>["listeners"];
-    attributes: ReturnType<typeof useSortable>["attributes"];
-  }) => ReactNode;
+  setNodeRef: ReturnType<typeof useSortable>["setNodeRef"];
+  listeners: ReturnType<typeof useSortable>["listeners"];
+  attributes: ReturnType<typeof useSortable>["attributes"];
+}) => ReactNode;
 };
 
 export const SortableItem = ({ id, children }: SortableItemProps) => {
@@ -49,15 +50,10 @@ export const SortableItem = ({ id, children }: SortableItemProps) => {
     <motion.div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      layout
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      className={`relative select-none touch-none transition-transform duration-300 ease-in-out ${
-        isDragging ? "shadow-xl scale-[1.03]" : "hover:scale-[1.02]"
-      }`}
+      className="relative select-none transition-transform duration-300 ease-in-out"
     >
-      {children({ listeners, attributes })}
+      {children({ listeners, attributes, setNodeRef })}
     </motion.div>
   );
 };

@@ -283,7 +283,7 @@ const WishlistDetail = () => {
       </div>
 
       {/* Items with DnD */}
-      <div className="px-4 mt-6 space-y-3">
+      <div className="px-4 mt-6 space-y-3 select-none">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -297,10 +297,11 @@ const WishlistDetail = () => {
             >
               {items.map((item) => (
                 <SortableItem key={item.id} id={item.id}>
-                  {({ listeners, attributes }) => (
+                  {({ setNodeRef,listeners, attributes }) => (
                     <WishlistItem
-                      {...listeners}
-                      {...attributes}
+                      setNodeRef={setNodeRef}
+                      listeners={listeners}
+                      attributes={attributes}
                       id={item.id}
                       name={item.name}
                       link={item.link}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy, FiMoreVertical } from "react-icons/fi";
 import ConfirmReserveModal from "./ui/modals/ConfirmReserveModal";
 import Modal from "./ui/Modal";
 
@@ -17,6 +17,7 @@ type WishlistItemProps = {
   onEdit?: () => void;
   listeners?: any;
   attributes?: any;
+  setNodeRef?: (node: HTMLElement | null) => void;
 };
 
 const WishlistItem = ({
@@ -55,122 +56,139 @@ const WishlistItem = ({
     : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
   return (
-    <>
+  <>
+    <div
+      ref={attributes?.ref}
+      className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-default transition-transform duration-200 ease-in-out active:scale-[0.99] active:shadow-lg"
+    >
+      {/* 🟣 Drag handle */}
+      {context === "own" && (
       <div
+        {...listeners}
         {...attributes}
-        className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-pointer transition-transform duration-200 ease-in-out active:scale-95 active:shadow-lg"
-        onClick={() => {
-          if (link) setIsLinkModalOpen(true);
-        }}
+        className="flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing"
       >
-        {/* Drag handle (only this part is draggable) */}
-        <div
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing flex-shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <img
-            src={imageToShow}
-            alt={name}
-            className="w-14 h-14 object-cover rounded-lg select-none"
-            draggable={false}
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-medium">{name}</h3>
-          <p className="text-xs text-gray-400 line-clamp-2">
-            A thoughtful gift idea for your wishlist.
-          </p>
-        </div>
-        <div className="flex gap-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          {context === "own" ? (
-            <>
-              {onEdit && (
-                <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="text-gray-400 hover:text-purple-400">
-                  <FiEdit className="text-large" />
-                </button>
-              )}
-              {onDelete && (
-                <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-red-500 hover:text-red-600">
-                  <FiTrash2 className="text-large" />
-                </button>
-              )}
-            </>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
+        <FiMoreVertical size={18} />
+      </div>
+      )}
 
-                if (context === "guest") {
-                  window.location.href = "/login";
-                  return;
-                }
+      {/* 🖼 Image */}
+      <img
+        src={imageToShow}
+        alt={name}
+        className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
+        onClick={() => link && setIsLinkModalOpen(true)}
+      />
 
-                // 🧠 New logic: handle third-person reserved items
-                if (isReserved && !isReserver) {
-                  import("react-hot-toast").then(({ toast }) => {
-                    toast.error("This item is already reserved by someone else.", {
-                      duration: 3000,
-                      position: "bottom-center",
-                      style: {
-                        background: "#333",
-                        color: "#fff",
-                        border: "1px solid #555",
-                      },
-                    });
-                  });
-                  return;
-                }
-
-                handleConfirmClick(isReserved ? "unreserve" : "reserve");
-              }}
-              className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
-            >
-              {isReserved ? <FiLock className="text-large" /> : <FiUnlock className="text-large" />}
-            </button>
-          )}
-        </div>
+      {/* 📄 Info section */}
+      <div className="flex-1 min-w-0" onClick={() => link && setIsLinkModalOpen(true)}>
+        <h3 className="text-sm font-medium">{name}</h3>
+        <p className="text-xs text-gray-400 line-clamp-2">
+          A thoughtful gift idea for your wishlist.
+        </p>
       </div>
 
-      {/* Modal for link actions (available for all contexts) */}
-      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
-        <h2 className="text-lg font-semibold mb-4">Open Link</h2>
-        <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
-        <div className="flex gap-3">
-          <a
-            href={link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
-            onClick={() => setIsLinkModalOpen(false)}
-          >
-            <FiExternalLink className="inline mr-1" /> Open
-          </a>
+      {/* 🧩 Action icons */}
+      <div className="flex gap-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+        {context === "own" ? (
+          <>
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="text-gray-400 hover:text-purple-400"
+              >
+                <FiEdit className="text-large" />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="text-red-500 hover:text-red-600"
+              >
+                <FiTrash2 className="text-large" />
+              </button>
+            )}
+          </>
+        ) : (
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(link);
-              setIsLinkModalOpen(false);
-            }}
-            className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
-          >
-            <FiCopy className="inline mr-1" /> Copy
-          </button>
-        </div>
-      </Modal>
+            onClick={(e) => {
+              e.stopPropagation();
 
-      {/* Reserve/Unreserve modal */}
-      <ConfirmReserveModal
-        isOpen={modalAction !== null}
-        onClose={() => setModalAction(null)}
-        onConfirm={() => {
-          setModalAction(null);
-          onToggleReserve && onToggleReserve();
-        }}
-        itemName={name}
-        actionType={modalAction || "reserve"}
-      />
-    </>
-  );
+              if (context === "guest") {
+                window.location.href = "/login";
+                return;
+              }
+
+              if (isReserved && !isReserver) {
+                import("react-hot-toast").then(({ toast }) => {
+                  toast.error("This item is already reserved by someone else.", {
+                    duration: 3000,
+                    position: "bottom-center",
+                    style: {
+                      background: "#333",
+                      color: "#fff",
+                      border: "1px solid #555",
+                    },
+                  });
+                });
+                return;
+              }
+
+              handleConfirmClick(isReserved ? "unreserve" : "reserve");
+            }}
+            className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
+          >
+            {isReserved ? <FiLock className="text-large" /> : <FiUnlock className="text-large" />}
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* 🔗 Link Modal */}
+    <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)}>
+      <h2 className="text-lg font-semibold mb-4">Open Link</h2>
+      <p className="text-sm text-gray-300 mb-4">Do you want to open this link?</p>
+      <div className="flex gap-3">
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 px-4 py-2 rounded-lg bg-purple-600 text-white text-center"
+          onClick={() => setIsLinkModalOpen(false)}
+        >
+          <FiExternalLink className="inline mr-1" /> Open
+        </a>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(link);
+            setIsLinkModalOpen(false);
+          }}
+          className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
+        >
+          <FiCopy className="inline mr-1" /> Copy
+        </button>
+      </div>
+    </Modal>
+
+    {/* 🎁 Reserve/Unreserve Modal */}
+    <ConfirmReserveModal
+      isOpen={modalAction !== null}
+      onClose={() => setModalAction(null)}
+      onConfirm={() => {
+        setModalAction(null);
+        onToggleReserve && onToggleReserve();
+      }}
+      itemName={name}
+      actionType={modalAction || "reserve"}
+    />
+  </>
+);
 };
 
 export default WishlistItem;
