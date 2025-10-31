@@ -10,6 +10,6 @@ namespace Gifty.Domain.Interfaces
         Task DeleteAsync(WishlistItem item);
         Task SaveChangesAsync();
         Task<IEnumerable<WishlistItem>> GetAllByWishlistIdAsync(Guid wishlistId);
-
+        Task<int> GetMaxOrderAsync(Guid wishlistId);
     }
 }
