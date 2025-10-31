@@ -218,4 +218,53 @@ public class WishlistItemControllerTests
         var items = await getItems.Content.ReadFromJsonAsync<List<WishlistItemDto>>();
         items.Should().NotContain(i => i.Id == created.Id);
     }
+    
+    [Fact]
+    public async Task ReorderWishlistItems_ShouldUpdateOrder()
+    {
+        // Arrange
+        var wishlist = await CreateWishlistAsync();
+
+        // Create three items
+        var itemDtos = new[]
+        {
+            new CreateWishlistItemDto { Name = "Item 1", Link = "https://1.com" },
+            new CreateWishlistItemDto { Name = "Item 2", Link = "https://2.com" },
+            new CreateWishlistItemDto { Name = "Item 3", Link = "https://3.com" }
+        };
+
+        var createdItems = new List<WishlistItemDto>();
+        foreach (var dto in itemDtos)
+        {
+            var res = await _client.PostAsJsonAsync($"/api/wishlists/{wishlist.Id}/items", dto);
+            res.StatusCode.Should().Be(HttpStatusCode.OK);
+            var created = await res.Content.ReadFromJsonAsync<WishlistItemDto>();
+            created.Should().NotBeNull();
+            createdItems.Add(created!);
+        }
+
+        // Act — reorder items in reverse order
+        var reorderedPayload = createdItems
+            .Select((x, i) => new { Id = x.Id, Order = createdItems.Count - i - 1 })
+            .ToList();
+
+        var reorderResponse = await _client.PutAsJsonAsync(
+            $"/api/wishlists/{wishlist.Id}/items/reorder",
+            reorderedPayload
+        );
+
+        reorderResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Assert — refetch and check order persisted
+        var fetchResponse = await _client.GetAsync($"/api/wishlists/{wishlist.Id}/items");
+        fetchResponse.EnsureSuccessStatusCode();
+
+        var items = await fetchResponse.Content.ReadFromJsonAsync<List<WishlistItemDto>>();
+        items.Should().NotBeNull();
+
+        var orders = items!.Select(i => i.Order).ToList();
+
+        // Validate ordering (should now be reversed: 2,1,0)
+        orders.Should().BeInDescendingOrder();
+    }
 }
