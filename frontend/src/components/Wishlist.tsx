@@ -86,24 +86,12 @@ const Wishlist = () => {
       setWishlists(data);
       setWishlistOrder(data.map((w: WishlistType) => w.id)); 
       data.forEach((wishlist: WishlistType) => fetchWishlistItems(wishlist.id));
-
-      // Expand first item in wishlist
-      // if (data.length > 0) {
-      //   setExpandedWishlistIds([data[0].id]);
-      // }
     }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const {active, over} = event;
     if (!over || active.id === over.id) return;
-
-    const oldIndex = wishlistOrder.indexOf(active.id as string);
-    const newIndex = wishlistOrder.indexOf(over.id as string);
-
-    if (oldIndex !== newIndex) {
-      setWishlistOrder((items) => arrayMove(items, oldIndex, newIndex));
-    }
   };
 
   const handleDragStart = () => {
@@ -112,33 +100,44 @@ const Wishlist = () => {
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    const {active, over} = event;
-    // Re-enable body scroll
+    const { active, over } = event;
     document.body.style.overflow = "";
 
     if (!over || active.id === over.id) return;
-  
+
     const oldIndex = wishlistOrder.indexOf(active.id as string);
     const newIndex = wishlistOrder.indexOf(over.id as string);
-  
+    if (oldIndex === -1 || newIndex === -1) return;
+
     const newOrder = arrayMove(wishlistOrder, oldIndex, newIndex);
     setWishlistOrder(newOrder);
-  
-    // Update order in backend
+
     const reordered = newOrder.map((id, index) => ({
       id,
       order: index,
     }));
-  
-    const token = await firebaseUser?.getIdToken();
-    await apiFetch("/api/wishlists/reorder", {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(reordered),
-    });
+
+    try {
+      const token = await firebaseUser?.getIdToken();
+      if (!token) return;
+
+      const res = await apiFetch("/api/wishlists/reorder", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reordered),
+      });
+
+      if (!res.ok) {
+        console.error("Failed to reorder wishlists", await res.text());
+        toast.error("Failed to reorder wishlists.");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      toast.error("Something went wrong reordering wishlists.");
+    }
   };
   
   const createWishlist = async () => {
@@ -301,8 +300,8 @@ const Wishlist = () => {
                           setWishlistToDelete({ id: wishlist.id, name: wishlist.name });
                           setIsWishlistDeleteModalOpen(true);
                         }}
-                        {...listeners}
-                        {...attributes}
+                        listeners={listeners}
+                        attributes={attributes}
                       />
                     )}
                   </SortableItem>

@@ -21,14 +21,6 @@ export const SortableItem = ({ id, children }: SortableItemProps) => {
     isDragging,
   } = useSortable({ id });
 
-  const transformStyle = transform
-    ? `translate3d(${transform.x}px, ${transform.y}px, 0)${
-        typeof transform.scaleX !== "undefined" || typeof transform.scaleY !== "undefined"
-          ? ` scale(${transform.scaleX ?? 1}, ${transform.scaleY ?? 1})`
-          : ""
-      }`
-    : undefined;
-
   const style: React.CSSProperties = {
     transform: transform
       ? `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scaleX ?? 1}, ${transform.scaleY ?? 1})`

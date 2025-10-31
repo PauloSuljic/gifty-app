@@ -37,6 +37,7 @@ namespace Gifty.Infrastructure.Repositories
         {
             return await dbContext.WishlistItems
                 .Where(item => item.WishlistId == wishlistId)
+                .OrderBy(i => i.Order)
                 .ToListAsync();
         }
     }

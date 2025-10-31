@@ -66,12 +66,13 @@ const WishlistDetail = () => {
       if (resItems.ok) {
         const data = await resItems.json();
         // Sort items by order property if present
+        // Reverse so that order=0 appears last visually (match DB behavior)
         const sorted = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setItems(sorted);
       }
     };
     fetchWishlist();
-  }, [id, firebaseUser]);
+  }, [id, firebaseUser?.uid]);
   // Mobile detection
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
     navigator.userAgent
@@ -116,39 +117,62 @@ const WishlistDetail = () => {
   };
 
   // DnD Kit drag end handler
-  const handleDragEnd = async (event: any) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = items.findIndex((item) => item.id === active.id);
-    const newIndex = items.findIndex((item) => item.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    const newItems = arrayMove(items, oldIndex, newIndex).map((item, idx) => ({
+const handleDragEnd = async (event: any) => {
+  const { active, over } = event;
+
+  // 1. nothing to drop on
+  if (!over) return;
+
+  // 2. dropped on itself, no-op
+  if (active.id === over.id) return;
+
+  // ❗ always work on a sorted snapshot
+  const sortedByOrder = [...items].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0)
+  );
+
+  const oldIndex = sortedByOrder.findIndex((item) => item.id === active.id);
+  const newIndex = sortedByOrder.findIndex((item) => item.id === over.id);
+
+  // 3. safety – in case ids don’t exist
+  if (oldIndex === -1 || newIndex === -1) return;
+
+  // 4. locally reorder
+  const reordered = arrayMove(sortedByOrder, oldIndex, newIndex).map(
+    (item, idx) => ({
       ...item,
-      order: idx,
-    }));
-    setItems(newItems);
-    // Persist new order to API
-    try {
-      const token = await firebaseUser?.getIdToken();
-      if (!token) return;
-      await apiFetch(`/api/wishlists/${id}/items/reorder`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          order: newItems.map((item) => item.id),
-        }),
-      });
-    } catch (err) {
-      // Optionally handle error
-      toast.error("Failed to reorder items.", {
-        duration: 3000,
-        position: "bottom-center",
-      });
-    }
-  };
+      order: idx, // 👈 set canonical order 0..n
+    })
+  );
+
+  // 5. update UI immediately
+  setItems(reordered);
+
+  // 6. persist to backend
+  try {
+    const token = await firebaseUser?.getIdToken();
+    if (!token) return;
+
+    await apiFetch(`/api/wishlists/${id}/items/reorder`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(
+        reordered.map((i) => ({
+          id: i.id,
+          order: i.order,
+        }))
+      ),
+    });
+  } catch (err) {
+    toast.error("Failed to reorder items.", {
+      duration: 3000,
+      position: "bottom-center",
+    });
+  }
+};
 
   const toggleReservation = async (itemId: string) => {
     if (!firebaseUser) return;

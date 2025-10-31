@@ -1,4 +1,4 @@
-import { FiMoreVertical, FiLink, FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiMove, FiMoreVertical, FiLink, FiEdit, FiTrash2 } from "react-icons/fi";
 import { Menu } from "@headlessui/react";
 import { HTMLAttributes, useRef } from "react";
 
@@ -11,7 +11,9 @@ type WishlistCardProps = {
   onShare: () => void;
   onRename: () => void;
   onDelete: () => void;
-} & HTMLAttributes<HTMLDivElement>; // ✅ allows spreading listeners & attributes
+  listeners?: any;       // 👈 from dnd-kit
+  attributes?: any;      // 👈 from dnd-kit
+} & HTMLAttributes<HTMLDivElement>;
 
 export const WishlistCard = ({
   name,
@@ -21,7 +23,9 @@ export const WishlistCard = ({
   onShare,
   onRename,
   onDelete,
-  ...listeners // ✅ drag & drop listeners passed from SortableItem
+  listeners,
+  attributes,
+  ...rest
 }: WishlistCardProps) => {
   const isValidImage = coverImage && /\.(jpeg|jpg|gif|png|webp)$/i.test(coverImage);
   const imageToShow = isValidImage
@@ -32,12 +36,16 @@ export const WishlistCard = ({
   const pressStart = useRef(0);
   const dragStarted = useRef(false);
 
-  // 🖐️ Distinguish short tap from drag
-  const handleTouchStart = () => {
+  // 🖐️ Distinguish short tap from drag (for mobile)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // 👇 Prevent starting a drag if touch began on a button or menu
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[role="menu"]')) return;
+
     dragStarted.current = false;
     pressStart.current = Date.now();
     pressTimer.current = setTimeout(() => {
-      dragStarted.current = true; // drag will start, so don’t treat it as a click
+      dragStarted.current = true;
       pressTimer.current = null;
     }, 250);
   };
@@ -47,7 +55,7 @@ export const WishlistCard = ({
       clearTimeout(pressTimer.current);
       pressTimer.current = null;
       if (!dragStarted.current && Date.now() - pressStart.current < 250) {
-        onClick(); // ✅ short tap triggers open
+        onClick();
       }
     }
   };
@@ -58,7 +66,7 @@ export const WishlistCard = ({
       onClick={onClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      {...listeners} // ✅ reapply listeners (drag still works)
+      {...rest}
     >
       <div className="relative">
         <img
@@ -68,11 +76,29 @@ export const WishlistCard = ({
           draggable={false}
         />
 
+        {/* 🟣 Drag handle */}
+        <div
+          {...listeners}
+          {...attributes}
+          className="absolute top-2 left-2 p-1 bg-black/40 rounded-md cursor-grab active:cursor-grabbing touch-none select-none"
+          onPointerDown={(e) => e.stopPropagation()}  // 👈 prevent event bubbling to the menu
+          onClick={(e) => e.stopPropagation()}
+        >
+          <FiMove size={14} />
+        </div>
+
         {/* Dropdown menu */}
         <Menu as="div" className="absolute top-2 right-2 text-left z-20">
           <Menu.Button
-            onClick={(e) => e.stopPropagation()}
-            className="p-1 bg-black/40 rounded-full text-white hover:bg-black/60"
+            onClick={(e) => {
+              e.stopPropagation();           // stop click bubbling
+              e.nativeEvent.stopImmediatePropagation(); // ensure parent doesn't catch touch simulation
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              e.nativeEvent.stopImmediatePropagation();
+            }}
+            className="p-1 bg-black/40 rounded-full text-white hover:bg-black/60 pointer-events-auto"
           >
             <FiMoreVertical size={16} />
           </Menu.Button>
