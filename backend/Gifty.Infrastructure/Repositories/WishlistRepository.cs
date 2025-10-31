@@ -26,7 +26,7 @@ namespace Gifty.Infrastructure.Repositories
             return await dbContext.Wishlists
                 .Where(w => w.UserId == userId)
                 .Include(w => w.Items)
-                .OrderBy(w => w.Order)
+                .OrderByDescending(w => w.Order)
                 .ToListAsync();
         }
 
@@ -50,6 +50,14 @@ namespace Gifty.Infrastructure.Repositories
         public async Task SaveChangesAsync()
         {
             await dbContext.SaveChangesAsync();
+        }
+        
+        public async Task<int> GetMaxOrderAsync(string userId)
+        {
+            return await dbContext.Wishlists
+                .Where(w => w.UserId == userId)
+                .Select(w => (int?)w.Order)
+                .MaxAsync() ?? -1;
         }
     }
 }

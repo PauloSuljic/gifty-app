@@ -11,5 +11,6 @@ namespace Gifty.Domain.Interfaces
         Task UpdateAsync(Wishlist wishlist);
         Task DeleteAsync(Wishlist wishlist);
         Task SaveChangesAsync();
+        Task<int> GetMaxOrderAsync(string userId);
     }
 }

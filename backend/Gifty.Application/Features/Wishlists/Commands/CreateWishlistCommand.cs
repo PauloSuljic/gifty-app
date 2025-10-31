@@ -18,11 +18,13 @@ public class CreateWishlistCommandHandler(IWishlistRepository wishlistRepository
 {
     public async Task<WishlistDto> Handle(CreateWishlistCommand request, CancellationToken cancellationToken)
     {
+        var maxOrder = await wishlistRepository.GetMaxOrderAsync(request.UserId);
+
         var newWishlist = Wishlist.Create(
             request.Name,
             request.UserId,
             request.IsPublic,
-            request.Order ?? 0
+            maxOrder + 1
         );
 
         await wishlistRepository.AddAsync(newWishlist);

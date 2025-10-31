@@ -33,7 +33,9 @@ public class CreateWishlistItemHandler(
             throw new ForbiddenAccessException("You are not authorized to add items to this wishlist.");
         }
         
-        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, request.Order);
+        var maxOrder = await wishlistItemRepository.GetMaxOrderAsync(request.WishlistId);
+        
+        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, maxOrder + 1);
         
         await wishlistItemRepository.AddAsync(newItem);
         await wishlistItemRepository.SaveChangesAsync();
@@ -46,7 +48,8 @@ public class CreateWishlistItemHandler(
             IsReserved = newItem.IsReserved,
             ReservedBy = newItem.ReservedBy,
             CreatedAt = newItem.CreatedAt,
-            WishlistId = newItem.WishlistId
+            WishlistId = newItem.WishlistId,
+            Order = newItem.Order
         };
     }
 }

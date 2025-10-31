@@ -67,7 +67,7 @@ const WishlistDetail = () => {
         const data = await resItems.json();
         // Sort items by order property if present
         // Reverse so that order=0 appears last visually (match DB behavior)
-        const sorted = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const sorted = [...data].sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
         setItems(sorted);
       }
     };
