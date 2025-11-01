@@ -38,6 +38,17 @@ public class DeleteWishlistItemHandler(
         await wishlistItemRepository.DeleteAsync(existingItem);
         await wishlistItemRepository.SaveChangesAsync();
         
+        var remainingItems = await wishlistItemRepository.GetAllByWishlistIdAsync(parentWishlist.Id);
+        var ordered = remainingItems.OrderBy(i => i.Order).ToList();
+
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].Reorder(i);
+            await wishlistItemRepository.UpdateAsync(ordered[i]);
+        }
+
+        await wishlistItemRepository.SaveChangesAsync();
+
         return true;
     }
 }
