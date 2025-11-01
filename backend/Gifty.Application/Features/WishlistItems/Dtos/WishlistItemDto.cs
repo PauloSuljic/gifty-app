@@ -11,4 +11,5 @@ public record WishlistItemDto
     public DateTime CreatedAt { get; set; }
     public Guid WishlistId { get; set; }
     public int Order { get; set; }
+    public string? ImageUrl { get; set; }
 }

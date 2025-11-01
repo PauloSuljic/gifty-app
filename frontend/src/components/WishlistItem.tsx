@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy, FiMoreVertical } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy, FiMove } from "react-icons/fi";
 import ConfirmReserveModal from "./ui/modals/ConfirmReserveModal";
 import Modal from "./ui/Modal";
 
@@ -11,6 +11,7 @@ type WishlistItemProps = {
   reservedBy?: string | null;
   wishlistOwner: string;
   currentUser?: string;
+  imageUrl?: string;
   context: "own" | "shared" | "guest";
   onToggleReserve?: () => void;
   onDelete?: () => void;
@@ -26,6 +27,7 @@ const WishlistItem = ({
   isReserved,
   reservedBy,
   currentUser,
+  imageUrl,
   context = "own",
   onToggleReserve,
   onDelete,
@@ -50,10 +52,11 @@ const WishlistItem = ({
     setModalAction(type);
   };
 
-  const isImage = link && /\.(jpeg|jpg|gif|png|webp)$/i.test(link);
-  const imageToShow = isImage
-    ? link
-    : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  const imageToShow = imageUrl
+  ? imageUrl
+  : link && /\.(jpeg|jpg|gif|png|webp)$/i.test(link)
+  ? link
+  : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
 
   return (
   <>
@@ -68,7 +71,7 @@ const WishlistItem = ({
         {...attributes}
         className="flex items-center justify-center text-gray-500 hover:text-gray-300 cursor-grab active:cursor-grabbing"
       >
-        <FiMoreVertical size={18} />
+        <FiMove size={18} />
       </div>
       )}
 

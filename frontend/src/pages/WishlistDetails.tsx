@@ -333,6 +333,7 @@ const handleDragEnd = async (event: any) => {
                       reservedBy={item.reservedBy}
                       wishlistOwner={wishlist.userId}
                       currentUser={firebaseUser?.uid}
+                      imageUrl={item.imageUrl}
                       context="own"
                       onToggleReserve={undefined}
                       onDelete={() => {

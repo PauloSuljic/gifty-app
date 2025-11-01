@@ -106,6 +106,8 @@ builder.Services.AddHostedService<BirthdayReminderJob>();
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
+builder.Services.AddHttpClient<IMetadataScraperService, MetadataScraperService>();
+
 // ✅ 4. Auth Setup
 if (builder.Environment.IsEnvironment("Testing") || builder.Configuration["UseTestAuth"] == "true")
 {
