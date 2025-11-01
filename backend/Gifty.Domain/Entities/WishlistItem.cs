@@ -16,6 +16,7 @@ namespace Gifty.Domain.Entities
         public string? ReservedBy { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int Order { get; set; } 
+        public string? ImageUrl { get; private set; }
         [ForeignKey("Wishlist")]
         public Guid WishlistId { get; set; }
         [JsonIgnore]
@@ -57,7 +58,7 @@ namespace Gifty.Domain.Entities
         public void Reorder(int newOrder)
         {
             Order = newOrder;
-            //RaiseDomainEvent(new WishlistItemReorderedEvent(this));
+            //lRaiseDomainEvent(new WishlistItemReorderedEvent(this));
         }
 
         public void Delete()
@@ -83,6 +84,11 @@ namespace Gifty.Domain.Entities
 
             // Generic event (used by audit/admin/analytics)
             RaiseDomainEvent(new WishlistItemUpdatedEvent(this));
+        }
+
+        public void SetImageUrl(string? imageUrl)
+        {
+            ImageUrl = imageUrl;
         }
     }
 }

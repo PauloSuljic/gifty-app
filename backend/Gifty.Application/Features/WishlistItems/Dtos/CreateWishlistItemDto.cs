@@ -8,4 +8,5 @@ public class CreateWishlistItemDto
     public required string Name { get; set; }
     public string? Link { get; set; }
     public int Order { get; set; }
+    public string? ImageUrl { get; set; }
 }
