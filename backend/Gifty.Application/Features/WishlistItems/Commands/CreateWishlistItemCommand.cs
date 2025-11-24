@@ -10,8 +10,7 @@ public record CreateWishlistItemCommand(
     Guid WishlistId,
     string UserId,
     string Name,
-    string? Link,
-    int Order
+    string? Link
 ) : IRequest<WishlistItemDto>;
 
 public class CreateWishlistItemHandler(

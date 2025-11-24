@@ -17,29 +17,35 @@ public record ReorderWishlistItemsCommand(
         public async Task<Unit> Handle(ReorderWishlistItemsCommand request, CancellationToken cancellationToken)
         {
             var itemIds = request.ReorderedItems.Select(r => r.Id).ToList();
+            
+            var wishlistItems = (await wishlistItemRepository
+                    .GetAllByWishlistIdAsync(request.WishlistId))
+                .ToList();
 
-            var wishlistItems = await wishlistItemRepository.GetAllByWishlistIdAsync(request.WishlistId);
             var itemsToUpdate = wishlistItems
                 .Where(i => itemIds.Contains(i.Id))
                 .ToList();
 
             if (itemsToUpdate.Count != request.ReorderedItems.Count)
             {
-                throw new BadRequestException("One or more wishlist items in the reorder request are invalid or do not belong to the wishlist.");
+                throw new BadRequestException(
+                    "One or more wishlist items in the reorder request are invalid or do not belong to the wishlist.");
             }
-
-            foreach (var reorderedDto in request.ReorderedItems)
+            
+            var total = request.ReorderedItems.Count;
+            
+            for (int index = 0; index < total; index++)
             {
-                var item = itemsToUpdate.FirstOrDefault(i => i.Id == reorderedDto.Id);
-                if (item != null)
-                {
-                    item.Reorder(reorderedDto.Order);
-                    await wishlistItemRepository.UpdateAsync(item);
-                }
+                var dto = request.ReorderedItems[index];
+                var item = itemsToUpdate.First(i => i.Id == dto.Id);
+                
+                var newOrder = total - 1 - index;
+
+                item.Reorder(newOrder);
+                await wishlistItemRepository.UpdateAsync(item);
             }
 
             await wishlistItemRepository.SaveChangesAsync();
-
             return Unit.Value;
         }
     }
