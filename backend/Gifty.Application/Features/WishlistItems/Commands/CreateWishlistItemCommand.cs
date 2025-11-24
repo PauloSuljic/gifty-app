@@ -10,7 +10,8 @@ public record CreateWishlistItemCommand(
     Guid WishlistId,
     string UserId,
     string Name,
-    string? Link
+    string? Link,
+    string? ImageUrl
 ) : IRequest<WishlistItemDto>;
 
 public class CreateWishlistItemHandler(
@@ -29,19 +30,22 @@ public class CreateWishlistItemHandler(
         if (parentWishlist.UserId != request.UserId)
             throw new ForbiddenAccessException("You are not authorized to add items to this wishlist.");
 
-        var maxOrder = await wishlistItemRepository.GetMaxOrderAsync(request.WishlistId);
+        var items = await wishlistItemRepository.GetAllByWishlistIdAsync(request.WishlistId);
+        
+        var wishlistItems = items as WishlistItem[] ?? items.ToArray();
+        var nextOrder = wishlistItems.Any() ? wishlistItems.Max(i => i.Order) + 1 : 0;
 
-        // 🪄 Create new item
-        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, maxOrder + 1);
+        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, nextOrder);
 
-        // 🖼 Try to scrape a preview image if the link is provided
-        if (!string.IsNullOrWhiteSpace(request.Link))
+        if (!string.IsNullOrWhiteSpace(request.ImageUrl))
+        {
+            newItem.SetImageUrl(request.ImageUrl);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.Link))
         {
             var previewImage = await metadataScraperService.GetPreviewImageAsync(request.Link);
             if (!string.IsNullOrWhiteSpace(previewImage))
-            {
                 newItem.SetImageUrl(previewImage);
-            }
         }
 
         await wishlistItemRepository.AddAsync(newItem);

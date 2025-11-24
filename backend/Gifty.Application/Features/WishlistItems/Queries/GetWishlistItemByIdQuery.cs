@@ -37,7 +37,8 @@ public class GetWishlistItemByIdHandler(
             IsReserved = wishlistItem.IsReserved,
             ReservedBy = wishlistItem.ReservedBy,
             CreatedAt = wishlistItem.CreatedAt,
-            WishlistId = wishlistItem.WishlistId
+            WishlistId = wishlistItem.WishlistId,
+            ImageUrl = wishlistItem.ImageUrl
         };
     }
 }

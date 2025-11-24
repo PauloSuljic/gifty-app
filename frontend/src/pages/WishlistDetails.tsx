@@ -368,7 +368,7 @@ const WishlistDetail = () => {
         onClose={() => setIsAddModalOpen(false)}
         wishlistId={wishlist.id}
         onItemAdded={(item) => {
-          setItems((prev) => [...prev, item]);
+          setItems((prev) => [item, ...prev]);
           toast.success("Item added to wishlist! 🎁", {
             duration: 3000,
             position: "bottom-center",
