@@ -153,11 +153,11 @@ namespace Gifty.Tests.Integration.Controllers
 
             var res2 = await client.PostAsJsonAsync("/api/wishlists", new CreateWishlistDto { Name = "List B", IsPublic = false });
             var created2 = await res2.Content.ReadFromJsonAsync<WishlistDto>();
-
+            
             var reorderPayload = new[]
             {
-                new ReorderWishlistDto { Id = created2!.Id, Order = 0 },
-                new ReorderWishlistDto { Id = created1!.Id, Order = 1 }
+                new ReorderWishlistDto { Id = created2!.Id, Order = 1 },
+                new ReorderWishlistDto { Id = created1!.Id, Order = 0 }
             };
 
             var reorderRes = await client.PutAsJsonAsync("/api/wishlists/reorder", reorderPayload);
@@ -168,10 +168,9 @@ namespace Gifty.Tests.Integration.Controllers
 
             var wishlists = await finalRes.Content.ReadFromJsonAsync<List<WishlistDto>>();
             wishlists.Should().NotBeNull().And.HaveCount(2);
-
-            var sorted = wishlists?.OrderBy(w => w.Order).ToList();
-            sorted?[0].Id.Should().Be(created2.Id);
-            sorted?[1].Id.Should().Be(created1.Id);
+            
+            wishlists![0].Id.Should().Be(created2.Id);
+            wishlists![1].Id.Should().Be(created1.Id);
         }
     }
 }

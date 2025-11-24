@@ -117,7 +117,7 @@ const WishlistDetail = () => {
   };
 
   // DnD Kit drag end handler
-const handleDragEnd = async (event: any) => {
+  const handleDragEnd = async (event: any) => {
   const { active, over } = event;
 
   // 1. nothing to drop on
@@ -126,29 +126,19 @@ const handleDragEnd = async (event: any) => {
   // 2. dropped on itself, no-op
   if (active.id === over.id) return;
 
-  // ❗ always work on a sorted snapshot
-  const sortedByOrder = [...items].sort(
-    (a, b) => (a.order ?? 0) - (b.order ?? 0)
-  );
+  // 3. work directly on the current visual order
+  const oldIndex = items.findIndex((item) => item.id === active.id);
+  const newIndex = items.findIndex((item) => item.id === over.id);
 
-  const oldIndex = sortedByOrder.findIndex((item) => item.id === active.id);
-  const newIndex = sortedByOrder.findIndex((item) => item.id === over.id);
-
-  // 3. safety – in case ids don’t exist
   if (oldIndex === -1 || newIndex === -1) return;
 
-  // 4. locally reorder
-  const reordered = arrayMove(sortedByOrder, oldIndex, newIndex).map(
-    (item, idx) => ({
-      ...item,
-      order: idx, // 👈 set canonical order 0..n
-    })
-  );
+  // 4. locally reorder in the same order the user sees
+  const reordered = arrayMove(items, oldIndex, newIndex);
 
   // 5. update UI immediately
   setItems(reordered);
 
-  // 6. persist to backend
+  // 6. persist to backend – only the order in this array matters
   try {
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
@@ -160,9 +150,9 @@ const handleDragEnd = async (event: any) => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(
-        reordered.map((i) => ({
-          id: i.id,
-          order: i.order,
+        reordered.map((item, index) => ({
+          id: item.id,
+          order: index, // backend ignores this value but it's fine to send
         }))
       ),
     });

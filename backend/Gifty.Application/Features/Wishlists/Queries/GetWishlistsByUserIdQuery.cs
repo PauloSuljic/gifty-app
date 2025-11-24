@@ -12,16 +12,16 @@ public class GetWishlistsByUserIdHandler(IWishlistRepository wishlistRepository)
 {
     public async Task<List<WishlistDto>> Handle(GetWishlistsByUserIdQuery request, CancellationToken cancellationToken)
     {
-        var wishlists = await wishlistRepository.GetAllByUserIdAsync(request.UserId);
-
-        var enumerable = wishlists.ToList();
-        if (enumerable.Count == 0)
+        var wishlists = (await wishlistRepository.GetAllByUserIdAsync(request.UserId))
+            .OrderByDescending(r => r.Order).ToList();
+        
+        if (wishlists.Count == 0)
         {
             return [];
         }
 
         // Map the entities to DTOs
-        var wishlistDtos = enumerable.Select(wishlist => new WishlistDto
+        var wishlistDtos = wishlists.Select(wishlist => new WishlistDto
         {
             Id = wishlist.Id,
             Name = wishlist.Name,

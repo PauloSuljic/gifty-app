@@ -23,20 +23,16 @@ public record ReorderWishlistsCommand(
                 .ToList();
 
             if (wishlistsToUpdate.Count != request.ReorderedWishlists.Count)
+                throw new BadRequestException("Invalid wishlist IDs for reorder.");
+            
+            for (int i = 0; i < request.ReorderedWishlists.Count; i++)
             {
-                throw new BadRequestException("One or more wishlists in the reorder request are invalid or do not belong to the user.");
+                var dto = request.ReorderedWishlists[i];
+                var wishlist = wishlistsToUpdate.FirstOrDefault(w => w.Id == dto.Id);
+                if (wishlist != null)
+                    wishlist.Reorder(request.ReorderedWishlists.Count - 1 - i);
             }
 
-            foreach (var reorderedDto in request.ReorderedWishlists)
-            {
-                var wishlist = wishlistsToUpdate.FirstOrDefault(w => w.Id == reorderedDto.Id);
-                if (wishlist != null)
-                {
-                    wishlist.Reorder(reorderedDto.Order);
-                    await wishlistRepository.UpdateAsync(wishlist);
-                }
-            }
-            
             await wishlistRepository.SaveChangesAsync();
 
             return Unit.Value;

@@ -27,8 +27,7 @@ namespace gifty_web_backend.Controllers
                 wishlistId,
                 userId,
                 request.Name,
-                request.Link,
-                request.Order
+                request.Link
             );
 
             var wishlistItemDto = await mediator.Send(command);
