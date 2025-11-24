@@ -36,8 +36,9 @@ public class GetAllWishlistItemsHandler(
             CreatedAt = item.CreatedAt,
             WishlistId = item.WishlistId,
             IsOwner = isOwner,
-            Order = item.Order
-        }).ToList();
+            Order = item.Order,
+            ImageUrl = item.ImageUrl
+        }).OrderByDescending(i => i.Order).ToList();
 
         return itemDtos;
     }
