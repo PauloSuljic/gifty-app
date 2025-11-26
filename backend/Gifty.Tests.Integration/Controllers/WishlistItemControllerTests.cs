@@ -196,10 +196,11 @@ public class WishlistItemControllerTests
             Link = "https://new.com"
         };
         
-        var updateRes = await _client.PatchAsJsonAsync(
-            $"/api/wishlists/{wishlist.Id}/items/{created!.Id}/details",
+        var updateRes = await _client.PutAsJsonAsync(
+            $"/api/wishlists/{wishlist.Id}/items/{created!.Id}",
             updateDto
         );
+
         updateRes.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
