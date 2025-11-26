@@ -81,9 +81,7 @@ namespace gifty_web_backend.Controllers
                 wishlistId,
                 userId,
                 request.Name,
-                request.Link,
-                request.IsReserved,
-                request.ReservedBy
+                request.Link
             );
 
             var updatedItem = await mediator.Send(command);
@@ -136,10 +134,11 @@ namespace gifty_web_backend.Controllers
         }
         
         [HttpPatch("{itemId}")]
+        [Consumes("multipart/form-data")]
         public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
             Guid wishlistId,
             Guid itemId,
-            [FromBody] PatchWishlistItemDto request)
+            [FromForm] PatchWishlistItemDto request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
