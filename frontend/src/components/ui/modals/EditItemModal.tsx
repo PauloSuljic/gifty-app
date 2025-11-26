@@ -51,26 +51,45 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
     const newErrors: typeof errors = {};
     if (!name.trim()) newErrors.name = "Item name is required.";
     if (!link.trim()) newErrors.link = "Link is required.";
-
     if (Object.keys(newErrors).length) return setErrors(newErrors);
 
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
 
+    // CASE A — only name + link changed
+    if (!newImageFile) {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/wishlists/${wishlistId}/items/${item.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name, link }),
+        }
+      );
+
+      if (!res.ok) return;
+
+      const updated = await res.json();
+      onItemUpdated(updated);
+      onClose();
+      return;
+    }
+
+    // CASE B — image updated (maybe name/link too)
     const formData = new FormData();
+    formData.append("image", newImageFile);
     formData.append("name", name);
     formData.append("link", link);
 
-    if (newImageFile) {
-      formData.append("image", newImageFile);
-    }
-
     const res = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/wishlists/${wishlistId}/items/${item.id}`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/wishlists/${wishlistId}/items/${item.id}/image`,
       {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
-        body: formData
+        body: formData,
       }
     );
 
@@ -79,7 +98,6 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
     const updated = await res.json();
     onItemUpdated(updated);
     onClose();
-    setErrors({});
   };
 
   return (
