@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import Modal from "../Modal";
-import { apiFetch } from "../../../api";
 import { useAuth } from "../../AuthProvider";
 
 interface EditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   wishlistId: string;
-  item: { id: string; name: string; link: string } | null;
+  item: { id: string; name: string; link: string; imageUrl?: string } | null;
   onItemUpdated: (item: any) => void;
 }
 
@@ -17,40 +16,96 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
   const [link, setLink] = useState("");
   const [errors, setErrors] = useState<{ name?: string; link?: string }>({});
 
+  const [existingImage, setExistingImage] = useState<string | null>(null);
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   useEffect(() => {
     if (item) {
       setName(item.name || "");
       setLink(item.link || "");
+
+      // FIX: treat empty string as null
+      const cleanImage = item.imageUrl && item.imageUrl.trim() !== "" 
+        ? item.imageUrl 
+        : null;
+
+      setExistingImage(cleanImage);
+
+      setPreviewUrl(null);
+      setNewImageFile(null);
     }
   }, [item]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setNewImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
   const handleSubmit = async () => {
     if (!item) return;
+
     const newErrors: typeof errors = {};
     if (!name.trim()) newErrors.name = "Item name is required.";
     if (!link.trim()) newErrors.link = "Link is required.";
+
     if (Object.keys(newErrors).length) return setErrors(newErrors);
 
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
 
-    const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${item.id}`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ name, link }),
-    });
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("link", link);
 
-    if (response.ok) {
-      const updatedItem = await response.json();
-      onItemUpdated(updatedItem);
-      onClose();
-      setErrors({});
+    if (newImageFile) {
+      formData.append("image", newImageFile);
     }
+
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE_URL}/api/wishlists/${wishlistId}/items/${item.id}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      }
+    );
+
+    if (!res.ok) return;
+
+    const updated = await res.json();
+    onItemUpdated(updated);
+    onClose();
+    setErrors({});
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-xl font-bold mb-4">Edit Item</h2>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold mb-3">Edit Item</h2>
+
+        {/* IMAGE PREVIEW SECTION */}
+        <div className="flex flex-col items-center mb-4">
+          <img
+            src={
+              previewUrl ||
+              existingImage ||
+              "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop"
+            }
+            alt="Item preview"
+            className="w-32 h-32 rounded-lg object-cover shadow-lg mb-2 border border-gray-600"
+          />
+          <label className="cursor-pointer bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
+            Change Image
+            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+          </label>
+        </div>
+      </div>
+
+      {/* NAME INPUT */}
       <input
         type="text"
         placeholder="Item Name"
@@ -59,6 +114,8 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
       />
       {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
+
+      {/* LINK INPUT */}
       <div className="relative mb-2">
         <input
           type="text"
@@ -80,7 +137,8 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
         )}
       </div>
       {errors.link && <p className="text-red-400 text-sm">{errors.link}</p>}
-      <button onClick={handleSubmit} className="w-full px-4 py-2 bg-purple-500 rounded-lg">
+
+      <button onClick={handleSubmit} className="w-full px-4 py-2 mt-3 bg-purple-500 rounded-lg">
         Save Changes
       </button>
     </Modal>
