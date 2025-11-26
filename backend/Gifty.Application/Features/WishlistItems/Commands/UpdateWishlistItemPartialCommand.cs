@@ -47,12 +47,15 @@ public class UpdateWishlistItemPartialHandler : IRequestHandler<UpdateWishlistIt
 
         if (wishlist.UserId != request.UserId)
             throw new ForbiddenAccessException("Not authorized to edit this item.");
-
-        // update name/link
+        
         if (request.Name != null || request.Link != null)
-            item.UpdatePartial(request.Name, request.Link);
+        {
+            var newName = request.Name ?? item.Name;
+            var newLink = request.Link ?? item.Link;
 
-        // update image
+            item.Update(newName, newLink);
+        }
+        
         if (request.ImageStream != null && request.FileName != null)
         {
             if (!string.IsNullOrWhiteSpace(item.ImageUrl))

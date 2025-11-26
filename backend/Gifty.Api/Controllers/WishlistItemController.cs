@@ -134,8 +134,32 @@ namespace gifty_web_backend.Controllers
         }
         
         [HttpPatch("{itemId}")]
+        public async Task<ActionResult<WishlistItemDto>> PatchWishlistItemJson(
+            Guid wishlistId,
+            Guid itemId,
+            [FromBody] PatchWishlistItemDto request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var command = new UpdateWishlistItemPartialCommand(
+                itemId,
+                wishlistId,
+                userId,
+                request.Name,
+                request.Link,
+                null,
+                null
+            );
+
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
+        }
+        
+        [HttpPatch("{itemId}/image")]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
+        public async Task<ActionResult<WishlistItemDto>> PatchWishlistItemImage(
             Guid wishlistId,
             Guid itemId,
             [FromForm] PatchWishlistItemDto request)
@@ -157,8 +181,8 @@ namespace gifty_web_backend.Controllers
                 itemId,
                 wishlistId,
                 userId,
-                request.Name,
-                request.Link,
+                null,
+                null,       
                 imageStream,
                 fileName
             );
