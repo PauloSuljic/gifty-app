@@ -133,30 +133,6 @@ namespace gifty_web_backend.Controllers
             return Ok(updatedItem);
         }
         
-        [HttpPatch("{itemId}/details")]
-        public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
-            Guid wishlistId,
-            Guid itemId,
-            [FromBody] PatchWishlistItemDto request)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User not authenticated.");
-
-            var command = new UpdateWishlistItemPartialCommand(
-                itemId,
-                wishlistId,
-                userId,
-                request.Name,
-                request.Link,
-                null,
-                null
-            );
-
-            var updatedItem = await mediator.Send(command);
-            return Ok(updatedItem);
-        }
-        
         [HttpPatch("{itemId}/image")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult<WishlistItemDto>> PatchWishlistItemImage(
@@ -165,24 +141,27 @@ namespace gifty_web_backend.Controllers
             [FromForm] PatchWishlistItemImageDto request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
+            if (userId is null)
                 return Unauthorized("User not authenticated.");
 
-            var stream = request.Image?.OpenReadStream();
-            var fileName = request.Image?.FileName;
+            if (request.Image is null)
+                return BadRequest("Image file is required.");
 
-            var command = new UpdateWishlistItemPartialCommand(
-                itemId,
+            var stream = request.Image.OpenReadStream();
+            var fileName = request.Image.FileName;
+
+            var command = new UpdateWishlistItemImageCommand(
                 wishlistId,
+                itemId,
                 userId,
-                null,
-                null,
                 stream,
-                fileName
+                fileName,
+                request.Name,
+                request.Link
             );
 
-            var updatedItem = await mediator.Send(command);
-            return Ok(updatedItem);
+            var updated = await mediator.Send(command);
+            return Ok(updated);
         }
         
     }
