@@ -11,7 +11,9 @@ public record UpdateWishlistItemImageCommand(
     Guid ItemId,
     string UserId,
     Stream ImageStream,
-    string FileName
+    string FileName,
+    string? Name,
+    string? Link
 ) : IRequest<WishlistItemDto>;
 
 public class UpdateWishlistItemImageHandler(
@@ -22,46 +24,47 @@ public class UpdateWishlistItemImageHandler(
 {
     public async Task<WishlistItemDto> Handle(UpdateWishlistItemImageCommand request, CancellationToken cancellationToken)
     {
-        var wishlistItem = await wishlistItemRepository.GetByIdAsync(request.ItemId);
+        var item = await wishlistItemRepository.GetByIdAsync(request.ItemId)
+            ?? throw new NotFoundException(nameof(WishlistItem), request.ItemId);
 
-        if (wishlistItem == null)
-            throw new NotFoundException(nameof(WishlistItem), request.ItemId);
+        if (item.WishlistId != request.WishlistId)
+            throw new BadRequestException("Item does not belong to this wishlist.");
 
-        if (wishlistItem.WishlistId != request.WishlistId)
-            throw new BadRequestException("Wishlist item does not belong to the specified wishlist.");
+        var wishlist = await wishlistRepository.GetByIdAsync(item.WishlistId)
+            ?? throw new NotFoundException("Parent wishlist not found.");
 
-        var parentWishlist = await wishlistRepository.GetByIdAsync(wishlistItem.WishlistId);
+        if (wishlist.UserId != request.UserId)
+            throw new ForbiddenAccessException();
 
-        if (parentWishlist == null)
-            throw new NotFoundException($"Parent wishlist for item ({request.ItemId}) not found during image update.");
-
-        if (parentWishlist.UserId != request.UserId)
-            throw new ForbiddenAccessException("You are not authorized to update this wishlist item's image.");
-
-        // ✅ Store file using your chosen service (Local, S3, Azure Blob…)
-        var imageUrl = await imageStorageService.SaveImageAsync(
+        var newUrl = await imageStorageService.SaveImageAsync(
             request.ImageStream,
             request.FileName,
             cancellationToken
         );
+        
+        if (!string.IsNullOrWhiteSpace(request.Name) || !string.IsNullOrWhiteSpace(request.Link))
+        {
+            item.Update(
+                request.Name ?? item.Name,
+                request.Link ?? item.Link
+            );
+        }
 
-        // ✅ Save URL
-        wishlistItem.SetImageUrl(imageUrl);
-
-        await wishlistItemRepository.UpdateAsync(wishlistItem);
+        item.SetImageUrl(newUrl);
+        await wishlistItemRepository.UpdateAsync(item);
         await wishlistItemRepository.SaveChangesAsync();
 
         return new WishlistItemDto
         {
-            Id = wishlistItem.Id,
-            Name = wishlistItem.Name,
-            Link = wishlistItem.Link,
-            IsReserved = wishlistItem.IsReserved,
-            ReservedBy = wishlistItem.ReservedBy,
-            CreatedAt = wishlistItem.CreatedAt,
-            WishlistId = wishlistItem.WishlistId,
-            Order = wishlistItem.Order,
-            ImageUrl = wishlistItem.ImageUrl
+            Id = item.Id,
+            Name = item.Name,
+            Link = item.Link,
+            CreatedAt = item.CreatedAt,
+            WishlistId = item.WishlistId,
+            IsReserved = item.IsReserved,
+            ReservedBy = item.ReservedBy,
+            Order = item.Order,
+            ImageUrl = item.ImageUrl
         };
     }
 }
