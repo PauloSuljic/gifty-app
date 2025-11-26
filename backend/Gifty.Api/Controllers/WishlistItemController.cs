@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using gifty_web_backend.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -80,46 +81,8 @@ namespace gifty_web_backend.Controllers
                 wishlistId,
                 userId,
                 request.Name,
-                request.Link,
-                request.IsReserved,
-                request.ReservedBy
-            );
-
-            var updatedItem = await mediator.Send(command);
-            return Ok(updatedItem);
-        }
-        
-        [HttpPatch("{itemId}")] 
-        public async Task<ActionResult<WishlistItemDto>> UpdateWishlistItemPartial(Guid wishlistId, Guid itemId, [FromBody] PatchWishlistItemDto request)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("User not authenticated.");
-            }
-
-            var command = new UpdateWishlistItemPartialCommand(
-                itemId,
-                wishlistId,
-                userId,
-                request.Name,
                 request.Link
             );
-
-            var updatedItem = await mediator.Send(command);
-            return Ok(updatedItem);
-        }
-        
-        [HttpPatch("{itemId}/reserve")] 
-        public async Task<ActionResult<WishlistItemDto>> ToggleReserveItem(Guid wishlistId, Guid itemId)
-        {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized("User not authenticated.");
-            }
-
-            var command = new ToggleWishlistItemReservationCommand(itemId, wishlistId, userId);
 
             var updatedItem = await mediator.Send(command);
             return Ok(updatedItem);
@@ -154,5 +117,73 @@ namespace gifty_web_backend.Controllers
             await mediator.Send(command);
             return Ok();
         }
+        
+        [HttpPatch("{itemId}/reserve")] 
+        public async Task<ActionResult<WishlistItemDto>> ToggleReserveItem(Guid wishlistId, Guid itemId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var command = new ToggleWishlistItemReservationCommand(itemId, wishlistId, userId);
+
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
+        }
+        
+        [HttpPatch("{itemId}/details")]
+        public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
+            Guid wishlistId,
+            Guid itemId,
+            [FromBody] PatchWishlistItemDto request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var command = new UpdateWishlistItemPartialCommand(
+                itemId,
+                wishlistId,
+                userId,
+                request.Name,
+                request.Link,
+                null,
+                null
+            );
+
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
+        }
+        
+        [HttpPatch("{itemId}/image")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<WishlistItemDto>> PatchWishlistItemImage(
+            Guid wishlistId,
+            Guid itemId,
+            [FromForm] PatchWishlistItemImageDto request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User not authenticated.");
+
+            var stream = request.Image?.OpenReadStream();
+            var fileName = request.Image?.FileName;
+
+            var command = new UpdateWishlistItemPartialCommand(
+                itemId,
+                wishlistId,
+                userId,
+                null,
+                null,
+                stream,
+                fileName
+            );
+
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
+        }
+        
     }
 }

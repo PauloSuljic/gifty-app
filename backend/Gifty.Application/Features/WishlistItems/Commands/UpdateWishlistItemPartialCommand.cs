@@ -10,47 +10,68 @@ public record UpdateWishlistItemPartialCommand(
     Guid Id,
     Guid WishlistId,
     string UserId,
-    string? Name, 
-    string? Link 
+    string? Name,
+    string? Link,
+    Stream? ImageStream,
+    string? FileName
 ) : IRequest<WishlistItemDto>;
 
-public class UpdateWishlistItemPartialHandler(
-    IWishlistItemRepository wishlistItemRepository,
-    IWishlistRepository wishlistRepository)
-    : IRequestHandler<UpdateWishlistItemPartialCommand, WishlistItemDto>
+public class UpdateWishlistItemPartialHandler : IRequestHandler<UpdateWishlistItemPartialCommand, WishlistItemDto>
 {
+    private readonly IWishlistItemRepository _wishlistItemRepository;
+    private readonly IWishlistRepository _wishlistRepository;
+    private readonly IImageStorageService _imageStorage;
+
+    public UpdateWishlistItemPartialHandler(
+        IWishlistItemRepository wishlistItemRepository,
+        IWishlistRepository wishlistRepository,
+        IImageStorageService imageStorage)
+    {
+        _wishlistItemRepository = wishlistItemRepository;
+        _wishlistRepository = wishlistRepository;
+        _imageStorage = imageStorage;
+    }
+
     public async Task<WishlistItemDto> Handle(UpdateWishlistItemPartialCommand request, CancellationToken cancellationToken)
     {
-        var item = await wishlistItemRepository.GetByIdAsync(request.Id);
-
+        var item = await _wishlistItemRepository.GetByIdAsync(request.Id);
         if (item == null)
-        {
             throw new NotFoundException(nameof(WishlistItem), request.Id);
-        }
-        
+
         if (item.WishlistId != request.WishlistId)
-        {
-            throw new BadRequestException("Wishlist item not found in the specified wishlist.");
-        }
+            throw new BadRequestException("Wishlist item not found in this wishlist.");
 
-        var parentWishlist = await wishlistRepository.GetByIdAsync(request.WishlistId);
-        if (parentWishlist == null)
-        {
-            throw new NotFoundException($"Parent Wishlist for Item ({request.Id}) not found.");
-        }
+        var wishlist = await _wishlistRepository.GetByIdAsync(request.WishlistId);
+        if (wishlist == null)
+            throw new NotFoundException("Parent wishlist not found.");
+
+        if (wishlist.UserId != request.UserId)
+            throw new ForbiddenAccessException("Not authorized to edit this item.");
         
-        if (parentWishlist.UserId != request.UserId)
-        {
-            throw new ForbiddenAccessException("You are not authorized to edit this wishlist item.");
-        }
-
         if (request.Name != null || request.Link != null)
         {
-            item.UpdatePartial(request.Name, request.Link);
+            var newName = request.Name ?? item.Name;
+            var newLink = request.Link ?? item.Link;
+
+            item.Update(newName, newLink);
+        }
+        
+        if (request.ImageStream != null && request.FileName != null)
+        {
+            if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                await _imageStorage.DeleteImageAsync(item.ImageUrl, cancellationToken);
+
+            var newUrl = await _imageStorage.SaveImageAsync(
+                request.ImageStream,
+                request.FileName,
+                cancellationToken
+            );
+
+            item.SetImageUrl(newUrl);
         }
 
-        await wishlistItemRepository.UpdateAsync(item);
-        await wishlistItemRepository.SaveChangesAsync();
+        await _wishlistItemRepository.UpdateAsync(item);
+        await _wishlistItemRepository.SaveChangesAsync();
 
         return new WishlistItemDto
         {
@@ -60,7 +81,8 @@ public class UpdateWishlistItemPartialHandler(
             IsReserved = item.IsReserved,
             ReservedBy = item.ReservedBy,
             CreatedAt = item.CreatedAt,
-            WishlistId = item.WishlistId
+            WishlistId = item.WishlistId,
+            ImageUrl = item.ImageUrl
         };
     }
 }

@@ -11,9 +11,7 @@ public record UpdateWishlistItemCommand(
     Guid WishlistId,
     string UserId,
     string Name,
-    string? Link,
-    bool IsReserved,
-    string? ReservedBy
+    string? Link
 ) : IRequest<WishlistItemDto>;
 
 public class UpdateWishlistItemHandler(
@@ -60,7 +58,9 @@ public class UpdateWishlistItemHandler(
             IsReserved = wishlistItem.IsReserved,
             ReservedBy = wishlistItem.ReservedBy,
             CreatedAt = wishlistItem.CreatedAt,
-            WishlistId = wishlistItem.WishlistId
+            WishlistId = wishlistItem.WishlistId,
+            Order = wishlistItem.Order,
+            ImageUrl = wishlistItem.ImageUrl,
         };
     }
 }

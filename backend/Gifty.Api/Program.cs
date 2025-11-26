@@ -100,6 +100,7 @@ builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<ISharedLinkVisitRepository, SharedLinkVisitRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IBirthdayReminderService, BirthdayReminderService>();
+builder.Services.AddScoped<IImageStorageService, AzureBlobImageStorageService>();
 
 builder.Services.AddHostedService<BirthdayReminderJob>();
 
