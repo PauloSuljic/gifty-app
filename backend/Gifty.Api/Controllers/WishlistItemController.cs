@@ -120,6 +120,21 @@ namespace gifty_web_backend.Controllers
             return Ok();
         }
         
+        [HttpPatch("{itemId}/reserve")] 
+        public async Task<ActionResult<WishlistItemDto>> ToggleReserveItem(Guid wishlistId, Guid itemId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User not authenticated.");
+            }
+
+            var command = new ToggleWishlistItemReservationCommand(itemId, wishlistId, userId);
+
+            var updatedItem = await mediator.Send(command);
+            return Ok(updatedItem);
+        }
+        
         [HttpPatch("{itemId}")]
         public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
             Guid wishlistId,
