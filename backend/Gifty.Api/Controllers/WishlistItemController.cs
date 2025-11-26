@@ -133,7 +133,7 @@ namespace gifty_web_backend.Controllers
             return Ok(updatedItem);
         }
         
-        [HttpPatch("{itemId}")]
+        [HttpPatch("{itemId}/details")]
         public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
             Guid wishlistId,
             Guid itemId,
