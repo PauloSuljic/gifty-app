@@ -139,7 +139,7 @@ namespace gifty_web_backend.Controllers
         public async Task<ActionResult<WishlistItemDto>> PatchWishlistItem(
             Guid wishlistId,
             Guid itemId,
-            [FromForm] PatchWishlistItemDto request)
+            [FromBody] PatchWishlistItemDto request)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
