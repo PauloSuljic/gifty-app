@@ -257,7 +257,7 @@ const WishlistDetail = () => {
   };
 
   return (
-    <Layout>
+    <>
       {/* Header bar */}
       <div className="px-4 py-3 text-center">
         <h2 className="text-lg font-semibold">{wishlist.name}</h2>
@@ -461,7 +461,7 @@ const WishlistDetail = () => {
         onClose={() => setIsShareModalOpen(false)}
         shareUrl={shareUrl}
       />
-    </Layout>
+    </>
   );
 };
 

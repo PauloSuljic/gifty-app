@@ -1,4 +1,3 @@
-import Layout from "../components/layout/Layout";
 import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import { useState } from "react";
 import { useAuth } from "../components/AuthProvider";
@@ -43,11 +42,11 @@ const SettingsPage = () => {
   };
 
   return (
-    <Layout>
-      <h2 className="text-3xl font-semibold pt-6 text-center">Settings</h2>
+    <>
+      <h2 className="text-2xl font-semibold pt-6 text-center">Settings</h2>
       <div className="mx-auto p-4 text-white w-full max-w-4xl">
         <section className="bg-white/10 rounded-xl p-6 mt-6 shadow-lg">
-          <h3 className="text-2xl font-bold text-purple-400 mb-2">Legal</h3>
+          <h3 className="text-xl font-bold text-purple-400 mb-2">Legal</h3>
           <p className="text-gray-300 mb-4">
             Learn more about how we handle your data and what you agree to by using Gifty.
           </p>
@@ -72,7 +71,7 @@ const SettingsPage = () => {
           </div>
         </section>
         <section className="bg-white/10 rounded-xl p-6 mt-6 shadow-lg">
-          <h3 className="text-2xl font-bold text-red-400 mb-2">Danger Zone</h3>
+          <h3 className="text-xl font-bold text-red-400 mb-2">Danger Zone</h3>
           <p className="text-gray-300 mb-4">
             Permanently delete your account and all associated data. This action cannot be undone.
           </p>
@@ -93,7 +92,7 @@ const SettingsPage = () => {
         onConfirm={handleDeleteAccount}
         itemName="your account"
       />
-    </Layout>
+    </>
   );
 };
 

@@ -16,6 +16,10 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import WishlistDetail from "./pages/WishlistDetails";
 import CalendarPage from "./pages/Calendar/CalendarPage";
+import { NotificationProvider } from "./context/NotificationContext";
+import NotificationsPage from "./pages/Notifications/NotificationsPage";
+import LayoutWrapper from "./components/layout/LayoutWrapper";
+import Layout from "./components/layout/Layout";
 
 const App = () => {
   return (
@@ -46,32 +50,43 @@ const App = () => {
         }}
       />
       <Routes>
-        {/* Public Routes */}
+        {/* --- PUBLIC ROUTES --- */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
-
-        {/* Private Routes (Require Authentication) */}
         <Route
-          path="/dashboard"
+            path="/shared/:shareCode"
+            element={
+              <Layout hideHeader guest>
+                <SharedWishlist />
+              </Layout>
+            }
+          />
+
+        {/* --- PRIVATE ROUTES (wrapped in layout) --- */}
+        <Route
+          path="/*"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <NotificationProvider>
+                <LayoutWrapper />
+              </NotificationProvider>
             </PrivateRoute>
           }
-        />
+        >
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="shared-with-me" element={<SharedWithMe />} />
+          <Route path="wishlist/:id" element={<WishlistDetail />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="calendar" element={<CalendarPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+        </Route>
 
-        <Route path="/shared/:shareCode" element={<SharedWishlist />} />
-        <Route path="/shared-with-me" element={<PrivateRoute><SharedWithMe /></PrivateRoute>} />
-        <Route path="/wishlist/:id" element={<PrivateRoute><WishlistDetail /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/calendar" element={<PrivateRoute><CalendarPage /></PrivateRoute>} />
-        <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
-
-        {/* 404 Page */}
+        {/* --- NOT FOUND --- */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
