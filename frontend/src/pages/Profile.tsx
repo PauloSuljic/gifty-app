@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../components/AuthProvider";
-import Layout from "../components/layout/Layout";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
 
@@ -73,8 +72,8 @@ const Profile = () => {
   };
 
   return (
-    <Layout>
-      <h2 className="text-xl sm:text-3xl font-semibold pt-3 text-center">Edit Profile</h2>
+    <>
+      <h2 className="text-xl sm:text-3xl font-semibold pt-6 text-center">Edit Profile</h2>
       <div className="mx-auto p-4 text-white w-full max-w-4xl">
         <div className="flex flex-col md:flex-row justify-center gap-5">
           {/* Left: Username & Bio */}
@@ -137,7 +136,7 @@ const Profile = () => {
           Save Changes
         </button>
       </div>
-    </Layout>
+    </>
   );  
   
 };

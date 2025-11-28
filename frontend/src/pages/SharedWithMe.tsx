@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../components/AuthProvider";
-import Layout from "../components/layout/Layout";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
 import { FiTrash2 } from "react-icons/fi";
@@ -88,8 +87,8 @@ const SharedWithMe = () => {
   }, [firebaseUser, highlightUserId]);
 
   return (
-    <Layout>
-      <h2 className="text-xl sm:text-3xl font-semibold pt-3 text-center">Wishlists Shared With Me</h2>
+    <>
+      <h2 className="text-xl sm:text-3xl font-semibold pt-6 text-center">Wishlists Shared With Me</h2>
       <div className="mx-auto p-4 text-white w-full max-w-4xl">
       {sharedWishlists.length === 0 ? (
         <p className="text-gray-300 text-center mt-6">No shared wishlists yet.</p>
@@ -177,7 +176,7 @@ const SharedWithMe = () => {
         }}
         ownerName={sharedWishlists.find(g => g.ownerId === removeModalOwnerId)?.ownerName || ""}
       />
-    </Layout>
+    </>
   );
 };
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
-import Layout from "../../components/layout/Layout";
 import { useAuth } from "../../components/AuthProvider";
 import { apiFetch } from "../../api";
 import { useNavigate } from "react-router-dom";
@@ -112,13 +111,9 @@ export default function CalendarPage() {
     : [];
 
   return (
-    <Layout>
-      <div className="min-h-screen text-gray-200 p-6">
-        {/* Header */}
-        <header className="mb-6">
-          <h2 className="text-lg font-semibold">Calendar</h2>
-        </header>
-
+    <>
+      <div className="min-h-screen text-gray-200 pt-4 px-2">
+        <h2 className="text-xl sm:text-3xl font-semibold pb-6 text-center">Calendar</h2>
         {/* Calendar card */}
         <div className="bg-gray-800 rounded-xl p-4 shadow-sm mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -209,6 +204,6 @@ export default function CalendarPage() {
           </div>
         </section>
       </div>
-    </Layout>
+    </>
   );
 }

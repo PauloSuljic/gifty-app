@@ -4,7 +4,6 @@ import { useAuth } from "../components/AuthProvider";
 import { apiFetch } from "../api";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
-import Layout from "../components/layout/Layout";
 import UserHeader from "../components/UserHeader";
 
 type WishlistItemType = {
@@ -80,7 +79,7 @@ const SharedWishlist = () => {
   }
 
   return (
-    <Layout hideHeader guest>
+    <>
       <UserHeader
         avatarUrl={wishlist.ownerAvatar}
         username={wishlist.ownerName}
@@ -127,7 +126,7 @@ const SharedWishlist = () => {
           </p>
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 
