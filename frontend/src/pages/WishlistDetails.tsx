@@ -388,15 +388,6 @@ const WishlistDetail = () => {
         item={itemToEdit}
         onItemUpdated={(updated) => {
           setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
-          toast.success("Item updated!", {
-            duration: 3000,
-            position: "bottom-center",
-            style: {
-              background: "#333",
-              color: "#fff",
-              border: "1px solid #555",
-            },
-          });
         }}
       />
 
