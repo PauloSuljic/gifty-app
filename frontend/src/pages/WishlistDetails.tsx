@@ -26,11 +26,13 @@ import RenameWishlistModal from "../components/ui/modals/RenameWishlistModal";
 import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import ShareLinkModal from "../components/ui/modals/ShareLinkModal";
 import { toast } from "react-hot-toast";
+import { useNotificationContext } from "../context/NotificationContext";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { firebaseUser } = useAuth();
+  const { refreshNotifications } = useNotificationContext();
 
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
@@ -226,6 +228,11 @@ const WishlistDetail = () => {
             : i
         )
       );
+
+      // Notify owner if someone else reserves their item
+      if (wishlist.userId === firebaseUser?.uid && updatedItem.reservedBy !== firebaseUser?.uid) {
+        refreshNotifications();
+      }
     } catch (error) {
       console.error("Error toggling reservation:", error);
       toast.error("Something went wrong!", {

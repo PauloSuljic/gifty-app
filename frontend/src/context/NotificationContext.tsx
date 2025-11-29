@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode
 } from "react";
 import { apiFetch } from "../api";
@@ -20,6 +21,7 @@ interface NotificationContextValue {
   notifications: NotificationItem[];
   unreadCount: number;
   loadNotifications: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;   // ✅ NEW
   markAllAsRead: () => Promise<void>;
 }
 
@@ -51,6 +53,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ✅ Safe wrapper – same as loadNotifications but semantic name
+  const refreshNotifications = async () => {
+    await loadNotifications();
+  };
+
   const markAllAsRead = async () => {
     if (!firebaseUser) return;
 
@@ -70,6 +77,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // 🔄 Refresh notifications when window regains focus
+  useEffect(() => {
+    const handleFocus = () => {
+      if (firebaseUser) refreshNotifications();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [firebaseUser]);
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
@@ -78,6 +95,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         notifications,
         unreadCount,
         loadNotifications,
+        refreshNotifications,  // ✅ Added
         markAllAsRead
       }}
     >
