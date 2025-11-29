@@ -80,7 +80,7 @@ export const WishlistCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute top-2 left-2 p-1 bg-black/40 rounded-md cursor-grab active:cursor-grabbing touch-none select-none"
+          className="absolute top-2 left-2 p-1 bg-black/40 rounded-md cursor-grab active:cursor-grabbing select-none"
           onPointerDown={(e) => e.stopPropagation()}  // 👈 prevent event bubbling to the menu
           onClick={(e) => e.stopPropagation()}
         >

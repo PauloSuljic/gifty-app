@@ -29,7 +29,6 @@ export const SortableItem = ({ id, children }: SortableItemProps) => {
     opacity: isDragging ? 0.9 : 1,
     zIndex: isDragging ? 50 : 1,
     cursor: isDragging ? "grabbing" : "grab",
-    touchAction: "none", // ✅ prevents scroll interference
     WebkitTapHighlightColor: "transparent", // ✅ removes blue flash on iOS
     boxShadow: isDragging
       ? "0 8px 20px rgba(0,0,0,0.25)"
