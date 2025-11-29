@@ -277,7 +277,7 @@ const Wishlist = () => {
           onDragStart={handleDragStart}
         >
           <SortableContext items={wishlistOrder} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-2 gap-4 p-4 touch-none select-none">
+            <div className="grid grid-cols-2 gap-4 p-4 select-none" style={{ touchAction: "pan-y" }}>
               {wishlistOrder.map((id) => {
                 const wishlist = wishlists.find((w) => w.id === id);
                 if (!wishlist) return null;
