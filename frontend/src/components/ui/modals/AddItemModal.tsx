@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import Modal from "../Modal";
 import { apiFetch } from "../../../api";
 import { useAuth } from "../../AuthProvider";
@@ -16,11 +17,22 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
   const [link, setLink] = useState("");
   const [errors, setErrors] = useState<{ name?: string; link?: string }>({});
 
+  const isValidUrl = (value: string) =>
+    /^(https?:\/\/)?([\w-]+\.)+[a-z]{2,}(\/\S*)?$/i.test(value.trim());
+
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
     if (!name.trim()) newErrors.name = "Item name is required.";
     if (!link.trim()) newErrors.link = "Link is required.";
-    if (Object.keys(newErrors).length) return setErrors(newErrors);
+    if (link.trim() && !isValidUrl(link)) newErrors.link = "Please enter a valid URL.";
+    if (Object.keys(newErrors).length) {
+      Object.values(newErrors).forEach((msg) => toast.error(msg, {
+        duration: 3000,
+        position: "bottom-center",
+        style: { background: "#333", color: "#fff", border: "1px solid #555" }
+      }));
+      return;
+    }
 
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
@@ -51,7 +63,6 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
         onChange={(e) => setName(e.target.value)}
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
       />
-      {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
       <input
         type="text"
         placeholder="Item Link"
@@ -59,7 +70,6 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
         onChange={(e) => setLink(e.target.value)}
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
       />
-      {errors.link && <p className="text-red-400 text-sm">{errors.link}</p>}
       <button onClick={handleSubmit} className="w-full px-4 py-2 bg-purple-500 rounded-lg">
         Confirm
       </button>
