@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Modal from "../Modal";
 import { useAuth } from "../../AuthProvider";
+import { toast } from "react-hot-toast";
 
 interface EditItemModalProps {
   isOpen: boolean;
@@ -10,11 +11,19 @@ interface EditItemModalProps {
   onItemUpdated: (item: any) => void;
 }
 
+const isValidUrl = (value: string) => {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: EditItemModalProps) => {
   const { firebaseUser } = useAuth();
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; link?: string }>({});
 
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
@@ -25,13 +34,9 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
       setName(item.name || "");
       setLink(item.link || "");
 
-      // FIX: treat empty string as null
-      const cleanImage = item.imageUrl && item.imageUrl.trim() !== "" 
-        ? item.imageUrl 
-        : null;
+      const clean = item.imageUrl && item.imageUrl.trim() !== "" ? item.imageUrl : null;
 
-      setExistingImage(cleanImage);
-
+      setExistingImage(clean);
       setPreviewUrl(null);
       setNewImageFile(null);
     }
@@ -48,15 +53,32 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
   const handleSubmit = async () => {
     if (!item) return;
 
-    const newErrors: typeof errors = {};
-    if (!name.trim()) newErrors.name = "Item name is required.";
-    if (!link.trim()) newErrors.link = "Link is required.";
-    if (Object.keys(newErrors).length) return setErrors(newErrors);
+    // VALIDATION — one toast per problem
+    if (!name.trim()) {
+      toast.error("Item name is required.", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
+    if (!link.trim()) {
+      toast.error("Item link is required.", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
+    if (!isValidUrl(link.trim())) {
+      toast.error("Please enter a valid URL.", {
+        position: "bottom-center",
+      });
+      return;
+    }
 
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
 
-    // CASE A — only name + link changed
+    // CASE A — only name/link updated
     if (!newImageFile) {
       const res = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/wishlists/${wishlistId}/items/${item.id}`,
@@ -70,15 +92,31 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
         }
       );
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error("Could not update item.", {
+          position: "bottom-center",
+        });
+        return;
+      }
 
       const updated = await res.json();
       onItemUpdated(updated);
+
+      toast.success("Item updated!", {
+        duration: 3000,
+        position: "bottom-center",
+        style: {
+          background: "#333",
+          color: "#fff",
+          border: "1px solid #555",
+        },
+      });
+
       onClose();
       return;
     }
 
-    // CASE B — image updated (maybe name/link too)
+    // CASE B — image updated + (optional) name/link
     const formData = new FormData();
     formData.append("image", newImageFile);
     formData.append("name", name);
@@ -93,10 +131,26 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
       }
     );
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      toast.error("Could not update item image.", {
+        position: "bottom-center",
+      });
+      return;
+    }
 
     const updated = await res.json();
     onItemUpdated(updated);
+
+    toast.success("Item updated!", {
+      duration: 3000,
+      position: "bottom-center",
+      style: {
+        background: "#333",
+        color: "#fff",
+        border: "1px solid #555",
+      },
+    });
+
     onClose();
   };
 
@@ -105,7 +159,7 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
       <div className="mb-4">
         <h2 className="text-xl font-bold mb-3">Edit Item</h2>
 
-        {/* IMAGE PREVIEW SECTION */}
+        {/* IMAGE PREVIEW */}
         <div className="flex flex-col items-center mb-4">
           <img
             src={
@@ -116,6 +170,7 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
             alt="Item preview"
             className="w-32 h-32 rounded-lg object-cover shadow-lg mb-2 border border-gray-600"
           />
+
           <label className="cursor-pointer bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
             Change Image
             <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
@@ -131,7 +186,6 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
         onChange={(e) => setName(e.target.value)}
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
       />
-      {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
 
       {/* LINK INPUT */}
       <div className="relative mb-2">
@@ -142,19 +196,18 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
           onChange={(e) => setLink(e.target.value)}
           className="w-full px-4 py-2 rounded bg-gray-700 text-white pr-10"
         />
+
         {link && (
           <button
             type="button"
             aria-label="Clear link"
             onClick={() => setLink("")}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-            tabIndex={0}
           >
             &#10005;
           </button>
         )}
       </div>
-      {errors.link && <p className="text-red-400 text-sm">{errors.link}</p>}
 
       <button onClick={handleSubmit} className="w-full px-4 py-2 mt-3 bg-purple-500 rounded-lg">
         Save Changes
