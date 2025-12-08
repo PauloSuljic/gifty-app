@@ -65,6 +65,7 @@ const App = () => {
               </Layout>
             }
           />
+          <Route path="*" element={<NotFound />} />
 
         {/* --- PRIVATE ROUTES (wrapped in layout) --- */}
         <Route
@@ -84,10 +85,9 @@ const App = () => {
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+    
+          <Route path="*" element={<NotFound />} />
         </Route>
-
-        {/* --- NOT FOUND --- */}
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

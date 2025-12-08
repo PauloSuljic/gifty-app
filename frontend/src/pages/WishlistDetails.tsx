@@ -27,6 +27,7 @@ import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import ShareLinkModal from "../components/ui/modals/ShareLinkModal";
 import { toast } from "react-hot-toast";
 import { useNotificationContext } from "../context/NotificationContext";
+import NotFound from "./NotFound";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +37,8 @@ const WishlistDetail = () => {
 
   const [wishlist, setWishlist] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
+  const [error, setError] = useState(false);
+
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,29 +55,47 @@ const WishlistDetail = () => {
     const fetchWishlist = async () => {
       const token = await firebaseUser?.getIdToken();
       if (!token) return;
+
       // 1. Fetch wishlist info
       const resWishlist = await apiFetch(`/api/wishlists/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (resWishlist.ok) {
-        const data = await resWishlist.json();
-        setWishlist(data);
+
+      if (!resWishlist.ok) {
+        setError(true);
+        return;
       }
+
+      const wishlistData = await resWishlist.json();
+      setWishlist(wishlistData);
 
       // 2. Fetch wishlist items
       const resItems = await apiFetch(`/api/wishlists/${id}/items`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (resItems.ok) {
-        const data = await resItems.json();
-        // Sort items by order property if present
-        // Reverse so that order=0 appears last visually (match DB behavior)
-        const sorted = [...data].sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
-        setItems(sorted);
+
+      if (!resItems.ok) {
+        setError(true);
+        return;
       }
+
+      const itemsData = await resItems.json();
+      const sorted = [...itemsData].sort(
+        (a, b) => (b.order ?? 0) - (a.order ?? 0)
+      );
+      setItems(sorted);
     };
+
     fetchWishlist();
   }, [id, firebaseUser?.uid]);
+  
+  const isValidGuid = (value: string | undefined) =>
+  !!value && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
+
+  if (!isValidGuid(id)) {
+    return <NotFound />;
+  }
+
   // Mobile detection
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
     navigator.userAgent
