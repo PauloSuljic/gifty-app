@@ -12,6 +12,8 @@ type SharedWishlistItem = {
   link?: string;
   isReserved: boolean;
   reservedBy?: string | null;
+  imageUrl?: string;
+  order?: number | null;
 };
 
 type SharedWishlist = {
@@ -122,25 +124,48 @@ const SharedWithMe = () => {
               </button>
             </div>
 
-            {(expandedGroups.includes(group.ownerId) ? group.wishlists : group.wishlists.slice(0, 1)).map(wl => (
-              <div
-                key={wl.id}
-                className="bg-gray-700/20 rounded-lg flex justify-between items-center p-3 mb-2 cursor-pointer hover:bg-gray-700"
-                onClick={() => navigate(`/wishlist/${wl.id}`)}
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={wl.coverImage || "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop"}
-                    alt={wl.name}
-                    className="w-12 h-12 rounded-lg object-cover"
-                  />
-                  <div>
-                    <p className="text-sm font-medium">{wl.name}</p>
-                    <p className="text-xs text-gray-400">{wl.items.length} items · Updated 2 days ago</p>
+            {(expandedGroups.includes(group.ownerId) ? group.wishlists : group.wishlists.slice(0, 1)).map(wl => {
+              const highestOrderedItemWithImage = wl.items.reduce<SharedWishlistItem | null>(
+                (best, item) => {
+                  if (!item.imageUrl) return best;
+
+                  if (!best) return item;
+
+                  const bestOrder = best.order ?? 0;
+                  const itemOrder = item.order ?? 0;
+
+                  return itemOrder > bestOrder ? item : best;
+                },
+                null
+              );
+
+              const coverImageUrl =
+                highestOrderedItemWithImage?.imageUrl ||
+                wl.coverImage ||
+                "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop";
+
+              return (
+                <div
+                  key={wl.id}
+                  className="bg-gray-700/20 rounded-lg flex justify-between items-center p-3 mb-2 cursor-pointer hover:bg-gray-700"
+                  onClick={() => navigate(`/wishlist/${wl.id}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={coverImageUrl}
+                      alt={wl.name}
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">{wl.name}</p>
+                      <p className="text-xs text-gray-400">
+                        {wl.items.length} items · Updated 2 days ago
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {group.wishlists.length > 1 && (
               <button
