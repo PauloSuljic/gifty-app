@@ -44,6 +44,8 @@ type WishlistItemType = {
   wishlistId: string;
   isReserved: boolean;
   reservedBy: string;
+  imageUrl?: string;
+  order?: number;
 };
 
 const Wishlist = () => {
@@ -255,6 +257,9 @@ const Wishlist = () => {
   }); // Optional: desktop support
 
   const sensors = isMobile ? useSensors(touchSensor) : useSensors(touchSensor, mouseSensor);
+
+  const fallbackCoverImage =
+  "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
   
   return (
     <div className="max-w-4xl mx-auto text-white">
@@ -284,12 +289,32 @@ const Wishlist = () => {
 
                 return (
                   <SortableItem key={wishlist.id} id={wishlist.id}>
-                    {({ listeners, attributes }) => (
+                  {({ listeners, attributes }) => {
+                    const items = wishlistItems[wishlist.id] || [];
+
+                    const highestOrderedItemWithImage = items.reduce<WishlistItemType | null>(
+                      (best, item) => {
+                        if (!item.imageUrl) return best;
+
+                        if (!best) return item;
+
+                        const bestOrder = best.order ?? 0;
+                        const itemOrder = item.order ?? 0;
+
+                        return itemOrder > bestOrder ? item : best;
+                      },
+                      null
+                    );
+
+                    const coverImageUrl =
+                      highestOrderedItemWithImage?.imageUrl || fallbackCoverImage;
+
+                    return (
                       <WishlistCard
                         id={wishlist.id}
                         name={wishlist.name}
-                        itemCount={wishlistItems[wishlist.id]?.length || 0}
-                        coverImage={wishlistItems[wishlist.id]?.[0]?.link}
+                        itemCount={items.length}
+                        coverImage={coverImageUrl}
                         onClick={() => navigate(`/wishlist/${wishlist.id}`)}
                         onShare={() => generateShareLink(wishlist.id)}
                         onRename={() => {
@@ -303,8 +328,9 @@ const Wishlist = () => {
                         listeners={listeners}
                         attributes={attributes}
                       />
-                    )}
-                  </SortableItem>
+                    );
+                  }}
+                </SortableItem>
                 );
               })}
             </div>
