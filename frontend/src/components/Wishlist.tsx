@@ -290,7 +290,29 @@ const Wishlist = () => {
                 return (
                   <SortableItem key={wishlist.id} id={wishlist.id}>
                   {({ listeners, attributes }) => {
-                    const items = wishlistItems[wishlist.id] || [];
+                    const items = wishlistItems[wishlist.id];
+                    if (!items) {
+                      return (
+                        <WishlistCard
+                          id={wishlist.id}
+                          name={wishlist.name}
+                          itemCount={0}
+                          coverImage={fallbackCoverImage}
+                          onClick={() => navigate(`/wishlist/${wishlist.id}`)}
+                          onShare={() => generateShareLink(wishlist.id)}
+                          onRename={() => {
+                            setWishlistToRename({ id: wishlist.id, name: wishlist.name });
+                            setIsRenameModalOpen(true);
+                          }}
+                          onDelete={() => {
+                            setWishlistToDelete({ id: wishlist.id, name: wishlist.name });
+                            setIsWishlistDeleteModalOpen(true);
+                          }}
+                          listeners={listeners}
+                          attributes={attributes}
+                        />
+                      );
+                    }
 
                     const highestOrderedItemWithImage = items.reduce<WishlistItemType | null>(
                       (best, item) => {
