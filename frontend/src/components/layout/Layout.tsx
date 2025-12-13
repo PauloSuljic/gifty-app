@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../AuthProvider";
 import { useNotificationContext } from "../../context/NotificationContext";
 import NotificationsModal from "../ui/modals/NotificationsModal";
+import RightSidebar from "../RightSidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -101,18 +102,14 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:pr-6 p-4 pt-4 lg:pt-6">
+        <div className="flex-1 flex flex-col p-4 pt-4 lg:pt-6">
           {!hideHeader && <DashboardHeader />}
 
           <div className="flex-1 overflow-y-auto p-2">{children}</div>
         </div>
 
         {/* Right Sidebar – "Coming Soon" */}
-        <aside className="w-64 hidden lg:flex flex-col justify-center items-center bg-gray-900 p-4 rounded-lg shadow-lg ml-6">
-          <p className="text-gray-400 text-center">
-            🎁 Coming Soon: <br /> Friendships & Calendar
-          </p>
-        </aside>
+        {!guest && firebaseUser && <RightSidebar />}
       </div>
     </div>
   );

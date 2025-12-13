@@ -110,6 +110,10 @@ export default function CalendarPage() {
     ? events.filter((event) => occursOn(event.date, selectedDate))
     : [];
 
+  const upcomingEventsLimited = !selectedDate
+    ? events.slice(0, 3)
+    : eventsForSelectedDate;
+
   return (
     <>
       <div className="min-h-screen text-gray-200 pt-4 px-2">
@@ -178,7 +182,7 @@ export default function CalendarPage() {
             </h3>
           )}
           <div className="space-y-3">
-            {(selectedDate && eventsForSelectedDate.length > 0 ? eventsForSelectedDate : !selectedDate ? events : []).map((event) => (
+            {upcomingEventsLimited.map((event) => (
               <div
                 key={event.id}
                 onClick={() => navigate("/shared-with-me", { state: { highlightUserId: event.id } })}
