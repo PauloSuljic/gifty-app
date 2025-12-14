@@ -32,7 +32,8 @@ public class GetWishlistByIdHandler(IWishlistRepository wishlistRepository)
             IsReserved = item.IsReserved,
             ReservedBy = item.ReservedBy,
             CreatedAt = item.CreatedAt,
-            WishlistId = item.WishlistId
+            WishlistId = item.WishlistId,
+            Description = item.Description
         }).ToList();
 
         return new WishlistDto

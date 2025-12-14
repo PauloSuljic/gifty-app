@@ -64,7 +64,8 @@ public class UpdateWishlistItemImageHandler(
             IsReserved = item.IsReserved,
             ReservedBy = item.ReservedBy,
             Order = item.Order,
-            ImageUrl = item.ImageUrl
+            ImageUrl = item.ImageUrl,
+            Description = item.Description
         };
     }
 }

@@ -11,7 +11,8 @@ public record UpdateWishlistItemCommand(
     Guid WishlistId,
     string UserId,
     string Name,
-    string? Link
+    string? Link,
+    string? Description
 ) : IRequest<WishlistItemDto>;
 
 public class UpdateWishlistItemHandler(
@@ -61,6 +62,7 @@ public class UpdateWishlistItemHandler(
             WishlistId = wishlistItem.WishlistId,
             Order = wishlistItem.Order,
             ImageUrl = wishlistItem.ImageUrl,
+            Description = wishlistItem.Description
         };
     }
 }

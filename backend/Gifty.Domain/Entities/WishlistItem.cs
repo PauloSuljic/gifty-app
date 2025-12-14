@@ -11,6 +11,7 @@ namespace Gifty.Domain.Entities
         public Guid Id { get; set; } = Guid.NewGuid();
         [Required]
         public required string Name { get; set; }
+        public string? Description { get; private set; }
         public string? Link { get; set; }
         public bool IsReserved { get; set; } = false;
         public string? ReservedBy { get; set; }
@@ -22,7 +23,7 @@ namespace Gifty.Domain.Entities
         [JsonIgnore]
         public Wishlist? Wishlist { get; set; }
         private WishlistItem() { }
-        public static WishlistItem Create(Guid wishlistId, string name, string? link, int order)
+        public static WishlistItem Create(Guid wishlistId, string name, string? link, int order, string? description = null)
         {
             var item = new WishlistItem
             {
@@ -32,7 +33,8 @@ namespace Gifty.Domain.Entities
                 CreatedAt = DateTime.UtcNow,
                 IsReserved = false,
                 ReservedBy = null,
-                Order = order
+                Order = order,
+                Description = description,
             };
 
             item.RaiseDomainEvent(new WishlistItemCreatedEvent(item));
@@ -53,6 +55,12 @@ namespace Gifty.Domain.Entities
             if (link != null) Link = link;
 
             RaiseDomainEvent(new WishlistItemPartiallyUpdatedEvent(this));
+        }
+
+        public void UpdateDescription(string? description)
+        {
+            Description = description;
+            RaiseDomainEvent(new WishlistItemUpdatedEvent(this));
         }
         
         public void Reorder(int newOrder)
@@ -89,6 +97,13 @@ namespace Gifty.Domain.Entities
         public void SetImageUrl(string? imageUrl)
         {
             ImageUrl = imageUrl;
+        }
+        
+        public void SetDescription(string? description)
+        {
+            Description = string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
         }
     }
 }

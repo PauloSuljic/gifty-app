@@ -372,6 +372,7 @@ const WishlistDetail = () => {
                       wishlistOwner={wishlist.userId}
                       currentUser={firebaseUser?.uid}
                       imageUrl={item.imageUrl}
+                      description={item.description}
                       context="own"
                       onToggleReserve={undefined}
                       onDelete={() => {
@@ -400,6 +401,7 @@ const WishlistDetail = () => {
                   wishlistOwner={wishlist.userId}
                   currentUser={firebaseUser?.uid}
                   imageUrl={item.imageUrl}
+                  description={item.description}
                   context={isOtherUser ? "shared" : "guest"}
                   onToggleReserve={
                     isOtherUser ? () => toggleReservation(item.id) : undefined

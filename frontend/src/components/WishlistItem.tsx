@@ -6,6 +6,7 @@ import Modal from "./ui/Modal";
 type WishlistItemProps = {
   id: string;
   name: string;
+  description?: string;
   link: string;
   isReserved: boolean;
   reservedBy?: string | null;
@@ -23,6 +24,7 @@ type WishlistItemProps = {
 
 const WishlistItem = ({
   name,
+  description,
   link,
   isReserved,
   reservedBy,
@@ -86,9 +88,11 @@ const WishlistItem = ({
       {/* 📄 Info section */}
       <div className="flex-1 min-w-0" onClick={() => link && setIsLinkModalOpen(true)}>
         <h3 className="text-sm font-medium">{name}</h3>
-        <p className="text-xs text-gray-400 line-clamp-2">
-          A thoughtful gift idea for your wishlist.
-        </p>
+        {description && (
+          <p className="text-xs text-gray-400 line-clamp-2 italic leading-snug">
+            {description}
+          </p>
+        )}
       </div>
 
       {/* 🧩 Action icons */}

@@ -29,7 +29,8 @@ namespace gifty_web_backend.Controllers
                 userId,
                 request.Name,
                 request.Link,
-                request.ImageUrl
+                request.ImageUrl,
+                request.Description
             );
 
             var wishlistItemDto = await mediator.Send(command);
@@ -76,12 +77,15 @@ namespace gifty_web_backend.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            var command = new UpdateWishlistItemCommand(
+            var command = new UpdateWishlistItemPartialCommand(
                 itemId,
                 wishlistId,
                 userId,
                 request.Name,
-                request.Link
+                request.Link,
+                request.Description,
+                null,
+                null
             );
 
             var updatedItem = await mediator.Send(command);

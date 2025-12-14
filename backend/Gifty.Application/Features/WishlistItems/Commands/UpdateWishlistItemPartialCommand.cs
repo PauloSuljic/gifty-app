@@ -12,6 +12,7 @@ public record UpdateWishlistItemPartialCommand(
     string UserId,
     string? Name,
     string? Link,
+    string? Description,
     Stream? ImageStream,
     string? FileName
 ) : IRequest<WishlistItemDto>;
@@ -56,6 +57,11 @@ public class UpdateWishlistItemPartialHandler : IRequestHandler<UpdateWishlistIt
             item.Update(newName, newLink);
         }
         
+        if (request.Description != null)
+        {
+            item.SetDescription(request.Description);
+        }
+        
         if (request.ImageStream != null && request.FileName != null)
         {
             if (!string.IsNullOrWhiteSpace(item.ImageUrl))
@@ -82,7 +88,9 @@ public class UpdateWishlistItemPartialHandler : IRequestHandler<UpdateWishlistIt
             ReservedBy = item.ReservedBy,
             CreatedAt = item.CreatedAt,
             WishlistId = item.WishlistId,
-            ImageUrl = item.ImageUrl
+            ImageUrl = item.ImageUrl,
+            Description = item.Description,
+            Order = item.Order
         };
     }
 }

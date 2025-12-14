@@ -7,7 +7,7 @@ interface EditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   wishlistId: string;
-  item: { id: string; name: string; link: string; imageUrl?: string } | null;
+  item: { id: string; name: string; link: string; imageUrl?: string; description?: string } | null;
   onItemUpdated: (item: any) => void;
 }
 
@@ -24,6 +24,7 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
   const { firebaseUser } = useAuth();
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
+  const [description, setDescription] = useState("");
 
   const [existingImage, setExistingImage] = useState<string | null>(null);
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
@@ -33,6 +34,7 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
     if (item) {
       setName(item.name || "");
       setLink(item.link || "");
+      setDescription(item.description || "");
 
       const clean = item.imageUrl && item.imageUrl.trim() !== "" ? item.imageUrl : null;
 
@@ -88,7 +90,7 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ name, link }),
+          body: JSON.stringify({ name, link, description }),
         }
       );
 
@@ -121,6 +123,7 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
     formData.append("image", newImageFile);
     formData.append("name", name);
     formData.append("link", link);
+    formData.append("description", description);
 
     const res = await fetch(
       `${import.meta.env.VITE_API_BASE_URL}/api/wishlists/${wishlistId}/items/${item.id}/image`,
@@ -208,6 +211,18 @@ const EditItemModal = ({ isOpen, onClose, wishlistId, item, onItemUpdated }: Edi
           </button>
         )}
       </div>
+
+      <textarea
+        placeholder="Description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={2}
+        maxLength={50}
+        className="w-full px-4 py-2 mt-2 rounded bg-gray-700 text-white resize-none"
+      />
+      <p className="text-xs text-gray-400 mt-1 text-right">
+        {description.length}/50
+      </p>
 
       <button onClick={handleSubmit} className="w-full px-4 py-2 mt-3 bg-purple-500 rounded-lg">
         Save Changes
