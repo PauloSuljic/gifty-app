@@ -186,22 +186,53 @@ public class WishlistItemControllerTests
     {
         var wishlist = await CreateWishlistAsync();
 
-        var itemDto = new CreateWishlistItemDto { Name = "Old Name", Link = "http://old.com" };
+        var itemDto = new CreateWishlistItemDto
+        {
+            Name = "Old Name",
+            Link = "http://old.com",
+            // Description is optional, but include it to match the updated contract
+            Description = "Old description"
+        };
+
         var res = await _client.PostAsJsonAsync($"/api/wishlists/{wishlist.Id}/items", itemDto);
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+
         var created = await res.Content.ReadFromJsonAsync<WishlistItemDto>();
-        
+        created.Should().NotBeNull();
+
         var updateDto = new UpdateWishlistItemDto
         {
             Name = "New Name",
-            Link = "https://new.com"
+            Link = "https://new.com",
+            // Include description so we don't accidentally overwrite it with null (if backend treats null as 'clear')
+            Description = "Updated description"
         };
-        
+
         var updateRes = await _client.PutAsJsonAsync(
             $"/api/wishlists/{wishlist.Id}/items/{created!.Id}",
             updateDto
         );
 
+        // If this fails again, the response body will help pinpoint validation/contract issues
+        if (!updateRes.IsSuccessStatusCode)
+        {
+            var body = await updateRes.Content.ReadAsStringAsync();
+            throw new Exception($"Update failed ({updateRes.StatusCode}):\n{body}");
+        }
+
         updateRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Optional but useful: verify changes persisted
+        var fetch = await _client.GetAsync($"/api/wishlists/{wishlist.Id}/items");
+        fetch.EnsureSuccessStatusCode();
+
+        var items = await fetch.Content.ReadFromJsonAsync<List<WishlistItemDto>>();
+        items.Should().NotBeNull();
+
+        var updated = items!.Single(i => i.Id == created.Id);
+        updated.Name.Should().Be("New Name");
+        updated.Link.Should().Be("https://new.com");
+        updated.Description.Should().Be("Updated description");
     }
 
     [Fact]
