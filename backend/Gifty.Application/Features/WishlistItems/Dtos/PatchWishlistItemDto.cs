@@ -1,4 +1,4 @@
-namespace gifty_web_backend.Models;
+namespace Gifty.Application.Features.WishlistItems.Dtos;
 
 public record PatchWishlistItemDto
 {

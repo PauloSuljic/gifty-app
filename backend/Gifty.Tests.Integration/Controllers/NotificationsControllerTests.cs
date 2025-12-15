@@ -10,15 +10,13 @@ namespace Gifty.Tests.Integration.Controllers;
 [Collection("IntegrationTestCollection")]
 public class NotificationsControllerTests
 {
-    private readonly TestApiFactory _factory;
     private readonly HttpClient _client;
     private readonly string _userId;
 
     public NotificationsControllerTests(TestApiFactory factory)
     {
-        _factory = factory;
         _userId = Guid.NewGuid().ToString();
-        _client = _factory.CreateClientWithTestAuth(_userId);
+        _client = factory.CreateClientWithTestAuth(_userId);
     }
 
     private async Task CreateTestUser(string userId, HttpClient client)

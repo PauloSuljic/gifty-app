@@ -46,7 +46,9 @@ public class CreateWishlistItemHandler(
         {
             var previewImage = await metadataScraperService.GetPreviewImageAsync(request.Link);
             if (!string.IsNullOrWhiteSpace(previewImage))
+            {
                 newItem.SetImageUrl(previewImage);
+            }
         }
 
         await wishlistItemRepository.AddAsync(newItem);

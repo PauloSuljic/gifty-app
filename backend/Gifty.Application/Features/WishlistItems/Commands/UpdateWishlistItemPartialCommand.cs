@@ -54,7 +54,7 @@ public class UpdateWishlistItemPartialHandler : IRequestHandler<UpdateWishlistIt
             var newName = request.Name ?? item.Name;
             var newLink = request.Link ?? item.Link;
 
-            item.Update(newName, newLink);
+            item.Update(newName, newLink, item.Description);
         }
         
         if (request.Description != null)

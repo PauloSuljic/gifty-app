@@ -13,7 +13,7 @@ namespace Gifty.Domain.Entities
         public required string Name { get; set; }
         public string? Description { get; private set; }
         public string? Link { get; set; }
-        public bool IsReserved { get; set; } = false;
+        public bool IsReserved { get; set; }
         public string? ReservedBy { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int Order { get; set; } 
@@ -41,10 +41,13 @@ namespace Gifty.Domain.Entities
             return item;
         }
 
-        public void Update(string name, string? link)
+        public void Update(string name, string? link, string? description)
         {
             Name = name;
             Link = link;
+            Description = string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
 
             RaiseDomainEvent(new WishlistItemUpdatedEvent(this));
         }

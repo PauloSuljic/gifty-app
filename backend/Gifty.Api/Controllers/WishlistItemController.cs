@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Gifty.Application.Features.WishlistItems.Commands;
 using Gifty.Application.Features.WishlistItems.Dtos;
 using Gifty.Application.Features.WishlistItems.Queries;
-using Gifty.Application.Features.Wishlists.Dtos;
 
 namespace gifty_web_backend.Controllers
 {
@@ -77,15 +76,13 @@ namespace gifty_web_backend.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            var command = new UpdateWishlistItemPartialCommand(
+            var command = new UpdateWishlistItemCommand(
                 itemId,
                 wishlistId,
                 userId,
                 request.Name,
                 request.Link,
-                request.Description,
-                null,
-                null
+                request.Description
             );
 
             var updatedItem = await mediator.Send(command);

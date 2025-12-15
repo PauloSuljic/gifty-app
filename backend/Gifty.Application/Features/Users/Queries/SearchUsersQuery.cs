@@ -1,4 +1,3 @@
-using FluentValidation;
 using Gifty.Domain.Entities.Users;
 using Gifty.Domain.Interfaces;
 using MediatR;

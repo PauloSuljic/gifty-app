@@ -7,7 +7,7 @@ public class DeleteWishlistItemCommandValidator : AbstractValidator<DeleteWishli
 {
     public DeleteWishlistItemCommandValidator()
     {
-        RuleFor(x => x.Id)
+        RuleFor(x => x.ItemId)
             .NotEmpty().WithMessage("Item Id is required.");
 
         RuleFor(x => x.WishlistId)

@@ -46,7 +46,11 @@ public class UpdateWishlistItemHandler(
             throw new ForbiddenAccessException("You are not authorized to update this wishlist item.");
         }
 
-        wishlistItem.Update(request.Name, request.Link);
+        wishlistItem.Update(
+            request.Name,
+            request.Link,
+            request.Description
+        );
 
         await wishlistItemRepository.UpdateAsync(wishlistItem);
         await wishlistItemRepository.SaveChangesAsync();

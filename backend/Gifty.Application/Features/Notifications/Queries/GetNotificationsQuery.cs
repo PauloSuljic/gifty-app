@@ -2,7 +2,7 @@ using Gifty.Domain.Entities.Notifications;
 using Gifty.Domain.Interfaces;
 using MediatR;
 
-namespace Gifty.Application.Notifications.Queries;
+namespace Gifty.Application.Features.Notifications.Queries;
 
 public record GetNotificationsQuery(string UserId) : IRequest<List<Notification>>;
 
