@@ -64,20 +64,23 @@ else
         options.UseNpgsql(connectionString));
 }
 
-// ✅ 2. Firebase Admin SDK
-var firebaseJson = configuration["Firebase:CredentialsJson"];
-
-if (string.IsNullOrWhiteSpace(firebaseJson))
+// ✅ 2. Firebase Admin SDK (skip entirely in Testing)
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    throw new Exception("❌ Firebase credentials not found.");
-}
+    var firebaseJson = configuration["Firebase:CredentialsJson"];
 
-if (FirebaseApp.DefaultInstance == null)
-{
-    FirebaseApp.Create(new AppOptions
+    if (string.IsNullOrWhiteSpace(firebaseJson))
     {
-        Credential = GoogleCredential.FromJson(firebaseJson)
-    });
+        throw new Exception("❌ Firebase credentials not found.");
+    }
+
+    if (FirebaseApp.DefaultInstance == null)
+    {
+        FirebaseApp.Create(new AppOptions
+        {
+            Credential = GoogleCredential.FromJson(firebaseJson)
+        });
+    }
 }
 
 // ✅ 3. Services
@@ -110,28 +113,36 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 builder.Services.AddHttpClient<IMetadataScraperService, MetadataScraperService>();
 
 // ✅ 4. Auth Setup
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = "https://securetoken.google.com/gifty-auth-71f71";
-        options.MetadataAddress =
-            "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys";
-
-        options.TokenValidationParameters = new TokenValidationParameters
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    // In integration tests we override auth in TestApiFactory (TestAuthHandler)
+    builder.Services.AddAuthentication();
+}
+else
+{
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            SignatureValidator = (token, _) =>
+            options.Authority = "https://securetoken.google.com/gifty-auth-71f71";
+            options.MetadataAddress =
+                "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys";
+
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                FirebaseAuth.DefaultInstance
-                    .VerifyIdTokenAsync(token)
-                    .GetAwaiter()
-                    .GetResult();
-                return new JsonWebToken(token);
-            }
-        };
-    });
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                SignatureValidator = (token, _) =>
+                {
+                    FirebaseAuth.DefaultInstance
+                        .VerifyIdTokenAsync(token)
+                        .GetAwaiter()
+                        .GetResult();
+                    return new JsonWebToken(token);
+                }
+            };
+        });
+}
 
 builder.Services.AddAuthorization();
 
