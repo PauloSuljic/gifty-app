@@ -1,41 +1,34 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 
-namespace gifty_web_backend.Utils
+namespace Gifty.Tests.Integration.Integration;
+
+public sealed class TestAuthHandler(
+    IOptionsMonitor<AuthenticationSchemeOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder)
+    : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
-    public class TestAuthHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder)
-        : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
+    public const string SchemeName = "Test";
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        // Always authenticated in tests
+        var userId = Request.Headers["X-Test-UserId"].FirstOrDefault()
+                     ?? "test-user-id";
+
+        var claims = new[]
         {
-            var authHeader = Context.Request.Headers["Authorization"].ToString();
-            string? userId = null;
-            const string bearerPrefix = $"{JwtBearerDefaults.AuthenticationScheme}";
-            if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
-            {
-                userId = authHeader.Substring(bearerPrefix.Length).Trim();
-            }
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Name, "Test User")
+        };
 
-            if (string.IsNullOrWhiteSpace(userId))
-                return Task.FromResult(AuthenticateResult.Fail("Missing test user ID"));
+        var identity = new ClaimsIdentity(claims, SchemeName);
+        var principal = new ClaimsPrincipal(identity);
+        var ticket = new AuthenticationTicket(principal, SchemeName);
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, $"TestUser_{userId}")
-            };
-
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Scheme.Name);
-
-            return Task.FromResult(AuthenticateResult.Success(ticket));
-        }
+        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }

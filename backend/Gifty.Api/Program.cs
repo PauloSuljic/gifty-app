@@ -4,7 +4,6 @@ using System.Security.Claims;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using gifty_web_backend.Middlewares;
-using gifty_web_backend.Utils;
 using Gifty.Application.Common.Behaviors;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Domain.Interfaces;
@@ -15,7 +14,6 @@ using Gifty.Infrastructure.Jobs;
 using Gifty.Infrastructure.Repositories;
 using Gifty.Infrastructure.Services;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -44,25 +42,30 @@ builder.Configuration
     .AddUserSecrets<Program>()
     .AddEnvironmentVariables();
 
-// ✅ 1. Read Connection String
-if (builder.Environment.EnvironmentName != "Testing")
-{
-    var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
-                           ?? configuration.GetConnectionString("DefaultConnection");
+// ✅ Database registration
+var connectionString =
+    Environment.GetEnvironmentVariable("DefaultConnection")
+    ?? configuration.GetConnectionString("DefaultConnection");
 
-    if (string.IsNullOrEmpty(connectionString))
+if (string.IsNullOrEmpty(connectionString))
+{
+    if (!builder.Environment.IsEnvironment("Testing"))
     {
         throw new Exception("❌ No connection string found!");
     }
-    
+
+    // Testing environment: DbContext will be replaced in TestApiFactory
+    builder.Services.AddDbContext<GiftyDbContext>(options =>
+        options.UseInMemoryDatabase("Placeholder_Test_Db"));
+}
+else
+{
     builder.Services.AddDbContext<GiftyDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
 
-// ✅ 2. Firebase Admin SDK
-var useTestAuth = builder.Configuration["UseTestAuth"];
-
-if (useTestAuth != "true")
+// ✅ 2. Firebase Admin SDK (skip entirely in Testing)
+if (!builder.Environment.IsEnvironment("Testing"))
 {
     var firebaseJson = configuration["Firebase:CredentialsJson"];
 
@@ -110,11 +113,10 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBeh
 builder.Services.AddHttpClient<IMetadataScraperService, MetadataScraperService>();
 
 // ✅ 4. Auth Setup
-if (builder.Environment.IsEnvironment("Testing") || builder.Configuration["UseTestAuth"] == "true")
+if (builder.Environment.IsEnvironment("Testing"))
 {
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-            JwtBearerDefaults.AuthenticationScheme, _ => { });
+    // In integration tests we override auth in TestApiFactory (TestAuthHandler)
+    builder.Services.AddAuthentication();
 }
 else
 {
@@ -122,7 +124,9 @@ else
         .AddJwtBearer(options =>
         {
             options.Authority = "https://securetoken.google.com/gifty-auth-71f71";
-            options.MetadataAddress = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys";
+            options.MetadataAddress =
+                "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys";
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = false,
@@ -130,8 +134,10 @@ else
                 ValidateLifetime = true,
                 SignatureValidator = (token, _) =>
                 {
-                    // Use Firebase Admin SDK instead
-                    FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(token).GetAwaiter().GetResult();
+                    FirebaseAuth.DefaultInstance
+                        .VerifyIdTokenAsync(token)
+                        .GetAwaiter()
+                        .GetResult();
                     return new JsonWebToken(token);
                 }
             };
@@ -206,3 +212,6 @@ if (app.Environment.EnvironmentName != "Testing")
 }
 
 app.Run();
+
+// Expose Program for integration testing (WebApplicationFactory<Program>)
+public partial class Program { }

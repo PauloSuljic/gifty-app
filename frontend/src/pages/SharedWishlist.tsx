@@ -10,6 +10,7 @@ type WishlistItemType = {
   id: string;
   name: string;
   link: string;
+  description?: string;
   isReserved: boolean;
   reservedBy?: string | null;
 };
@@ -118,6 +119,7 @@ const SharedWishlist = () => {
               wishlistOwner={wishlist.ownerId}
               currentUser={firebaseUser ? (firebaseUser as any).uid : undefined}
               context="guest"
+              description={item.description}
             />
           ))
         ) : (

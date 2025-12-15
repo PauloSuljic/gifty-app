@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Gifty.Application.Features.Wishlists.Dtos
+namespace Gifty.Application.Features.WishlistItems.Dtos
 {
     public class UpdateWishlistItemDto
     {
@@ -9,5 +9,6 @@ namespace Gifty.Application.Features.Wishlists.Dtos
         public string? Link { get; init; }
         public bool IsReserved { get; init; } 
         public string? ReservedBy { get; init; }
+        public string? Description { get; init; }
     }
 }

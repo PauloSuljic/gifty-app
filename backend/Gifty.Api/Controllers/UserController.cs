@@ -30,13 +30,8 @@ namespace gifty_web_backend.Controllers
                 return Unauthorized("User not authenticated.");
             }
 
-            if (firebaseUid != dto.Id)
-            {
-                return Forbid("You can only create a profile for your own Firebase account.");
-            }
-
             var command = new CreateUserCommand(
-                dto.Id,
+                firebaseUid,
                 dto.Username,
                 dto.Email,
                 dto.Bio,
@@ -45,7 +40,12 @@ namespace gifty_web_backend.Controllers
             );
 
             var userDto = await mediator.Send(command);
-            return CreatedAtAction(nameof(GetUserByFirebaseUid), new { firebaseUid = userDto.Id }, userDto);
+
+            return CreatedAtAction(
+                nameof(GetUserByFirebaseUid),
+                new { firebaseUid = userDto.Id },
+                userDto
+            );
         }
 
         [HttpPut("{firebaseUid}")]

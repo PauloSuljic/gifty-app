@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Gifty.Application.Features.WishlistItems.Commands;
 using Gifty.Application.Features.WishlistItems.Dtos;
 using Gifty.Application.Features.WishlistItems.Queries;
-using Gifty.Application.Features.Wishlists.Dtos;
 
 namespace gifty_web_backend.Controllers
 {
@@ -29,7 +28,8 @@ namespace gifty_web_backend.Controllers
                 userId,
                 request.Name,
                 request.Link,
-                request.ImageUrl
+                request.ImageUrl,
+                request.Description
             );
 
             var wishlistItemDto = await mediator.Send(command);
@@ -81,7 +81,8 @@ namespace gifty_web_backend.Controllers
                 wishlistId,
                 userId,
                 request.Name,
-                request.Link
+                request.Link,
+                request.Description
             );
 
             var updatedItem = await mediator.Send(command);

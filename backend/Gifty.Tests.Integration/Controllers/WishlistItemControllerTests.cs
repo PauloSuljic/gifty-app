@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Gifty.Application.Features.WishlistItems.Dtos;
 using Gifty.Application.Features.Wishlists.Dtos;
-using Gifty.Domain.Entities.Users;
+using Gifty.Application.Features.Users.Dtos;
 using Gifty.Tests.Integration.Integration;
 
 namespace Gifty.Tests.Integration.Controllers;
@@ -13,18 +13,19 @@ public class WishlistItemControllerTests
 {
     private readonly HttpClient _client;
     private readonly string _userId;
+    private readonly TestApiFactory _factory;
 
     public WishlistItemControllerTests(TestApiFactory factory)
     {
+        _factory = factory;
         _userId = Guid.NewGuid().ToString();
         _client = factory.CreateClientWithTestAuth(_userId);
     }
     
     private async Task CreateTestUser(string userId, HttpClient client)
     {
-        var user = new User
+        var user = new CreateUserDto
         {
-            Id = userId,
             Username = $"TestUser_{userId}",
             Email = $"{userId}@test.com",
             Bio = "Test Bio",
@@ -186,22 +187,53 @@ public class WishlistItemControllerTests
     {
         var wishlist = await CreateWishlistAsync();
 
-        var itemDto = new CreateWishlistItemDto { Name = "Old Name", Link = "http://old.com" };
+        var itemDto = new CreateWishlistItemDto
+        {
+            Name = "Old Name",
+            Link = "http://old.com",
+            // Description is optional, but include it to match the updated contract
+            Description = "Old description"
+        };
+
         var res = await _client.PostAsJsonAsync($"/api/wishlists/{wishlist.Id}/items", itemDto);
+        res.StatusCode.Should().Be(HttpStatusCode.OK);
+
         var created = await res.Content.ReadFromJsonAsync<WishlistItemDto>();
-        
+        created.Should().NotBeNull();
+
         var updateDto = new UpdateWishlistItemDto
         {
             Name = "New Name",
-            Link = "https://new.com"
+            Link = "https://new.com",
+            // Include description so we don't accidentally overwrite it with null (if backend treats null as 'clear')
+            Description = "Updated description"
         };
-        
+
         var updateRes = await _client.PutAsJsonAsync(
             $"/api/wishlists/{wishlist.Id}/items/{created!.Id}",
             updateDto
         );
 
+        // If this fails again, the response body will help pinpoint validation/contract issues
+        if (!updateRes.IsSuccessStatusCode)
+        {
+            var body = await updateRes.Content.ReadAsStringAsync();
+            throw new Exception($"Update failed ({updateRes.StatusCode}):\n{body}");
+        }
+
         updateRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Optional but useful: verify changes persisted
+        var fetch = await _client.GetAsync($"/api/wishlists/{wishlist.Id}/items");
+        fetch.EnsureSuccessStatusCode();
+
+        var items = await fetch.Content.ReadFromJsonAsync<List<WishlistItemDto>>();
+        items.Should().NotBeNull();
+
+        var updated = items!.Single(i => i.Id == created.Id);
+        updated.Name.Should().Be("New Name");
+        updated.Link.Should().Be("https://new.com");
+        updated.Description.Should().Be("Updated description");
     }
 
     [Fact]
@@ -249,7 +281,11 @@ public class WishlistItemControllerTests
 
         // Act — reorder items in reverse order
         var reorderedPayload = createdItems
-            .Select((x, i) => new { Id = x.Id, Order = createdItems.Count - i - 1 })
+            .Select((x, i) => new
+            {
+                Id = x.Id,
+                Order = createdItems.Count - i - 1
+            })
             .ToList();
 
         var reorderResponse = await _client.PutAsJsonAsync(
@@ -270,5 +306,63 @@ public class WishlistItemControllerTests
 
         // Validate ordering (should now be reversed: 2,1,0)
         orders.Should().BeInDescendingOrder();
+    }
+    
+    [Fact]
+    public async Task GetWishlistItems_AsGuest_ShouldShowReservationState_ButNotReserver()
+    {
+        // Arrange — authenticated user creates wishlist + item
+        var wishlist = await CreateWishlistAsync();
+
+        var itemDto = new CreateWishlistItemDto
+        {
+            Name = "Guest visible item",
+            Link = "https://example.com"
+        };
+
+        var createRes = await _client.PostAsJsonAsync(
+            $"/api/wishlists/{wishlist.Id}/items",
+            itemDto
+        );
+
+        createRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var created = await createRes.Content.ReadFromJsonAsync<WishlistItemDto>();
+        created.Should().NotBeNull();
+
+        // Reserve the item as the authenticated user
+        var reserveRes = await _client.PatchAsync(
+            $"/api/wishlists/{wishlist.Id}/items/{created!.Id}/reserve",
+            null
+        );
+
+        reserveRes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Act — guest client (NO auth header)
+        var guestClient = _factory.CreateClient();
+
+        var response = await guestClient.GetAsync(
+            $"/api/wishlists/{wishlist.Id}/items"
+        );
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var items = await response.Content.ReadFromJsonAsync<List<WishlistItemDto>>();
+        items.Should().NotBeNull();
+        items.Should().HaveCount(1);
+
+        var item = items![0];
+
+        item.Name.Should().Be("Guest visible item");
+
+        // ✅ Visible to guests
+        item.IsReserved.Should().BeTrue();
+
+        // 🔒 Hidden from guests
+        item.ReservedBy.Should().BeNull();
+
+        // Guests are never owners
+        item.IsOwner.Should().BeFalse();
     }
 }

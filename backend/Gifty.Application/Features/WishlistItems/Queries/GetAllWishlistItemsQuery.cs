@@ -13,33 +13,43 @@ public class GetAllWishlistItemsHandler(
     IWishlistItemRepository wishlistItemRepository)
     : IRequestHandler<GetAllWishlistItemsQuery, IEnumerable<WishlistItemDto>>
 {
-    public async Task<IEnumerable<WishlistItemDto>> Handle(GetAllWishlistItemsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<WishlistItemDto>> Handle(
+        GetAllWishlistItemsQuery request,
+        CancellationToken cancellationToken)
     {
         var wishlist = await wishlistRepository.GetByIdAsync(request.WishlistId);
 
         if (wishlist == null)
-        {
             throw new NotFoundException(nameof(Wishlist), request.WishlistId);
-        }
 
-        var isOwner = wishlist.UserId == request.UserId;
+        var userId = request.UserId;              // can be null
+        var isAuthenticated = userId != null;
+        var isOwner = isAuthenticated && wishlist.UserId == userId;
 
-        var items = await wishlistItemRepository.GetAllByWishlistIdAsync(request.WishlistId);
+        var items = await wishlistItemRepository
+            .GetAllByWishlistIdAsync(request.WishlistId);
 
-        var itemDtos = items.Select(item => new WishlistItemDto
-        {
-            Id = item.Id,
-            Name = item.Name,
-            Link = item.Link,
-            IsReserved = item.IsReserved,
-            ReservedBy = item.ReservedBy,
-            CreatedAt = item.CreatedAt,
-            WishlistId = item.WishlistId,
-            IsOwner = isOwner,
-            Order = item.Order,
-            ImageUrl = item.ImageUrl
-        }).OrderByDescending(i => i.Order).ToList();
+        return items
+            .OrderByDescending(i => i.Order)
+            .Select(item => new WishlistItemDto
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Description = item.Description,
+                Link = item.Link,
+                ImageUrl = item.ImageUrl,
+                CreatedAt = item.CreatedAt,
+                WishlistId = item.WishlistId,
+                Order = item.Order,
 
-        return itemDtos;
+                // ✅ Visible to everyone
+                IsReserved = item.IsReserved,
+
+                // 🔒 Optional: show only to owner / authenticated users
+                ReservedBy = isOwner ? item.ReservedBy : null,
+
+                IsOwner = isOwner
+            })
+            .ToList();
     }
 }

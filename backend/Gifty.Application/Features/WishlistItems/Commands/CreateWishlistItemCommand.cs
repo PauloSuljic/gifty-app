@@ -11,7 +11,8 @@ public record CreateWishlistItemCommand(
     string UserId,
     string Name,
     string? Link,
-    string? ImageUrl
+    string? ImageUrl,
+    string? Description
 ) : IRequest<WishlistItemDto>;
 
 public class CreateWishlistItemHandler(
@@ -35,7 +36,7 @@ public class CreateWishlistItemHandler(
         var wishlistItems = items as WishlistItem[] ?? items.ToArray();
         var nextOrder = wishlistItems.Any() ? wishlistItems.Max(i => i.Order) + 1 : 0;
 
-        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, nextOrder);
+        var newItem = WishlistItem.Create(request.WishlistId, request.Name, request.Link, nextOrder, request.Description);
 
         if (!string.IsNullOrWhiteSpace(request.ImageUrl))
         {
@@ -45,7 +46,9 @@ public class CreateWishlistItemHandler(
         {
             var previewImage = await metadataScraperService.GetPreviewImageAsync(request.Link);
             if (!string.IsNullOrWhiteSpace(previewImage))
+            {
                 newItem.SetImageUrl(previewImage);
+            }
         }
 
         await wishlistItemRepository.AddAsync(newItem);
@@ -61,7 +64,8 @@ public class CreateWishlistItemHandler(
             CreatedAt = newItem.CreatedAt,
             WishlistId = newItem.WishlistId,
             Order = newItem.Order,
-            ImageUrl = newItem.ImageUrl
+            ImageUrl = newItem.ImageUrl,
+            Description = newItem.Description
         };
     }
 }

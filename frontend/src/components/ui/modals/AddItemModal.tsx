@@ -15,6 +15,7 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
   const { firebaseUser } = useAuth();
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
+  const [description, setDescription] = useState("");
   const [errors, setErrors] = useState<{ name?: string; link?: string }>({});
 
   const isValidUrl = (value: string) =>
@@ -40,7 +41,7 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
     const response = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ name, link, reservedBy: null }),
+      body: JSON.stringify({ name, link, description, reservedBy: null }),
     });
 
     if (response.ok) {
@@ -49,6 +50,7 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
       onClose();
       setName("");
       setLink("");
+      setDescription("");
       setErrors({});
     }
   };
@@ -70,6 +72,17 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
         onChange={(e) => setLink(e.target.value)}
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
       />
+      <textarea
+        placeholder="Description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={2}
+        maxLength={50}
+        className="w-full px-4 py-2 mb-1 rounded bg-gray-700 text-white resize-none"
+      />
+      <p className="text-xs text-gray-400 mb-3 text-right">
+        {description.length}/50
+      </p>
       <button onClick={handleSubmit} className="w-full px-4 py-2 bg-purple-500 rounded-lg">
         Confirm
       </button>

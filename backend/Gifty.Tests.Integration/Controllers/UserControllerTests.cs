@@ -168,10 +168,9 @@ namespace Gifty.Tests.Integration.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
-        private static CreateUserDto BuildUserDto(string id, string username, string email, string? bio = null, string? avatarUrl = null)
+        private static CreateUserDto BuildUserDto(string username, string email, string? bio = null, string? avatarUrl = null)
             => new CreateUserDto
             {
-                Id = id,
                 Username = username,
                 Email = email,
                 Bio = bio,

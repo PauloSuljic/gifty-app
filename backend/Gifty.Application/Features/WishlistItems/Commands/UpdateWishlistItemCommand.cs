@@ -11,7 +11,8 @@ public record UpdateWishlistItemCommand(
     Guid WishlistId,
     string UserId,
     string Name,
-    string? Link
+    string? Link,
+    string? Description
 ) : IRequest<WishlistItemDto>;
 
 public class UpdateWishlistItemHandler(
@@ -45,7 +46,11 @@ public class UpdateWishlistItemHandler(
             throw new ForbiddenAccessException("You are not authorized to update this wishlist item.");
         }
 
-        wishlistItem.Update(request.Name, request.Link);
+        wishlistItem.Update(
+            request.Name,
+            request.Link,
+            request.Description
+        );
 
         await wishlistItemRepository.UpdateAsync(wishlistItem);
         await wishlistItemRepository.SaveChangesAsync();
@@ -61,6 +66,7 @@ public class UpdateWishlistItemHandler(
             WishlistId = wishlistItem.WishlistId,
             Order = wishlistItem.Order,
             ImageUrl = wishlistItem.ImageUrl,
+            Description = wishlistItem.Description
         };
     }
 }

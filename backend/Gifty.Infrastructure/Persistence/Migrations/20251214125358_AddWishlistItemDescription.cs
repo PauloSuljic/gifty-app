@@ -2,28 +2,27 @@
 
 #nullable disable
 
-namespace Gifty.Infrastructure.Migrations
+namespace Gifty.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddOrderToWishlist : Migration
+    public partial class AddWishlistItemDescription : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "Order",
-                table: "Wishlists",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.AddColumn<string>(
+                name: "Description",
+                table: "WishlistItems",
+                type: "text",
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Order",
-                table: "Wishlists");
+                name: "Description",
+                table: "WishlistItems");
         }
     }
 }

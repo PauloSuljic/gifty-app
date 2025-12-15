@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Gifty.Application.Features.Notifications.Commands;
 using Gifty.Application.Features.Notifications.Queries;
-using Gifty.Application.Notifications.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

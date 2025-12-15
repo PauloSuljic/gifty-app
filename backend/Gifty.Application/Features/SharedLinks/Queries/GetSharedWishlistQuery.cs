@@ -52,7 +52,8 @@ public class GetSharedWishlistHandler(
                     IsReserved = i.IsReserved,
                     ReservedBy = i.ReservedBy,
                     CreatedAt = i.CreatedAt,
-                    WishlistId = i.WishlistId
+                    WishlistId = i.WishlistId,
+                    Description = i.Description
                 }).ToList()
         };
     }

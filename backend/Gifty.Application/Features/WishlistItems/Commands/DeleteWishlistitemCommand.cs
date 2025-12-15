@@ -5,41 +5,54 @@ using Gifty.Application.Common.Exceptions;
 
 namespace Gifty.Application.Features.WishlistItems.Commands;
 
-public record DeleteWishlistItemCommand(Guid Id, Guid WishlistId, string UserId) : IRequest<bool>;
+public record DeleteWishlistItemCommand(
+    Guid ItemId,
+    Guid WishlistId,
+    string UserId
+) : IRequest;
 
 public class DeleteWishlistItemHandler(
     IWishlistItemRepository wishlistItemRepository,
     IWishlistRepository wishlistRepository)
-    : IRequestHandler<DeleteWishlistItemCommand, bool>
+    : IRequestHandler<DeleteWishlistItemCommand>
 {
-    public async Task<bool> Handle(DeleteWishlistItemCommand request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteWishlistItemCommand request, CancellationToken cancellationToken)
     {
-        var existingItem = await wishlistItemRepository.GetByIdAsync(request.Id);
+        // 1️⃣ Load item
+        var item = await wishlistItemRepository.GetByIdAsync(request.ItemId);
+        if (item is null)
+        {
+            throw new NotFoundException(nameof(WishlistItem), request.ItemId);
+        }
 
-        if (existingItem == null)
+        // 2️⃣ Ensure item belongs to wishlist from route
+        if (item.WishlistId != request.WishlistId)
         {
-            throw new NotFoundException(nameof(WishlistItem), request.Id);
+            throw new NotFoundException(nameof(WishlistItem), request.ItemId);
         }
-        
-        var parentWishlist = await wishlistRepository.GetByIdAsync(existingItem.WishlistId);
 
-        if (parentWishlist == null)
+        // 3️⃣ Load wishlist for ownership check
+        var wishlist = await wishlistRepository.GetByIdAsync(item.WishlistId);
+        if (wishlist is null)
         {
-            throw new NotFoundException($"Parent Wishlist for Item ({request.Id}) not found during deletion.");
+            throw new NotFoundException(nameof(Wishlist), item.WishlistId);
         }
-        
-        if (parentWishlist.UserId != request.UserId)
+
+        // 4️⃣ Ownership check (hide existence if not owner)
+        if (wishlist.UserId != request.UserId)
         {
-            throw new ForbiddenAccessException("You are not authorized to delete this wishlist item.");
+            throw new NotFoundException(nameof(WishlistItem), request.ItemId);
         }
-        
-        existingItem.Delete();
-        
-        await wishlistItemRepository.DeleteAsync(existingItem);
+
+        // 5️⃣ Delete item
+        await wishlistItemRepository.DeleteAsync(item);
         await wishlistItemRepository.SaveChangesAsync();
-        
-        var remainingItems = await wishlistItemRepository.GetAllByWishlistIdAsync(parentWishlist.Id);
-        var ordered = remainingItems.OrderBy(i => i.Order).ToList();
+
+        // 6️⃣ Reorder remaining items
+        var remainingItems = await wishlistItemRepository.GetAllByWishlistIdAsync(wishlist.Id);
+        var ordered = remainingItems
+            .OrderBy(i => i.Order)
+            .ToList();
 
         for (int i = 0; i < ordered.Count; i++)
         {
@@ -48,7 +61,5 @@ public class DeleteWishlistItemHandler(
         }
 
         await wishlistItemRepository.SaveChangesAsync();
-
-        return true;
     }
 }

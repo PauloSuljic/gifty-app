@@ -36,6 +36,9 @@ public class UpdateWishlistItemImageHandler(
         if (wishlist.UserId != request.UserId)
             throw new ForbiddenAccessException();
 
+        if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+            await imageStorageService.DeleteImageAsync(item.ImageUrl, cancellationToken);
+
         var newUrl = await imageStorageService.SaveImageAsync(
             request.ImageStream,
             request.FileName,
@@ -46,7 +49,8 @@ public class UpdateWishlistItemImageHandler(
         {
             item.Update(
                 request.Name ?? item.Name,
-                request.Link ?? item.Link
+                request.Link ?? item.Link,
+                item.Description
             );
         }
 
@@ -64,7 +68,8 @@ public class UpdateWishlistItemImageHandler(
             IsReserved = item.IsReserved,
             ReservedBy = item.ReservedBy,
             Order = item.Order,
-            ImageUrl = item.ImageUrl
+            ImageUrl = item.ImageUrl,
+            Description = item.Description
         };
     }
 }

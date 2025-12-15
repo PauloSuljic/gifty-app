@@ -52,7 +52,8 @@ public class GetWishlistsSharedWithMeHandler(ISharedLinkVisitRepository sharedLi
                             CreatedAt = i.CreatedAt,
                             WishlistId = i.WishlistId,
                             ImageUrl = i.ImageUrl,
-                            Order = i.Order
+                            Order = i.Order,
+                            Description = i.Description
                         }).ToList()
                 }).ToList()
             }).ToList();

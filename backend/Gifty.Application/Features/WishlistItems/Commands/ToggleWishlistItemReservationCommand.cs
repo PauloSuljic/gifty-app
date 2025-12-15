@@ -59,7 +59,9 @@ public class ToggleWishlistItemReservationHandler(
             IsReserved = item.IsReserved,
             ReservedBy = item.ReservedBy,
             CreatedAt = item.CreatedAt,
-            WishlistId = item.WishlistId
+            WishlistId = item.WishlistId,
+            Order = item.Order,
+            Description = item.Description
         };
     }
 }
