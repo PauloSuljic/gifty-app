@@ -54,7 +54,7 @@ const Wishlist = () => {
   const [wishlists, setWishlists] = useState<WishlistType[]>([]);
   const [wishlistItems, setWishlistItems] = useState<{ [key: string]: WishlistItemType[] }>({});
   const [newWishlist, setNewWishlist] = useState<string>(""); 
-  const [selectedWishlist, setSelectedWishlist] = useState<string | null>(null);
+  const [selectedWishlist] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const [isWishlistDeleteModalOpen, setIsWishlistDeleteModalOpen] = useState(false);

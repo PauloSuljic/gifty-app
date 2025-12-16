@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useNotificationContext } from "../context/NotificationContext";
-import { FiGift, FiBell, FiUser, FiCalendar } from "react-icons/fi";
+import { FiGift, FiBell, FiUser, FiCalendar, FiLock } from "react-icons/fi";
 import { useUpcomingBirthdays } from "../hooks/useUpcomingBirthdays";
 
 export default function RightSidebar() {
@@ -19,7 +19,7 @@ export default function RightSidebar() {
     switch (type) {
       case "ItemReserved":
       case "BirthdayReminder":
-        return <FiGift size={16} className="text-purple-400 shrink-0" />;
+        return <FiLock size={16} className="text-purple-400 shrink-0" />;
       case "WishlistShared":
         return <FiUser size={16} className="text-purple-400" />;
       default:
@@ -51,7 +51,7 @@ export default function RightSidebar() {
 
               <div className="flex flex-col gap-0.5">
                 {n.title && (
-                  <p className="text-purple-300 text-sm font-semibold leading-tight">
+                  <p className="text-purple-300 text-xs font-semibold leading-tight">
                     {n.title}
                   </p>
                 )}
@@ -82,7 +82,21 @@ export default function RightSidebar() {
       </h3>
 
       {birthdaysLoading && (
-        <p className="text-sm text-gray-500">Loading…</p>
+        <ul className="flex flex-col gap-3 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <li
+              key={i}
+              className="flex items-start gap-3 p-3 rounded-lg bg-gray-800"
+            >
+              <div className="w-4 h-4 rounded-full bg-gray-700 mt-1" />
+
+              <div className="flex flex-col gap-2 flex-1">
+                <div className="h-3 w-24 bg-gray-700 rounded" />
+                <div className="h-2 w-32 bg-gray-700 rounded" />
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
       {!birthdaysLoading && upcomingBirthdays.length === 0 && (
@@ -103,7 +117,7 @@ export default function RightSidebar() {
               }
               className="flex items-start gap-3 p-3 rounded-lg bg-gray-800 cursor-pointer hover:bg-gray-700 transition-colors"
             >
-              <FiGift size={16} className="text-purple-400 shrink-0" />
+              <FiGift size={16} className="text-purple-400 mt-2.5 shrink-0" />
 
               <div className="flex flex-col gap-0.5">
                 <p className="text-gray-200 text-sm font-medium">
