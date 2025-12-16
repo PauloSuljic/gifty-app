@@ -3,6 +3,7 @@ import { FiBell, FiGift, FiUser } from "react-icons/fi";
 import { useAuth } from "../../components/AuthProvider";
 import { apiFetch } from "../../api";
 import { useNotificationContext } from "../../context/NotificationContext";
+import Spinner from "../../components/ui/Spinner";
 
 interface NotificationItem {
   id: string;
@@ -110,8 +111,8 @@ export default function NotificationsPage() {
       </div>
 
       {loading && allNotifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-[30vh] text-gray-400">
-          Loading...
+        <div className="relative h-[30vh]">
+          <Spinner />
         </div>
       ) : allNotifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[40vh] text-gray-400">

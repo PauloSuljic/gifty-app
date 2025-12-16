@@ -41,7 +41,7 @@ namespace Gifty.Infrastructure.Jobs
 
                         foreach (var birthday in upcomingBirthdays)
                         {
-                            if (birthday.DaysUntil is 7 or 3 or 1 or 0)
+                            if (birthday.DaysUntil is 14 or 7 or 3 or 0)
                             {
                                 // 🧍 Notify the birthday user
                                 if (birthday.DaysUntil > 0)

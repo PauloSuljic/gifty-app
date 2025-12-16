@@ -103,7 +103,15 @@ const Layout = ({ children, hideHeader, guest }: LayoutProps) => {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col p-4 pt-4 lg:pt-6">
-          {!hideHeader && <DashboardHeader />}
+          {!hideHeader && (
+            <Link
+              to="/profile"
+              className="cursor-pointer"
+              aria-label="Go to profile"
+            >
+              <DashboardHeader />
+            </Link>
+          )}
 
           <div className="flex-1 overflow-y-auto p-2">{children}</div>
         </div>

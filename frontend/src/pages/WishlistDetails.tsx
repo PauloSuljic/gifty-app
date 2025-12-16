@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { SortableItem } from "../components/ui/SortableItem";
 import { useParams, useNavigate } from "react-router-dom";
-import Layout from "../components/layout/Layout";
+import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
 import { useAuth } from "../components/AuthProvider";
 import { apiFetch } from "../api";
@@ -263,7 +263,17 @@ const WishlistDetail = () => {
     }
   };
 
-  if (!wishlist) return <Layout>Loading...</Layout>;
+  if (!isValidGuid(id)) {
+    return <NotFound />;
+  }
+
+  if (error) {
+    return <NotFound />;
+  }
+
+  if (!wishlist) {
+    return <Spinner />;
+  }
 
   const isOwner = !!firebaseUser && wishlist?.userId === firebaseUser.uid;
 
