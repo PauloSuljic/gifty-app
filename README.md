@@ -23,7 +23,7 @@ Built with a full-stack architecture powered by **React + Vite + Firebase** on t
 gifty-app/
 ├── frontend/   # Vite + React + Firebase + Tailwind
 ├── backend/    # ASP.NET Core Web API + PostgreSQL + Redis
-├── .github/    # CI/CD workflows for staging and production
+├── .github/    # CI/CD workflows (CI on PRs, prod deploys on master)
 └── README.md   # You're here
 ```
 
@@ -134,15 +134,14 @@ Coming soon! (e.g. Vitest or Playwright)
 
 CI/CD is fully automated using **GitHub Actions** + **Azure**:
 
-| Branch    | Environment  | Workflow Type                 |
-| --------- | ------------ | ----------------------------- |
-| `staging` | QA / Preview | ✅ Backend & frontend staging |
-| `master`  | Production   | 🚀 Full production deploys    |
+| Branch    | Environment | Workflow Type                  |
+| --------- | ----------- | ------------------------------ |
+| `master`  | Production  | 🚀 Full production deploys on merge |
 
 Workflows are separated by:
 
 - CI (pull requests) → build & test both frontend + backend
-- CD (staging/master) → build, test, deploy to Azure
+- CD (master) → build, test, deploy to Azure production
 - Artifact caching + per-path triggers for faster builds
 
 ---
