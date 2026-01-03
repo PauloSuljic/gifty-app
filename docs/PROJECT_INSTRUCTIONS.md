@@ -35,11 +35,10 @@ gifty-app/
 ## 🔧 Development Guidelines
 
 ### Branching
-- `master` → production
-- `staging` → QA / preview
+- `master` → trunk (production)
 - Feature branches → `feature/<short-description>`
 
-Always PR into **staging**. Merge staging → master only when stable.
+Always PR into **master**. Use feature branches for all work; keep master releasable.
 
 ---
 
@@ -76,8 +75,8 @@ CI/CD runs **all tests on PRs** before deploy.
 
 ### CI/CD
 - GitHub Actions: build → test → deploy
-- Staging: auto-deploy from `staging`
-- Production: auto-deploy from `master`
+- Dev: auto-deploys after merges to `master`
+- Production: manual deploy via GitHub Actions (`workflow_dispatch`)
 
 ---
 

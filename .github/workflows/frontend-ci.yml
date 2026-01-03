@@ -3,6 +3,10 @@ name: Frontend CI
 on:
   pull_request:
     paths:
+      - ".github/**"
+      - "Makefile"
+      - "AGENTS.md"
+      - "docs/**"
       - "frontend/**"
 
 jobs:
@@ -25,6 +29,10 @@ jobs:
 
       - name: Build
         run: npm run build
+        working-directory: frontend
+
+      - name: Lint
+        run: npm run lint
         working-directory: frontend
 
       # Optional: run frontend tests (if/when added)
