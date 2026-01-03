@@ -3,6 +3,10 @@ name: Backend CI
 on:
   pull_request:
     paths:
+      - ".github/**"
+      - "Makefile"
+      - "AGENTS.md"
+      - "docs/**"
       - "backend/**"
 
 jobs:
