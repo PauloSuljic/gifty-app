@@ -8,11 +8,11 @@ Author: Paulo Suljic
 - Backend refactor: Completed (CQRS via MediatR, FluentValidation pipeline, Serilog, domain events skeleton)
 - Tests: Backend unit + integration tests passing locally (xUnit)
 - Known failing items: none (all green as of last run)
-- CI: GitHub Actions for backend+frontend -> staging & master workflows exist
+- CI: GitHub Actions for backend + frontend; PRs merge to `master`; Dev auto-deploys after `master` merges; Prod deploy is manual (`workflow_dispatch`)
 
 ## Recent commits / important PRs
-- staging: merged master, resolved tests + login fixes (commit b126a49)
-- PR: backend refactor & validators (merged to staging) — see PR #25 (local note)
+- master: resolved tests + login fixes (commit b126a49)
+- PR: backend refactor & validators (merged to master) — see PR #25 (local note)
 
 ## Open high-priority tasks
 1. Frontend: UI/UX audit for “My wishlists” page (mobile-first).  
@@ -41,11 +41,11 @@ Author: Paulo Suljic
 - Current milestone: **Web MVP – Strong foundation**.
 - Backend refactor: ✅ **Done** — CQRS/MediatR (commands & queries), FluentValidation pipeline, centralized exception middleware, **domain events + handlers** (Users, Wishlists, WishlistItems, SharedLinks), and Serilog with **Correlation-Id** enrichment.
 - Tests: ✅ All **unit + integration** tests green (xUnit).
-- CI/CD: GitHub Actions for **staging** and **production** (backend + frontend) deploying to Azure.
+- CI/CD: GitHub Actions for backend + frontend; PRs merge to `master`; Dev auto-deploys after `master` merges; Prod deploy is manual (`workflow_dispatch`) deploying to Azure.
 
 ## Recent commits / important PRs
-- `staging`: merged `master`, fixed tests + login flow (`b126a49`).
-- PR #25: Backend refactor & validators (merged to `staging`).
+- `master`: fixed tests + login flow (`b126a49`).
+- PR #25: Backend refactor & validators (merged to `master`).
 
 ## Open high‑priority tasks
 1. **Frontend UX polish**  
