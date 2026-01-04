@@ -87,8 +87,7 @@ Types of tests:
 
 ## 🚀 Deployment
 
-- Staging: auto-deployed from staging branch via GitHub Actions.  
-- Production: auto-deployed from master branch.
+- Production: auto-deployed from `master` via GitHub Actions (no staging branch today).
 
 Workflow stages:  
 1. Build → restore, compile.  

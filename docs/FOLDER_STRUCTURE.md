@@ -2,6 +2,7 @@
 
 This document provides an overview of the Gifty monorepo folder structure.  
 It is split into **backend** and **frontend** sections for clarity.  
+For commands and PR expectations, see `AGENTS.md`; this file stays high-level and may omit build artifacts.
 
 ---
 

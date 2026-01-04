@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Gifty.Tests.Integration.Integration
 {
@@ -38,11 +39,18 @@ namespace Gifty.Tests.Integration.Integration
                     options.UseInMemoryDatabase("Gifty_Test_Db");
                 });
             });
+
+            builder.ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
+            });
         }
 
         public HttpClient CreateClientWithTestAuth(string userId)
         {
             var client = CreateClient();
+            client.Timeout = TimeSpan.FromMinutes(3); // Avoid false negatives from default 100s timeout in long-running integration calls
             client.DefaultRequestHeaders.Add("X-Test-UserId", userId);
             return client;
         }

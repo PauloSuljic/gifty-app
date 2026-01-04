@@ -5,6 +5,14 @@ It is meant for both developers and AI assistants (ChatGPT) so that context is n
 
 ---
 
+## 📚 Documentation index
+- `AGENTS.md` — Quickstart, commands, and definition of done (run `make check`).
+- `docs/CHAT_CONTEXT.md` — Current-state snapshot (milestones, tasks, recent PRs).
+- `docs/FOLDER_STRUCTURE.md` — High-level repo map.
+- `docs/PROJECT_INSTRUCTIONS.md` — Working agreements + architecture conventions (you’re here).
+
+---
+
 ## 🗂 Repo Layout
 gifty-app/
 ├── frontend/     # Vite + React + Firebase + Tailwind
@@ -75,8 +83,8 @@ CI/CD runs **all tests on PRs** before deploy.
 
 ### CI/CD
 - GitHub Actions: build → test → deploy
-- Dev: auto-deploys after merges to `master`
-- Production: manual deploy via GitHub Actions (`workflow_dispatch`)
+- PRs must be green (backend + frontend) before merge.
+- Production: merge to `master` auto-deploys to production (no staging branch today; dev env may be added later).
 
 ---
 
