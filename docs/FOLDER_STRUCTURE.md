@@ -258,17 +258,14 @@ frontend/
 │   ├── gifty-logo.png  
 │   ├── index.html  
 │   ├── manifest.json  
-│   ├── preview.png  
-│   ├── screenshots/  
-│   │   ├── dashboard-mobile.png  
-│   │   └── dashboard.png  
-│   └── vite.svg  
+│   └── preview.png  
 ├── src  
 │   ├── App.css  
 │   ├── App.tsx  
 │   ├── api.ts  
 │   ├── assets/  
-│   │   └── react.svg  
+│   │   ├── fonts/  
+│   │   └── images/  
 │   ├── components  
 │   │   ├── AuthProvider.tsx  
 │   │   ├── DashboardHeader.tsx  
