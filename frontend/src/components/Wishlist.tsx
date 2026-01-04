@@ -1,265 +1,73 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AddItemModal from "./ui/modals/AddItemModal";
 import RenameWishlistModal from "./ui/modals/RenameWishlistModal";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
 import { WishlistCard } from "./WishlistCard";
 import Modal from "./ui/Modal";
 
 import ConfirmDeleteModal from "./ui/modals/ConfirmDeleteModal";
 import ShareLinkModal from "./ui/modals/ShareLinkModal";
-import { apiFetch } from "../api";
-import toast from "react-hot-toast";
 
-import {
-  DndContext,
-  closestCenter,
-  DragEndEvent,
-  DragOverEvent,
-  useSensor,
-  useSensors,
-  TouchSensor,
-  MouseSensor
-} from '@dnd-kit/core';
+import { DndContext } from "@dnd-kit/core";
 
-import {
-  SortableContext,
-  rectSortingStrategy,
-  arrayMove,
-} from '@dnd-kit/sortable';
-import {SortableItem} from './ui/SortableItem';
+import { SortableContext } from "@dnd-kit/sortable";
+import { SortableItem } from "./ui/SortableItem";
+import { useWishlists, WishlistItemType } from "../hooks/useWishlists";
+import { useWishlistDnd } from "../hooks/useWishlistDnd";
+import { useShareLink } from "../hooks/useShareLink";
 
-// Define TypeScript types
-type WishlistType = {
-  id: string;
-  userId: string;
-  name: string;
-  isPublic: boolean;
-};
-
-type WishlistItemType = {
-  id: string;
-  name: string;
-  link: string;
-  wishlistId: string;
-  isReserved: boolean;
-  reservedBy: string;
-  imageUrl?: string;
-  order?: number;
-};
+const fallbackCoverImage =
+  "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const Wishlist = () => {
   const navigate = useNavigate();
-  const { firebaseUser } = useAuth();
-  const [wishlists, setWishlists] = useState<WishlistType[]>([]);
-  const [wishlistItems, setWishlistItems] = useState<{ [key: string]: WishlistItemType[] }>({});
-  const [newWishlist, setNewWishlist] = useState<string>(""); 
+  const [newWishlist, setNewWishlist] = useState<string>("");
   const [selectedWishlist] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const [isWishlistDeleteModalOpen, setIsWishlistDeleteModalOpen] = useState(false);
   const [wishlistToDelete, setWishlistToDelete] = useState<{ id: string; name: string } | null>(null);
 
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
-
-  const [wishlistOrder, setWishlistOrder] = useState<string[]>([]);
-
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [wishlistToRename, setWishlistToRename] = useState<{ id: string; name: string } | null>(null);
+  const {
+    wishlists,
+    setWishlists,
+    wishlistItems,
+    setWishlistItems,
+    wishlistOrder,
+    setWishlistOrder,
+    createWishlist,
+    deleteWishlist,
+    persistWishlistOrder,
+  } = useWishlists();
 
+  const { isShareModalOpen, shareUrl, setIsShareModalOpen, generateShareLink } = useShareLink();
 
-  useEffect(() => {
-    if (firebaseUser) fetchWishlists();
-  }, [firebaseUser]);
+  const { dndContextProps, sortableStrategy } = useWishlistDnd(
+    wishlistOrder,
+    setWishlistOrder,
+    persistWishlistOrder
+  );
 
-  const fetchWishlists = async () => {
-    if (!firebaseUser) return;
-    const token = await firebaseUser.getIdToken();
-    const response = await apiFetch("/api/wishlists", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setWishlists(data);
-      setWishlistOrder(data.map((w: WishlistType) => w.id)); 
-      data.forEach((wishlist: WishlistType) => fetchWishlistItems(wishlist.id));
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const {active, over} = event;
-    if (!over || active.id === over.id) return;
-  };
-
-  const handleDragStart = () => {
-    // Disable body scroll during drag to prevent Safari bounce
-    document.body.style.overflow = "hidden";
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    document.body.style.overflow = "";
-
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = wishlistOrder.indexOf(active.id as string);
-    const newIndex = wishlistOrder.indexOf(over.id as string);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const newOrder = arrayMove(wishlistOrder, oldIndex, newIndex);
-    setWishlistOrder(newOrder);
-
-    const reordered = newOrder.map((id, index) => ({
-      id,
-      order: index,
-    }));
-
-    try {
-      const token = await firebaseUser?.getIdToken();
-      if (!token) return;
-
-      const res = await apiFetch("/api/wishlists/reorder", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reordered),
-      });
-
-      if (!res.ok) {
-        console.error("Failed to reorder wishlists", await res.text());
-        toast.error("Failed to reorder wishlists.");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      toast.error("Something went wrong reordering wishlists.");
-    }
-  };
-  
-  const createWishlist = async () => {
-    if (!firebaseUser) return;
-    const token = await firebaseUser.getIdToken();
-
-    if (!newWishlist.trim()) {
-      toast.error("Wishlist name cannot be empty.");
-      return;
-    }
-    if (newWishlist.length > 30) {
-      toast.error("Wishlist name must be under 30 characters.");
-      return;
-    }    
-  
-    const response = await apiFetch("/api/wishlists", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        userId: firebaseUser.uid,
-        name: newWishlist,
-        isPublic: false
-      }),
-    });
-  
-    if (response.ok) {
-      toast.success("Wishlist created! 🎉", {
-        duration: 3000,
-        position: "bottom-center",
-      });
-      fetchWishlists();
-      setNewWishlist("");
-    } else {
-      toast.error("Failed to create wishlist 😞");
-    }
-  };  
-
-  const deleteWishlist = async () => {
-    if (!firebaseUser || !wishlistToDelete) return;
-    const token = await firebaseUser.getIdToken();
-  
-    const response = await apiFetch(`/api/wishlists/${wishlistToDelete.id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  
-    if (response.ok) {
-      setWishlists((prev) => prev.filter((w) => w.id !== wishlistToDelete.id));
-      setWishlistItems((prev) => {
-        const updated = { ...prev };
-        delete updated[wishlistToDelete.id];
-        return updated;
-      });
-  
+  const handleConfirmDelete = async () => {
+    if (!wishlistToDelete) return;
+    const deleted = await deleteWishlist(wishlistToDelete);
+    if (deleted) {
       setIsWishlistDeleteModalOpen(false);
       setWishlistToDelete(null);
-      toast.success(`Wishlist "${wishlistToDelete.name}" deleted 🗑️`, {
-        duration: 3000,
-        position: "bottom-center",
-      });
-    } else {
-      toast.error("Failed to delete wishlist.");
-    }
-  };  
-
-  const fetchWishlistItems = async (wishlistId: string) => {
-    if (!firebaseUser) return;
-    const token = await firebaseUser.getIdToken();
-    const response = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setWishlistItems((prev) => ({ ...prev, [wishlistId]: data }));
     }
   };
 
-  const generateShareLink = async (wishlistId: string) => {
-    const token = await firebaseUser?.getIdToken();
-    const response = await apiFetch(`/api/shared-links/${wishlistId}/generate`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  
-    if (response.ok) {
-      const data = await response.json();
-      const generatedUrl = `${window.location.origin}/shared/${data.shareCode}`;
-  
-      setShareUrl(generatedUrl); 
-      setIsShareModalOpen(true); 
-    } else {
-      console.error("Error generating share link:", await response.json());
+  const handleCreateWishlist = async () => {
+    setIsCreateModalOpen(false);
+    const created = await createWishlist(newWishlist);
+    if (created) {
+      setNewWishlist("");
     }
   };
-
-  // Detect mobile device (iOS) for optimized sensors
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-  const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: {
-      delay: 350,
-      tolerance: 8,
-    },
-  });
-  
-  const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: {
-      distance: 8,
-    },
-  }); // Optional: desktop support
-
-  const sensors = isMobile ? useSensors(touchSensor) : useSensors(touchSensor, mouseSensor);
-
-  const fallbackCoverImage =
-  "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
   
   return (
     <div className="max-w-4xl mx-auto text-white">
@@ -274,14 +82,8 @@ const Wishlist = () => {
       </div>
   
       {wishlists.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          onDragOver={handleDragOver}
-          onDragStart={handleDragStart}
-        >
-          <SortableContext items={wishlistOrder} strategy={rectSortingStrategy}>
+        <DndContext {...dndContextProps}>
+          <SortableContext items={wishlistOrder} strategy={sortableStrategy}>
             <div className="grid grid-cols-2 gap-4 p-4 select-none" style={{ touchAction: "pan-y" }}>
               {wishlistOrder.map((id) => {
                 const wishlist = wishlists.find((w) => w.id === id);
@@ -289,15 +91,54 @@ const Wishlist = () => {
 
                 return (
                   <SortableItem key={wishlist.id} id={wishlist.id}>
-                  {({ listeners, attributes }) => {
-                    const items = wishlistItems[wishlist.id];
-                    if (!items) {
+                    {({ listeners, attributes }) => {
+                      const items = wishlistItems[wishlist.id];
+                      if (!items) {
+                        return (
+                          <WishlistCard
+                            id={wishlist.id}
+                            name={wishlist.name}
+                            itemCount={0}
+                            coverImage={fallbackCoverImage}
+                            onClick={() => navigate(`/wishlist/${wishlist.id}`)}
+                            onShare={() => generateShareLink(wishlist.id)}
+                            onRename={() => {
+                              setWishlistToRename({ id: wishlist.id, name: wishlist.name });
+                              setIsRenameModalOpen(true);
+                            }}
+                            onDelete={() => {
+                              setWishlistToDelete({ id: wishlist.id, name: wishlist.name });
+                              setIsWishlistDeleteModalOpen(true);
+                            }}
+                            listeners={listeners}
+                            attributes={attributes}
+                          />
+                        );
+                      }
+
+                      const highestOrderedItemWithImage = items.reduce<WishlistItemType | null>(
+                        (best, item) => {
+                          if (!item.imageUrl) return best;
+
+                          if (!best) return item;
+
+                          const bestOrder = best.order ?? 0;
+                          const itemOrder = item.order ?? 0;
+
+                          return itemOrder > bestOrder ? item : best;
+                        },
+                        null
+                      );
+
+                      const coverImageUrl =
+                        highestOrderedItemWithImage?.imageUrl || fallbackCoverImage;
+
                       return (
                         <WishlistCard
                           id={wishlist.id}
                           name={wishlist.name}
-                          itemCount={0}
-                          coverImage={fallbackCoverImage}
+                          itemCount={items.length}
+                          coverImage={coverImageUrl}
                           onClick={() => navigate(`/wishlist/${wishlist.id}`)}
                           onShare={() => generateShareLink(wishlist.id)}
                           onRename={() => {
@@ -312,47 +153,8 @@ const Wishlist = () => {
                           attributes={attributes}
                         />
                       );
-                    }
-
-                    const highestOrderedItemWithImage = items.reduce<WishlistItemType | null>(
-                      (best, item) => {
-                        if (!item.imageUrl) return best;
-
-                        if (!best) return item;
-
-                        const bestOrder = best.order ?? 0;
-                        const itemOrder = item.order ?? 0;
-
-                        return itemOrder > bestOrder ? item : best;
-                      },
-                      null
-                    );
-
-                    const coverImageUrl =
-                      highestOrderedItemWithImage?.imageUrl || fallbackCoverImage;
-
-                    return (
-                      <WishlistCard
-                        id={wishlist.id}
-                        name={wishlist.name}
-                        itemCount={items.length}
-                        coverImage={coverImageUrl}
-                        onClick={() => navigate(`/wishlist/${wishlist.id}`)}
-                        onShare={() => generateShareLink(wishlist.id)}
-                        onRename={() => {
-                          setWishlistToRename({ id: wishlist.id, name: wishlist.name });
-                          setIsRenameModalOpen(true);
-                        }}
-                        onDelete={() => {
-                          setWishlistToDelete({ id: wishlist.id, name: wishlist.name });
-                          setIsWishlistDeleteModalOpen(true);
-                        }}
-                        listeners={listeners}
-                        attributes={attributes}
-                      />
-                    );
-                  }}
-                </SortableItem>
+                    }}
+                  </SortableItem>
                 );
               })}
             </div>
@@ -388,7 +190,7 @@ const Wishlist = () => {
       <ConfirmDeleteModal
         isOpen={isWishlistDeleteModalOpen}
         onClose={() => setIsWishlistDeleteModalOpen(false)}
-        onConfirm={deleteWishlist}
+        onConfirm={handleConfirmDelete}
         itemName={wishlistToDelete?.name || ""}
       />
 
@@ -409,10 +211,7 @@ const Wishlist = () => {
           className="w-full px-4 py-2 rounded bg-gray-700 text-white mb-4"
         />
         <button
-          onClick={() => {
-            createWishlist();
-            setIsCreateModalOpen(false);
-          }}
+          onClick={handleCreateWishlist}
           className="px-4 py-2 bg-purple-500 rounded-lg w-full"
           disabled={!newWishlist.trim()}
         >
