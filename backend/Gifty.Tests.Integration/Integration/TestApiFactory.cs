@@ -47,16 +47,10 @@ namespace Gifty.Tests.Integration.Integration
             });
         }
 
-        protected override HttpClient CreateDefaultClient(HttpMessageHandler handler, Uri? baseAddress)
-        {
-            var client = base.CreateDefaultClient(handler, baseAddress);
-            client.Timeout = TimeSpan.FromMinutes(3); // Avoid false negatives from default 100s timeout in long-running integration calls
-            return client;
-        }
-
         public HttpClient CreateClientWithTestAuth(string userId)
         {
             var client = CreateClient();
+            client.Timeout = TimeSpan.FromMinutes(3); // Avoid false negatives from default 100s timeout in long-running integration calls
             client.DefaultRequestHeaders.Add("X-Test-UserId", userId);
             return client;
         }
