@@ -1,269 +1,54 @@
-import { useEffect, useState } from "react";
-// DnD Kit imports
-import {
-  DndContext,
-  closestCenter,
-  useSensors,
-  useSensor,
-  PointerSensor,
-  TouchSensor,
-  MouseSensor,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { useState } from "react";
+import { DndContext } from "@dnd-kit/core";
+import { SortableContext } from "@dnd-kit/sortable";
 import { SortableItem } from "../components/ui/SortableItem";
 import { useParams, useNavigate } from "react-router-dom";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
-import { useAuth } from "../components/AuthProvider";
-import { apiFetch } from "../api";
 import AddItemModal from "../components/ui/modals/AddItemModal";
 import EditItemModal from "../components/ui/modals/EditItemModal";
 import RenameWishlistModal from "../components/ui/modals/RenameWishlistModal";
 import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import ShareLinkModal from "../components/ui/modals/ShareLinkModal";
 import { toast } from "react-hot-toast";
-import { useNotificationContext } from "../context/NotificationContext";
 import NotFound from "./NotFound";
+import { useWishlistDetails, isValidGuid, WishlistDetailsItemType } from "../hooks/useWishlistDetails";
+import { useWishlistItemsDnd } from "../hooks/useWishlistItemsDnd";
+import { useShareLink } from "../hooks/useShareLink";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { firebaseUser } = useAuth();
-  const { refreshNotifications } = useNotificationContext();
-
-  const [wishlist, setWishlist] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
-  const [error, setError] = useState(false);
-
+  const isValidId = isValidGuid(id);
+  const {
+    wishlist,
+    items,
+    setItems,
+    error,
+    isOwner,
+    isOtherUser,
+    persistItemOrder,
+    toggleReservation,
+    handleItemAdded,
+    handleItemUpdated,
+    handleWishlistRenamed,
+    deleteItem,
+    deleteWishlist,
+    currentUserId,
+  } = useWishlistDetails(isValidId ? id : undefined);
+  const { dndContextProps, sortableStrategy } = useWishlistItemsDnd(items, setItems, persistItemOrder);
+  const { isShareModalOpen, shareUrl, setIsShareModalOpen, generateShareLink } = useShareLink();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [isDeleteWishlistModalOpen, setIsDeleteWishlistModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
 
-  const [itemToEdit, setItemToEdit] = useState<any>(null);
-  const [itemToDelete, setItemToDelete] = useState<any>(null);
+  const [itemToEdit, setItemToEdit] = useState<WishlistDetailsItemType | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<WishlistDetailsItemType | null>(null);
 
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      const token = await firebaseUser?.getIdToken();
-      if (!token) return;
-
-      // 1. Fetch wishlist info
-      const resWishlist = await apiFetch(`/api/wishlists/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!resWishlist.ok) {
-        setError(true);
-        return;
-      }
-
-      const wishlistData = await resWishlist.json();
-      setWishlist(wishlistData);
-
-      // 2. Fetch wishlist items
-      const resItems = await apiFetch(`/api/wishlists/${id}/items`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!resItems.ok) {
-        setError(true);
-        return;
-      }
-
-      const itemsData = await resItems.json();
-      const sorted = [...itemsData].sort(
-        (a, b) => (b.order ?? 0) - (a.order ?? 0)
-      );
-      setItems(sorted);
-    };
-
-    fetchWishlist();
-  }, [id, firebaseUser?.uid]);
-  
-  const isValidGuid = (value: string | undefined) =>
-  !!value && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value);
-
-  if (!isValidGuid(id)) {
-    return <NotFound />;
-  }
-
-  // Mobile detection
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-    navigator.userAgent
-  );
-
-  // Disable body scroll
-  const disableBodyScroll = () => {
-    document.body.style.overflow = "hidden";
-  };
-
-  // Enable body scroll
-  const enableBodyScroll = () => {
-    document.body.style.overflow = "";
-  };
-
-  // DnD Kit sensors
-  const sensors = useSensors(
-    isMobile
-      ? useSensor(TouchSensor, {
-          activationConstraint: {
-            delay: 350,
-            tolerance: 8,
-          },
-        })
-      : useSensor(PointerSensor, {
-          activationConstraint: {
-            delay: 250,
-            tolerance: 5,
-          },
-        }),
-    useSensor(MouseSensor)
-  );
-
-  // Handlers for drag start and end to manage body scroll
-  const handleDragStart = () => {
-    disableBodyScroll();
-  };
-
-  const handleDragEndWrapper = async (event: any) => {
-    enableBodyScroll();
-    await handleDragEnd(event);
-  };
-
-  // DnD Kit drag end handler
-  const handleDragEnd = async (event: any) => {
-  const { active, over } = event;
-
-  // 1. nothing to drop on
-  if (!over) return;
-
-  // 2. dropped on itself, no-op
-  if (active.id === over.id) return;
-
-  // 3. work directly on the current visual order
-  const oldIndex = items.findIndex((item) => item.id === active.id);
-  const newIndex = items.findIndex((item) => item.id === over.id);
-
-  if (oldIndex === -1 || newIndex === -1) return;
-
-  // 4. locally reorder in the same order the user sees
-  const reordered = arrayMove(items, oldIndex, newIndex);
-
-  // 5. update UI immediately
-  setItems(reordered);
-
-  // 6. persist to backend – only the order in this array matters
-  try {
-    const token = await firebaseUser?.getIdToken();
-    if (!token) return;
-
-    await apiFetch(`/api/wishlists/${id}/items/reorder`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(
-        reordered.map((item, index) => ({
-          id: item.id,
-          order: index, // backend ignores this value but it's fine to send
-        }))
-      ),
-    });
-  } catch (err) {
-    toast.error("Failed to reorder items.", {
-      duration: 3000,
-      position: "bottom-center",
-    });
-  }
-};
-
-  const toggleReservation = async (itemId: string) => {
-    if (!firebaseUser) return;
-    const token = await firebaseUser.getIdToken();
-    if (!token) return;
-
-    try {
-      const response = await apiFetch(`/api/wishlists/${id}/items/${itemId}/reserve`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        if (errorData.error[0] === "You can only reserve 1 item per wishlist.") {
-          toast.error("Max 1 item per wishlist.", {
-            duration: 3000,
-            position: "bottom-center",
-            style: {
-              background: "#333",
-              color: "#fff",
-              border: "1px solid #555",
-            },
-          });
-        } else {
-          toast.error("Failed to toggle reservation.", {
-            duration: 3000,
-            position: "bottom-center",
-          });
-        }
-        return;
-      }
-
-      const updatedItem = await response.json();
-
-      toast.success(
-        updatedItem.isReserved
-          ? "Item reserved successfully! 🎁"
-          : "Reservation removed ✅",
-        {
-          duration: 3000,
-          position: "bottom-center",
-          style: {
-            background: "#333",
-            color: "#fff",
-            border: "1px solid #555",
-          },
-        }
-      );
-
-      // Update UI
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId
-            ? {
-                ...i,
-                isReserved: updatedItem.isReserved,
-                reservedBy: updatedItem.reservedBy,
-              }
-            : i
-        )
-      );
-
-      // Notify owner if someone else reserves their item
-      if (wishlist.userId === firebaseUser?.uid && updatedItem.reservedBy !== firebaseUser?.uid) {
-        refreshNotifications();
-      }
-    } catch (error) {
-      console.error("Error toggling reservation:", error);
-      toast.error("Something went wrong!", {
-        duration: 3000,
-        position: "bottom-center",
-      });
-    }
-  };
-
-  if (!isValidGuid(id)) {
+  if (!isValidId) {
     return <NotFound />;
   }
 
@@ -275,30 +60,16 @@ const WishlistDetail = () => {
     return <Spinner />;
   }
 
-  const isOwner = !!firebaseUser && wishlist?.userId === firebaseUser.uid;
-
-  const isOtherUser = !!firebaseUser && !isOwner;
-
   const handleShareClick = async () => {
-    const token = await firebaseUser?.getIdToken();
-    if (!token) return;
-    const response = await apiFetch(`/api/shared-links/${wishlist.id}/generate`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (response.ok) {
-      const data = await response.json();
-      const generatedUrl = `${window.location.origin}/shared/${data.shareCode}`;
-      setShareUrl(generatedUrl);
-      setIsShareModalOpen(true);
-    }
+    if (!wishlist) return;
+    await generateShareLink(wishlist.id);
   };
 
-    const fallbackCoverImage =
+  const fallbackCoverImage =
     "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
   // Pick item with the highest `order` that has an image
-  const highestOrderedItemWithImage = items.reduce<any | null>(
+  const highestOrderedItemWithImage = items.reduce<WishlistDetailsItemType | null>(
     (best, item) => {
       if (!item.imageUrl) return best; // skip items without image
 
@@ -356,20 +127,15 @@ const WishlistDetail = () => {
 
       {/* Items with DnD */}
       <div className="px-4 mt-6 space-y-3 select-none">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEndWrapper}
-        >
+        <DndContext {...dndContextProps}>
           {isOwner ? (
             <SortableContext
               items={items.map((item) => item.id)}
-              strategy={verticalListSortingStrategy}
+              strategy={sortableStrategy}
             >
               {items.map((item) => (
                 <SortableItem key={item.id} id={item.id}>
-                  {({ setNodeRef,listeners, attributes }) => (
+                  {({ setNodeRef, listeners, attributes }) => (
                     <WishlistItem
                       setNodeRef={setNodeRef}
                       listeners={listeners}
@@ -380,7 +146,7 @@ const WishlistDetail = () => {
                       isReserved={item.isReserved}
                       reservedBy={item.reservedBy}
                       wishlistOwner={wishlist.userId}
-                      currentUser={firebaseUser?.uid}
+                      currentUser={currentUserId}
                       imageUrl={item.imageUrl}
                       description={item.description}
                       context="own"
@@ -409,7 +175,7 @@ const WishlistDetail = () => {
                   isReserved={item.isReserved}
                   reservedBy={item.reservedBy}
                   wishlistOwner={wishlist.userId}
-                  currentUser={firebaseUser?.uid}
+                  currentUser={currentUserId}
                   imageUrl={item.imageUrl}
                   description={item.description}
                   context={isOtherUser ? "shared" : "guest"}
@@ -429,7 +195,7 @@ const WishlistDetail = () => {
         onClose={() => setIsAddModalOpen(false)}
         wishlistId={wishlist.id}
         onItemAdded={(item) => {
-          setItems((prev) => [item, ...prev]);
+          handleItemAdded(item);
           toast.success("Item added to wishlist! 🎁", {
             duration: 3000,
             position: "bottom-center",
@@ -448,7 +214,7 @@ const WishlistDetail = () => {
         wishlistId={wishlist.id}
         item={itemToEdit}
         onItemUpdated={(updated) => {
-          setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+          handleItemUpdated(updated);
         }}
       />
 
@@ -457,7 +223,7 @@ const WishlistDetail = () => {
         onClose={() => setIsRenameModalOpen(false)}
         wishlist={wishlist}
         onWishlistRenamed={(updated) => {
-          setWishlist(updated);
+          handleWishlistRenamed(updated);
         }}
       />
 
@@ -466,25 +232,19 @@ const WishlistDetail = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={async () => {
           if (!itemToDelete) return;
-          const token = await firebaseUser?.getIdToken();
-          if (!token) return;
-          const response = await apiFetch(`/api/wishlists/${wishlist.id}/items/${itemToDelete.id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` }
+          const deleted = await deleteItem(itemToDelete.id);
+          if (!deleted) return;
+
+          setIsDeleteModalOpen(false);
+          toast.success(`Deleted "${itemToDelete.name}" from wishlist 🗑️`, {
+            duration: 3000,
+            position: "bottom-center",
+            style: {
+              background: "#333",
+              color: "#fff",
+              border: "1px solid #555",
+            },
           });
-          if (response.ok) {
-            setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
-            setIsDeleteModalOpen(false);
-            toast.success(`Deleted "${itemToDelete.name}" from wishlist 🗑️`, {
-              duration: 3000,
-              position: "bottom-center",
-              style: {
-                background: "#333",
-                color: "#fff",
-                border: "1px solid #555",
-              },
-            });
-          }
         }}
         itemName={itemToDelete?.name || ""}
         wishlistName={wishlist?.name}
@@ -494,16 +254,11 @@ const WishlistDetail = () => {
         isOpen={isDeleteWishlistModalOpen}
         onClose={() => setIsDeleteWishlistModalOpen(false)}
         onConfirm={async () => {
-          const token = await firebaseUser?.getIdToken();
-          if (!token) return;
-          const response = await apiFetch(`/api/wishlists/${wishlist.id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (response.ok) {
-            setIsDeleteWishlistModalOpen(false);
-            navigate("/");
-          }
+          const deleted = await deleteWishlist();
+          if (!deleted) return;
+
+          setIsDeleteWishlistModalOpen(false);
+          navigate("/");
         }}
         itemName={wishlist?.name}
       />

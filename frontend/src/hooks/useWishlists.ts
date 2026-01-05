@@ -8,6 +8,7 @@ export type WishlistType = {
   userId: string;
   name: string;
   isPublic: boolean;
+  coverImage?: string;
 };
 
 export type WishlistItemType = {
@@ -19,6 +20,7 @@ export type WishlistItemType = {
   reservedBy: string;
   imageUrl?: string;
   order?: number;
+  description?: string;
 };
 
 export function useWishlists() {
