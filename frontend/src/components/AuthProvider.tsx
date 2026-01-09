@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
 import {
   GoogleAuthProvider,
-  onAuthStateChanged,
   signOut,
   signInWithPopup,
   createUserWithEmailAndPassword,
@@ -11,19 +10,10 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../api";
 import toast from "react-hot-toast";
 import Spinner from "./ui/Spinner";
-
-// ✅ Define PostgreSQL User
-export type GiftyUser = {
-  id: string;
-  email: string;
-  username: string;
-  bio: string;
-  avatarUrl: string;
-  dateOfBirth?: string;
-};
+import { useDatabaseUser, GiftyUser } from "../hooks/useDatabaseUser";
+import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
 
 // ✅ Define context type
 interface AuthContextType {
@@ -40,95 +30,29 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [databaseUser, setDatabaseUser] = useState<GiftyUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { firebaseUser, loading, refreshFirebaseUser, clearFirebaseUser } = useFirebaseAuth();
+  const {
+    databaseUser,
+    refreshDatabaseUser,
+    ensureDatabaseUser,
+    createDatabaseUser,
+    clearDatabaseUser,
+  } = useDatabaseUser(firebaseUser);
   const navigate = useNavigate();
 
-  // 🔄 Refetch user from backend (PostgreSQL)
-  const fetchDatabaseUser = async (token: string, uid: string) => {
-    const res = await apiFetch(`/api/users/${uid}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setDatabaseUser(data);
-    }
-  };
-
-  // ✅ Firebase auth state listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setFirebaseUser(user);
-      setLoading(false);
-
-      if (user) {
-        const token = await user.getIdToken();
-        await fetchDatabaseUser(token, user.uid);
-      } else {
-        setDatabaseUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const refreshDatabaseUser = async () => {
-    if (firebaseUser) {
-      const token = await firebaseUser.getIdToken();
-      await fetchDatabaseUser(token, firebaseUser.uid);
-    }
-  };
-
-  const refreshFirebaseUser = async () => {
-    if (auth.currentUser) {
-      await auth.currentUser.reload();
-      setFirebaseUser(auth.currentUser);
-    }
-  };
-
   const loginWithGoogle = async () => {
-  try {
-    const provider = new GoogleAuthProvider();
-    auth.useDeviceLanguage();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    try {
+      const provider = new GoogleAuthProvider();
+      auth.useDeviceLanguage();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-    const token = await user.getIdToken();
-
-    // Try fetching existing user
-    const response = await apiFetch(`/api/users/${user.uid}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    // If user doesn’t exist → create it
-    if (response.status === 404) {
-      const randomAvatar = `/avatars/avatar${Math.floor(Math.random() * 9) + 1}.png`;
-      const avatar = user.photoURL || randomAvatar;
-
-      await apiFetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          id: user.uid,
-          username: user.displayName || `user_${user.uid.substring(0, 6)}`,
-          email: user.email,
-          bio: "",
-          avatarUrl: avatar,
-          dateOfBirth: "2000-01-01", // placeholder if Google doesn’t supply one
-        }),
-      });
+      await ensureDatabaseUser(user);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Google Sign-In Error", error);
     }
-
-    navigate("/dashboard");
-  } catch (error) {
-    console.error("Google Sign-In Error", error);
-  }
-};
+  };
 
   const register = async (email: string, password: string, username: string, dateOfBirth: string) => {
     try {
@@ -138,28 +62,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await updateProfile(user, { displayName: username });
       await sendEmailVerification(user);
 
-      // Get Firebase token
-      const token = await user.getIdToken();
-
-      // ✅ Assign random avatar if Firebase doesn't have one
-      const randomAvatar = `/avatars/avatar${Math.floor(Math.random() * 9) + 1}.png`;
-      const avatar = user.photoURL || randomAvatar;
-
-      // ✅ Create DB user in backend
-      await apiFetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          id: user.uid,
-          username,
-          email,
-          bio: "",
-          avatarUrl: avatar,
-          dateOfBirth, // e.g. "1996-06-29"
-        }),
+      await createDatabaseUser({
+        user,
+        email,
+        username,
+        dateOfBirth,
       });
 
       navigate("/verify-email");
@@ -174,8 +81,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     await signOut(auth);
-    setFirebaseUser(null);
-    setDatabaseUser(null);
+    clearFirebaseUser();
+    clearDatabaseUser();
     navigate("/");
   };
 
