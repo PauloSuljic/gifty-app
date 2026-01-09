@@ -1,37 +1,13 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode
-} from "react";
+import { useState, useEffect, useCallback, ReactNode } from "react";
 import { apiFetch } from "../api";
-import { useAuth } from "../components/AuthProvider";
-
-interface NotificationItem {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  createdAt: string;
-  isRead: boolean;
-}
-
-interface NotificationContextValue {
-  notifications: NotificationItem[];
-  unreadCount: number;
-  loadNotifications: () => Promise<void>;
-  refreshNotifications: () => Promise<void>;   // ✅ NEW
-  markAllAsRead: () => Promise<void>;
-}
-
-const NotificationContext = createContext<NotificationContextValue | null>(null);
+import { useAuth } from "../hooks/useAuth";
+import { NotificationContext, NotificationItem } from "./NotificationContextCore";
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { firebaseUser } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!firebaseUser) return;
 
     try {
@@ -51,12 +27,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Failed loading notifications", err);
     }
-  };
+  }, [firebaseUser]);
 
   // ✅ Safe wrapper – same as loadNotifications but semantic name
-  const refreshNotifications = async () => {
+  const refreshNotifications = useCallback(async () => {
     await loadNotifications();
-  };
+  }, [loadNotifications]);
 
   const markAllAsRead = async () => {
     if (!firebaseUser) return;
@@ -85,7 +61,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [firebaseUser]);
+  }, [firebaseUser, refreshNotifications]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -95,18 +71,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         notifications,
         unreadCount,
         loadNotifications,
-        refreshNotifications,  // ✅ Added
+        refreshNotifications,
         markAllAsRead
       }}
     >
       {children}
     </NotificationContext.Provider>
   );
-}
-
-export function useNotificationContext() {
-  const ctx = useContext(NotificationContext);
-  if (!ctx)
-    throw new Error("useNotificationContext must be used inside provider");
-  return ctx;
 }

@@ -1,6 +1,6 @@
 import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import { useState } from "react";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { apiFetch } from "../api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "./useAuth";
 
 export interface UpcomingBirthday {
   id: string;

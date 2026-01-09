@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiGift, FiLogOut, FiHome, FiUser, FiX, FiSettings, FiCalendar } from "react-icons/fi";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { useState, useEffect } from "react";
 
 type SidebarProps = {

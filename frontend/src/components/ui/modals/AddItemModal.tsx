@@ -2,27 +2,40 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import Modal from "../Modal";
 import { apiFetch } from "../../../api";
-import { useAuth } from "../../AuthProvider";
+import { useAuth } from "../../../hooks/useAuth";
 
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   wishlistId: string;
-  onItemAdded: (item: any) => void;
+  onItemAdded: (item: WishlistItem) => void;
 }
+
+type WishlistItem = {
+  id: string;
+  name: string;
+  link: string;
+  description?: string;
+  imageUrl?: string;
+  reservedBy?: string | null;
+};
+
+type AddItemErrors = {
+  name?: string;
+  link?: string;
+};
 
 const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModalProps) => {
   const { firebaseUser } = useAuth();
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; link?: string }>({});
 
   const isValidUrl = (value: string) =>
     /^(https?:\/\/)?([\w-]+\.)+[a-z]{2,}(\/\S*)?$/i.test(value.trim());
 
   const handleSubmit = async () => {
-    const newErrors: typeof errors = {};
+    const newErrors: AddItemErrors = {};
     if (!name.trim()) newErrors.name = "Item name is required.";
     if (!link.trim()) newErrors.link = "Link is required.";
     if (link.trim() && !isValidUrl(link)) newErrors.link = "Please enter a valid URL.";
@@ -51,7 +64,6 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
       setName("");
       setLink("");
       setDescription("");
-      setErrors({});
     }
   };
 

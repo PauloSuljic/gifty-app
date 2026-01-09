@@ -1,5 +1,5 @@
 import { FiBell, FiGift, FiUser, FiX } from "react-icons/fi";
-import { useNotificationContext } from "../../../context/NotificationContext";
+import { useNotificationContext } from "../../../context/useNotificationContext";
 import { useNavigate } from "react-router-dom";
 
 export default function NotificationsModal({

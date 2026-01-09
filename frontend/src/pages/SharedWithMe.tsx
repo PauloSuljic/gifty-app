@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
 import { FiTrash2 } from "react-icons/fi";
