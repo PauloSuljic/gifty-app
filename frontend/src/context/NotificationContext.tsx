@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode
 } from "react";
 import { apiFetch } from "../api";
@@ -31,7 +32,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { firebaseUser } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!firebaseUser) return;
 
     try {
@@ -51,12 +52,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Failed loading notifications", err);
     }
-  };
+  }, [firebaseUser]);
 
   // ✅ Safe wrapper – same as loadNotifications but semantic name
-  const refreshNotifications = async () => {
+  const refreshNotifications = useCallback(async () => {
     await loadNotifications();
-  };
+  }, [loadNotifications]);
 
   const markAllAsRead = async () => {
     if (!firebaseUser) return;
@@ -85,7 +86,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [firebaseUser]);
+  }, [firebaseUser, refreshNotifications]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
