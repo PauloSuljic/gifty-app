@@ -14,8 +14,6 @@ import { useDatabaseUser } from "../hooks/useDatabaseUser";
 import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
 import { AuthContext } from "../context/AuthContext";
 
-export { AuthContext };
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading, refreshFirebaseUser, clearFirebaseUser } = useFirebaseAuth();
   const {
