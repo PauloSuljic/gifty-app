@@ -8,7 +8,7 @@ interface RenameWishlistModalProps {
   isOpen: boolean;
   onClose: () => void;
   wishlist: { id: string; name: string } | null;
-  onWishlistRenamed: (updated: any) => void;
+  onWishlistRenamed: (updated: { id: string; name: string }) => void;
 }
 
 const RenameWishlistModal = ({ isOpen, onClose, wishlist, onWishlistRenamed }: RenameWishlistModalProps) => {
