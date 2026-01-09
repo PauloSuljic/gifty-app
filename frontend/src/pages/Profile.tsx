@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-hot-toast";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 
 const avatarOptions = [
   "/avatars/avatar1.png",
@@ -25,13 +25,12 @@ const Profile = () => {
 
     const fetchUserData = async () => {
       const token = await firebaseUser.getIdToken();
-      const response = await apiFetch(`/api/users/${firebaseUser.uid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch user data");
-
-      const userData = await response.json();
+      const userData = await apiClient.get<{
+        username: string;
+        bio: string;
+        avatarUrl: string;
+        dateOfBirth?: string;
+      }>(`/api/users/${firebaseUser.uid}`, { token });
       setUser({
         username: userData.username,
         bio: userData.bio,
@@ -47,21 +46,18 @@ const Profile = () => {
   const handleUpdateProfile = async () => {
     const token = await firebaseUser?.getIdToken();
 
-    const response = await apiFetch(`/api/users/${firebaseUser?.uid}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        username: user.username,
-        bio: user.bio,
-        avatarUrl: selectedAvatar,
-        dateOfBirth: user.dateOfBirth
-      })
-    });
-
-    if (!response.ok) {
+    try {
+      await apiClient.request<void>(`/api/users/${firebaseUser?.uid}`, {
+        method: "PUT",
+        token,
+        body: {
+          username: user.username,
+          bio: user.bio,
+          avatarUrl: selectedAvatar,
+          dateOfBirth: user.dateOfBirth,
+        },
+      });
+    } catch {
       toast.error("Failed to update profile 😞");
       return;
     }

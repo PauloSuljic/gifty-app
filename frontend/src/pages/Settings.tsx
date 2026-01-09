@@ -1,7 +1,7 @@
 import ConfirmDeleteModal from "../components/ui/modals/ConfirmDeleteModal";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
@@ -18,14 +18,9 @@ const SettingsPage = () => {
     try {
       const token = await firebaseUser.getIdToken();
 
-      const response = await apiFetch(`/api/users/${firebaseUser.uid}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
+      try {
+        await apiClient.del<void>(`/api/users/${firebaseUser.uid}`, { token });
+      } catch {
         toast.error("Failed to delete account.");
         return;
       }

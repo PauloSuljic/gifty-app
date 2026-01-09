@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { User as FirebaseUser } from "firebase/auth";
-import { apiFetch } from "../api";
+import { ApiError, apiClient } from "../shared/lib/apiClient";
 
 export type GiftyUser = {
   id: string;
@@ -27,13 +27,11 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
   const [databaseUser, setDatabaseUser] = useState<GiftyUser | null>(null);
 
   const fetchDatabaseUser = useCallback(async (token: string, uid: string) => {
-    const res = await apiFetch(`/api/users/${uid}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const data = await apiClient.get<GiftyUser>(`/api/users/${uid}`, { token });
       setDatabaseUser(data);
+    } catch (error) {
+      console.error("Failed to fetch database user:", error);
     }
   }, []);
 
@@ -60,28 +58,27 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
 
   const ensureDatabaseUser = useCallback(async (user: FirebaseUser) => {
     const token = await user.getIdToken();
-    const response = await apiFetch(`/api/users/${user.uid}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      await apiClient.get<GiftyUser>(`/api/users/${user.uid}`, { token });
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 404) {
+        throw error;
+      }
 
-    if (response.status === 404) {
       const avatarUrl = getAvatarUrl(user.photoURL);
 
-      await apiFetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      await apiClient.post<void>(
+        "/api/users",
+        {
           id: user.uid,
           username: user.displayName || `user_${user.uid.substring(0, 6)}`,
           email: user.email,
           bio: "",
           avatarUrl,
           dateOfBirth: "2000-01-01",
-        }),
-      });
+        },
+        { token }
+      );
     }
   }, []);
 
@@ -89,21 +86,18 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
     const token = await input.user.getIdToken();
     const avatarUrl = getAvatarUrl(input.user.photoURL);
 
-    await apiFetch("/api/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    await apiClient.post<void>(
+      "/api/users",
+      {
         id: input.user.uid,
         username: input.username,
         email: input.email,
         bio: "",
         avatarUrl,
         dateOfBirth: input.dateOfBirth,
-      }),
-    });
+      },
+      { token }
+    );
   }, []);
 
   const clearDatabaseUser = useCallback(() => {

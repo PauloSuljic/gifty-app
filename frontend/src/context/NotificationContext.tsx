@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, ReactNode } from "react";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import { useAuth } from "../hooks/useAuth";
 import { NotificationContext, NotificationItem } from "./NotificationContextCore";
 
@@ -12,12 +12,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     try {
       const token = await firebaseUser.getIdToken();
-      const res = await apiFetch("/api/notifications", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` }
+      const data = await apiClient.get<NotificationItem[]>("/api/notifications", {
+        token,
       });
-
-      const data = await res.json();
       const sorted = data.sort(
         (a: NotificationItem, b: NotificationItem) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -39,12 +36,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     try {
       const token = await firebaseUser.getIdToken();
-      await apiFetch("/api/notifications/mark-read", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+      await apiClient.post<void>("/api/notifications/mark-read", undefined, {
+        token,
       });
 
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { apiFetch } from "../api";
+import { ApiError, apiClient } from "../shared/lib/apiClient";
 import { useAuth } from "./useAuth";
 
 export function useShareLink() {
@@ -10,19 +10,22 @@ export function useShareLink() {
   const generateShareLink = useCallback(
     async (wishlistId: string) => {
       const token = await firebaseUser?.getIdToken();
-      const response = await apiFetch(`/api/shared-links/${wishlistId}/generate`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      try {
+        const data = await apiClient.post<{ shareCode: string }>(
+          `/api/shared-links/${wishlistId}/generate`,
+          undefined,
+          { token }
+        );
         const generatedUrl = `${window.location.origin}/shared/${data.shareCode}`;
 
         setShareUrl(generatedUrl);
         setIsShareModalOpen(true);
-      } else {
-        console.error("Error generating share link:", await response.json());
+      } catch (error) {
+        if (error instanceof ApiError) {
+          console.error("Error generating share link:", error.details ?? error.message);
+        } else {
+          console.error("Error generating share link:", error);
+        }
       }
     },
     [firebaseUser]

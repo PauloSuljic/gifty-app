@@ -1,7 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect, useState, useRef } from "react";
-import { apiFetch } from "../api";
+import { ApiError, apiClient } from "../shared/lib/apiClient";
 import Spinner from "./ui/Spinner";
 
 // Define our database user type
@@ -29,37 +29,32 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         const token = await firebaseUser.getIdToken();
 
-        let response = await apiFetch(`/api/users/${firebaseUser.uid}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        let userData: GiftyUser;
 
-        if (response.status === 404) {
-          console.log("User not found, creating...");
-          await apiFetch("/api/users", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              id: firebaseUser.uid,
-              username: firebaseUser.displayName || "New User",
-              email: firebaseUser.email,
-              avatarUrl: "",
-              bio: "",
-              dateOfBirth: ""
-            }),
-          });
+        try {
+          userData = await apiClient.get<GiftyUser>(`/api/users/${firebaseUser.uid}`, { token });
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 404) {
+            console.log("User not found, creating...");
+            await apiClient.post<void>(
+              "/api/users",
+              {
+                id: firebaseUser.uid,
+                username: firebaseUser.displayName || "New User",
+                email: firebaseUser.email,
+                avatarUrl: "",
+                bio: "",
+                dateOfBirth: ""
+              },
+              { token }
+            );
 
-          // Try again
-          response = await apiFetch(`/api/users/${firebaseUser.uid}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+            userData = await apiClient.get<GiftyUser>(`/api/users/${firebaseUser.uid}`, { token });
+          } else {
+            throw error;
+          }
         }
 
-        if (!response.ok) throw new Error("Failed to fetch user data");
-
-        const userData = await response.json();
         setUser({
           id: userData.id,
           username: userData.username || firebaseUser.displayName || "Unknown",

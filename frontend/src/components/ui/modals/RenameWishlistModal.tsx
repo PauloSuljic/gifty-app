@@ -1,7 +1,7 @@
 import { toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import Modal from "../Modal";
-import { apiFetch } from "../../../api";
+import { apiClient } from "../../../shared/lib/apiClient";
 import { useAuth } from "../../../hooks/useAuth";
 
 interface RenameWishlistModalProps {
@@ -36,17 +36,12 @@ const RenameWishlistModal = ({ isOpen, onClose, wishlist, onWishlistRenamed }: R
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
 
-    const response = await apiFetch(`/api/wishlists/${wishlist.id}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ name: newName }),
-    });
-
-    if (response.ok) {
-      const updatedWishlist = await response.json();
+    try {
+      const updatedWishlist = await apiClient.patch<{ id: string; name: string }>(
+        `/api/wishlists/${wishlist.id}`,
+        { name: newName },
+        { token }
+      );
       onWishlistRenamed(updatedWishlist);
       toast.success("Wishlist renamed! ✏️", {
         duration: 3000,
@@ -60,7 +55,7 @@ const RenameWishlistModal = ({ isOpen, onClose, wishlist, onWishlistRenamed }: R
       onClose();
       setNewName("");
       setError(null);
-    } else {
+    } catch {
       setError("Failed to rename wishlist.");
     }
   };
