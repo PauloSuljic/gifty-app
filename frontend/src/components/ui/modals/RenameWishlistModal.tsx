@@ -3,12 +3,13 @@ import { useState, useEffect } from "react";
 import Modal from "../Modal";
 import { apiClient } from "../../../shared/lib/apiClient";
 import { useAuth } from "../../../hooks/useAuth";
+import type { WishlistType } from "../../../hooks/useWishlists";
 
 interface RenameWishlistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  wishlist: { id: string; name: string } | null;
-  onWishlistRenamed: (updated: { id: string; name: string }) => void;
+  wishlist: WishlistType | null;
+  onWishlistRenamed: (updated: WishlistType) => void;
 }
 
 const RenameWishlistModal = ({ isOpen, onClose, wishlist, onWishlistRenamed }: RenameWishlistModalProps) => {
@@ -42,7 +43,7 @@ const RenameWishlistModal = ({ isOpen, onClose, wishlist, onWishlistRenamed }: R
         { name: newName },
         { token }
       );
-      onWishlistRenamed(updatedWishlist);
+      onWishlistRenamed({ ...wishlist, ...updatedWishlist });
       toast.success("Wishlist renamed! ✏️", {
         duration: 3000,
         position: "bottom-center",
