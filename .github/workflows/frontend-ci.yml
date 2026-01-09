@@ -27,13 +27,14 @@ jobs:
         run: npm ci
         working-directory: frontend
 
-      - name: Build
-        run: npm run build
-        working-directory: frontend
-
       - name: Lint
-        run: npm run lint
-        working-directory: frontend
+        run: make frontend-lint
+
+      - name: Typecheck
+        run: make frontend-typecheck
+
+      - name: Build
+        run: make frontend-build
 
       # Optional: run frontend tests (if/when added)
       # - name: Run tests
