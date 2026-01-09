@@ -26,6 +26,6 @@ frontend-lint:
 	cd frontend && npm run lint
 
 frontend-typecheck:
-	PATH="$(PWD)/frontend/node_modules/.bin:$$PATH" tsc -p frontend/tsconfig.json --noEmit
+	PATH="$(PWD)/frontend/node_modules/.bin:$$PATH" tsc -b frontend/tsconfig.json --noEmit
 
 check: backend-test frontend-build frontend-lint

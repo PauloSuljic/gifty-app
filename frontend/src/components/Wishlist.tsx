@@ -12,7 +12,7 @@ import { DndContext } from "@dnd-kit/core";
 
 import { SortableContext } from "@dnd-kit/sortable";
 import { SortableItem } from "./ui/SortableItem";
-import { useWishlists, WishlistItemType } from "../hooks/useWishlists";
+import { useWishlists, WishlistItemType, WishlistType } from "../hooks/useWishlists";
 import { useWishlistDnd } from "../hooks/useWishlistDnd";
 import { useShareLink } from "../hooks/useShareLink";
 
@@ -31,7 +31,7 @@ const Wishlist = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
-  const [wishlistToRename, setWishlistToRename] = useState<{ id: string; name: string } | null>(null);
+  const [wishlistToRename, setWishlistToRename] = useState<WishlistType | null>(null);
   const {
     wishlists,
     setWishlists,
@@ -103,7 +103,7 @@ const Wishlist = () => {
                             onClick={() => navigate(`/wishlist/${wishlist.id}`)}
                             onShare={() => generateShareLink(wishlist.id)}
                             onRename={() => {
-                              setWishlistToRename({ id: wishlist.id, name: wishlist.name });
+                              setWishlistToRename(wishlist);
                               setIsRenameModalOpen(true);
                             }}
                             onDelete={() => {
@@ -142,7 +142,7 @@ const Wishlist = () => {
                           onClick={() => navigate(`/wishlist/${wishlist.id}`)}
                           onShare={() => generateShareLink(wishlist.id)}
                           onRename={() => {
-                            setWishlistToRename({ id: wishlist.id, name: wishlist.name });
+                            setWishlistToRename(wishlist);
                             setIsRenameModalOpen(true);
                           }}
                           onDelete={() => {
@@ -182,7 +182,9 @@ const Wishlist = () => {
         onClose={() => setIsRenameModalOpen(false)}
         wishlist={wishlistToRename}
         onWishlistRenamed={(updated) => {
-          setWishlists((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+          setWishlists((prev) =>
+            prev.map((w) => (w.id === updated.id ? { ...w, name: updated.name } : w))
+          );
         }}
       />
 

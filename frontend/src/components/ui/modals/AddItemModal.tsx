@@ -3,21 +3,13 @@ import { toast } from "react-hot-toast";
 import Modal from "../Modal";
 import { apiClient } from "../../../shared/lib/apiClient";
 import { useAuth } from "../../../hooks/useAuth";
+import type { WishlistItemType } from "../../../hooks/useWishlists";
 
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   wishlistId: string;
-  onItemAdded: (item: WishlistItem) => void;
-}
-
-type WishlistItem = {
-  id: string;
-  name: string;
-  link: string;
-  description?: string;
-  imageUrl?: string;
-  reservedBy?: string | null;
+  onItemAdded: (item: WishlistItemType) => void;
 };
 
 type AddItemErrors = {
@@ -52,7 +44,7 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
     if (!token) return;
 
     try {
-      const createdItem = await apiClient.post<WishlistItem>(
+      const createdItem = await apiClient.post<WishlistItemType>(
         `/api/wishlists/${wishlistId}/items`,
         { name, link, description, reservedBy: null },
         { token }

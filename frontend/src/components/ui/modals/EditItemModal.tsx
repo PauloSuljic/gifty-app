@@ -2,22 +2,14 @@ import { useState, useEffect } from "react";
 import Modal from "../Modal";
 import { useAuth } from "../../../hooks/useAuth";
 import { toast } from "react-hot-toast";
+import type { WishlistItemType } from "../../../hooks/useWishlists";
 
 interface EditItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   wishlistId: string;
-  item: WishlistItem | null;
-  onItemUpdated: (item: WishlistItem) => void;
-}
-
-type WishlistItem = {
-  id: string;
-  name: string;
-  link: string;
-  description?: string;
-  imageUrl?: string;
-  reservedBy?: string | null;
+  item: WishlistItemType | null;
+  onItemUpdated: (item: WishlistItemType) => void;
 };
 
 const isValidUrl = (value: string) => {
