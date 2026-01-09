@@ -13,6 +13,17 @@ interface EventItem {
   daysLeft: number;
 }
 
+type SharedUserDto = {
+  ownerId: number;
+  ownerName: string;
+  ownerDateOfBirth?: string | null;
+};
+
+const hasDateOfBirth = (
+  user: SharedUserDto
+): user is SharedUserDto & { ownerDateOfBirth: string } =>
+  typeof user.ownerDateOfBirth === "string" && user.ownerDateOfBirth.length > 0;
+
 function calculateDaysUntilBirthday(dateString: string): number {
   const today = new Date();
   const birthday = new Date(dateString);
@@ -40,19 +51,19 @@ export default function CalendarPage() {
   const fetchSharedUsers = async () => {
     try {
       const token = await firebaseUser.getIdToken();
-      const data = await apiClient.get<any[]>("/api/shared-links/shared-with-me", {
+      const data = await apiClient.get<SharedUserDto[]>("/api/shared-links/shared-with-me", {
         token,
       });
       const fetchedEvents: EventItem[] = data
-        .filter((user: any) => user.ownerDateOfBirth)
-        .map((user: any) => ({
+        .filter(hasDateOfBirth)
+        .map((user): EventItem => ({
           id: user.ownerId,
           name: user.ownerName,
           type: "birthday",
           date: new Date(user.ownerDateOfBirth),
           daysLeft: calculateDaysUntilBirthday(user.ownerDateOfBirth),
         }))
-        .sort((a: EventItem, b: EventItem) => a.daysLeft - b.daysLeft);
+        .sort((a, b) => a.daysLeft - b.daysLeft);
       setEvents(fetchedEvents);
     } catch (error) {
       console.error("Failed to fetch shared users:", error);
