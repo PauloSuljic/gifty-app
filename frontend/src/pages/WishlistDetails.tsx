@@ -15,6 +15,7 @@ import NotFound from "./NotFound";
 import { useWishlistDetails, isValidGuid, WishlistDetailsItemType } from "../hooks/useWishlistDetails";
 import { useWishlistItemsDnd } from "../hooks/useWishlistItemsDnd";
 import { useShareLink } from "../hooks/useShareLink";
+import { getWishlistCoverImage } from "../shared/lib/getWishlistCoverImage";
 
 const WishlistDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -68,25 +69,11 @@ const WishlistDetail = () => {
   const fallbackCoverImage =
     "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
-  // Pick item with the highest `order` that has an image
-  const highestOrderedItemWithImage = items.reduce<WishlistDetailsItemType | null>(
-    (best, item) => {
-      if (!item.imageUrl) return best; // skip items without image
-
-      if (!best) return item; // first candidate
-
-      const bestOrder = best.order ?? 0;
-      const itemOrder = item.order ?? 0;
-
-      return itemOrder > bestOrder ? item : best;
-    },
-    null
-  );
-
-  const coverImageUrl =
-    wishlist.coverImage ||
-    highestOrderedItemWithImage?.imageUrl ||
-    fallbackCoverImage;
+  const coverImageUrl = getWishlistCoverImage<WishlistDetailsItemType>({
+    items,
+    fallbackImage: fallbackCoverImage,
+    wishlistCoverImage: wishlist.coverImage,
+  });
 
   return (
     <>
