@@ -59,7 +59,7 @@ export default function NotificationsPage() {
       await loadNotifications();
       await markAllAsRead();
     })();
-  }, []);
+  }, [loadNotifications, markAllAsRead]);
 
   // ----------------------------------------------------------------------
   // ✓ INFINITE SCROLL
