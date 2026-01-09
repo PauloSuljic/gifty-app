@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { FiBell, FiGift, FiUser } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
-import { apiFetch } from "../../api";
+import { apiClient } from "../../shared/lib/apiClient";
 import { useNotificationContext } from "../../context/useNotificationContext";
 import Spinner from "../../components/ui/Spinner";
 
@@ -34,13 +34,9 @@ export default function NotificationsPage() {
     try {
       const token = firebaseUser ? await firebaseUser.getIdToken() : "";
 
-      const res = await apiFetch("/api/notifications", {
-        method: "GET",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      const data = await apiClient.get<NotificationItem[]>("/api/notifications", {
+        token: token || undefined,
       });
-
-      if (!res.ok) throw new Error("Failed to load notifications");
-      const data = await res.json();
 
       const sorted = data.sort(
         (a: NotificationItem, b: NotificationItem) =>
@@ -63,7 +59,7 @@ export default function NotificationsPage() {
       await loadNotifications();
       await markAllAsRead();
     })();
-  }, []);
+  }, [loadNotifications, markAllAsRead]);
 
   // ----------------------------------------------------------------------
   // ✓ INFINITE SCROLL

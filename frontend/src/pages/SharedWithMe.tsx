@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-hot-toast";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import { FiTrash2 } from "react-icons/fi";
 import ConfirmRemoveSharedModal from "../components/ui/modals/ConfirmRemoveSharedModal";
 
@@ -67,12 +67,10 @@ const SharedWithMe = () => {
 
     const fetchSharedWishlists = async () => {
       const token = await firebaseUser.getIdToken();
-      const response = await apiFetch("/api/shared-links/shared-with-me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      try {
+        const data = await apiClient.get<GroupedWishlists[]>("/api/shared-links/shared-with-me", {
+          token,
+        });
 
         // ✅ Move the highlighted user to the top
         if (highlightUserId) {
@@ -82,6 +80,8 @@ const SharedWithMe = () => {
         }
 
         setSharedWishlists(data);
+      } catch (error) {
+        console.error("Failed to fetch shared wishlists:", error);
       }
     };
 
@@ -188,14 +188,13 @@ const SharedWithMe = () => {
           if (!removeModalOwnerId) return;
           const token = await firebaseUser?.getIdToken();
           if (!token) return;
-          const response = await apiFetch(`/api/shared-links/shared-with-me/${removeModalOwnerId}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (response.ok) {
+          try {
+            await apiClient.del<void>(`/api/shared-links/shared-with-me/${removeModalOwnerId}`, {
+              token,
+            });
             setSharedWishlists(prev => prev.filter(g => g.ownerId !== removeModalOwnerId));
             toast.success("Removed shared wishlists");
-          } else {
+          } catch {
             toast.error("Failed to remove shared wishlists");
           }
         }}

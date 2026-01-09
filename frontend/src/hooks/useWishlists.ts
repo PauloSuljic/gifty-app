@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import { useAuth } from "./useAuth";
 
 export type WishlistType = {
@@ -33,14 +33,13 @@ export function useWishlists() {
     async (wishlistId: string) => {
       if (!firebaseUser) return;
       const token = await firebaseUser.getIdToken();
-      const response = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
+      try {
+        const data = await apiClient.get<WishlistItemType[]>(`/api/wishlists/${wishlistId}/items`, {
+          token,
+        });
         setWishlistItems((prev) => ({ ...prev, [wishlistId]: data }));
+      } catch (error) {
+        console.error("Failed to fetch wishlist items:", error);
       }
     },
     [firebaseUser]
@@ -49,16 +48,15 @@ export function useWishlists() {
   const fetchWishlists = useCallback(async () => {
     if (!firebaseUser) return;
     const token = await firebaseUser.getIdToken();
-    const response = await apiFetch("/api/wishlists", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
+    try {
+      const data = await apiClient.get<WishlistType[]>("/api/wishlists", {
+        token,
+      });
       setWishlists(data);
       setWishlistOrder(data.map((w: WishlistType) => w.id));
       data.forEach((wishlist: WishlistType) => fetchWishlistItems(wishlist.id));
+    } catch (error) {
+      console.error("Failed to fetch wishlists:", error);
     }
   }, [firebaseUser, fetchWishlistItems]);
 
@@ -72,19 +70,11 @@ export function useWishlists() {
         const token = await firebaseUser?.getIdToken();
         if (!token) return;
 
-        const res = await apiFetch("/api/wishlists/reorder", {
+        await apiClient.request<void>("/api/wishlists/reorder", {
           method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(reordered),
+          token,
+          body: reordered,
         });
-
-        if (!res.ok) {
-          console.error("Failed to reorder wishlists", await res.text());
-          toast.error("Failed to reorder wishlists.");
-        }
       } catch (err) {
         console.error("Error:", err);
         toast.error("Something went wrong reordering wishlists.");
@@ -107,27 +97,23 @@ export function useWishlists() {
         return false;
       }
 
-      const response = await apiFetch("/api/wishlists", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: firebaseUser.uid,
-          name: newWishlist,
-          isPublic: false,
-        }),
-      });
-
-      if (response.ok) {
+      try {
+        await apiClient.post<void>(
+          "/api/wishlists",
+          {
+            userId: firebaseUser.uid,
+            name: newWishlist,
+            isPublic: false,
+          },
+          { token }
+        );
         toast.success("Wishlist created! 🎉", {
           duration: 3000,
           position: "bottom-center",
         });
         fetchWishlists();
         return true;
-      } else {
+      } catch {
         toast.error("Failed to create wishlist 😞");
         return false;
       }
@@ -140,12 +126,10 @@ export function useWishlists() {
       if (!firebaseUser) return false;
       const token = await firebaseUser.getIdToken();
 
-      const response = await apiFetch(`/api/wishlists/${wishlistToDelete.id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
+      try {
+        await apiClient.del<void>(`/api/wishlists/${wishlistToDelete.id}`, {
+          token,
+        });
         setWishlists((prev) => prev.filter((w) => w.id !== wishlistToDelete.id));
         setWishlistItems((prev) => {
           const updated = { ...prev };
@@ -157,7 +141,7 @@ export function useWishlists() {
           position: "bottom-center",
         });
         return true;
-      } else {
+      } catch {
         toast.error("Failed to delete wishlist.");
         return false;
       }

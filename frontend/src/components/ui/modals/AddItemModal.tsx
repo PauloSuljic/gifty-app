@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import Modal from "../Modal";
-import { apiFetch } from "../../../api";
+import { apiClient } from "../../../shared/lib/apiClient";
 import { useAuth } from "../../../hooks/useAuth";
 
 interface AddItemModalProps {
@@ -51,19 +51,19 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
     const token = await firebaseUser?.getIdToken();
     if (!token) return;
 
-    const response = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ name, link, description, reservedBy: null }),
-    });
-
-    if (response.ok) {
-      const createdItem = await response.json();
+    try {
+      const createdItem = await apiClient.post<WishlistItem>(
+        `/api/wishlists/${wishlistId}/items`,
+        { name, link, description, reservedBy: null },
+        { token }
+      );
       onItemAdded(createdItem);
       onClose();
       setName("");
       setLink("");
       setDescription("");
+    } catch (error) {
+      console.error("Failed to add wishlist item:", error);
     }
   };
 

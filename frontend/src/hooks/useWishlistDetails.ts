@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { apiFetch } from "../api";
+import { ApiError, apiClient } from "../shared/lib/apiClient";
 import { useAuth } from "./useAuth";
 import { useNotificationContext } from "../context/useNotificationContext";
 import { WishlistItemType, WishlistType } from "./useWishlists";
@@ -24,30 +24,26 @@ export function useWishlistDetails(wishlistId?: string) {
 
     const token = await firebaseUser.getIdToken();
 
-    const resWishlist = await apiFetch(`/api/wishlists/${wishlistId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!resWishlist.ok) {
+    try {
+      const wishlistData = await apiClient.get<WishlistDetailsType>(`/api/wishlists/${wishlistId}`, {
+        token,
+      });
+      setWishlist(wishlistData);
+    } catch {
       setError(true);
       return;
     }
 
-    const wishlistData = await resWishlist.json();
-    setWishlist(wishlistData);
-
-    const resItems = await apiFetch(`/api/wishlists/${wishlistId}/items`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!resItems.ok) {
+    try {
+      const itemsData = await apiClient.get<WishlistDetailsItemType[]>(
+        `/api/wishlists/${wishlistId}/items`,
+        { token }
+      );
+      const sorted = [...itemsData].sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
+      setItems(sorted);
+    } catch {
       setError(true);
-      return;
     }
-
-    const itemsData = await resItems.json();
-    const sorted = [...itemsData].sort((a, b) => (b.order ?? 0) - (a.order ?? 0));
-    setItems(sorted);
   }, [firebaseUser, wishlistId]);
 
   useEffect(() => {
@@ -66,18 +62,13 @@ export function useWishlistDetails(wishlistId?: string) {
         const token = await firebaseUser?.getIdToken();
         if (!token || !wishlistId) return;
 
-        await apiFetch(`/api/wishlists/${wishlistId}/items/reorder`, {
+        await apiClient.request<void>(`/api/wishlists/${wishlistId}/items/reorder`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(
-            reordered.map((item, index) => ({
-              id: item.id,
-              order: index,
-            }))
-          ),
+          token,
+          body: reordered.map((item, index) => ({
+            id: item.id,
+            order: index,
+          })),
         });
       } catch (error) {
         console.error("Error reordering wishlist items:", error);
@@ -97,34 +88,11 @@ export function useWishlistDetails(wishlistId?: string) {
       if (!token) return;
 
       try {
-        const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}/reserve`, {
-          method: "PATCH",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-
-          if (errorData.error[0] === "You can only reserve 1 item per wishlist.") {
-            toast.error("Max 1 item per wishlist.", {
-              duration: 3000,
-              position: "bottom-center",
-              style: {
-                background: "#333",
-                color: "#fff",
-                border: "1px solid #555",
-              },
-            });
-          } else {
-            toast.error("Failed to toggle reservation.", {
-              duration: 3000,
-              position: "bottom-center",
-            });
-          }
-          return;
-        }
-
-        const updatedItem = await response.json();
+        const updatedItem = await apiClient.patch<WishlistDetailsItemType>(
+          `/api/wishlists/${wishlistId}/items/${itemId}/reserve`,
+          undefined,
+          { token }
+        );
 
         toast.success(
           updatedItem.isReserved ? "Item reserved successfully! 🎁" : "Reservation removed ✅",
@@ -155,6 +123,27 @@ export function useWishlistDetails(wishlistId?: string) {
           refreshNotifications();
         }
       } catch (err) {
+        if (err instanceof ApiError) {
+          const details = err.details as { error?: string[] } | undefined;
+          if (details?.error?.[0] === "You can only reserve 1 item per wishlist.") {
+            toast.error("Max 1 item per wishlist.", {
+              duration: 3000,
+              position: "bottom-center",
+              style: {
+                background: "#333",
+                color: "#fff",
+                border: "1px solid #555",
+              },
+            });
+            return;
+          }
+          toast.error("Failed to toggle reservation.", {
+            duration: 3000,
+            position: "bottom-center",
+          });
+          return;
+        }
+
         console.error("Error toggling reservation:", err);
         toast.error("Something went wrong!", {
           duration: 3000,
@@ -182,17 +171,15 @@ export function useWishlistDetails(wishlistId?: string) {
       const token = await firebaseUser?.getIdToken();
       if (!token || !wishlistId) return false;
 
-      const response = await apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
+      try {
+        await apiClient.del<void>(`/api/wishlists/${wishlistId}/items/${itemId}`, {
+          token,
+        });
         setItems((prev) => prev.filter((i) => i.id !== itemId));
         return true;
+      } catch {
+        return false;
       }
-
-      return false;
     },
     [firebaseUser, wishlistId]
   );
@@ -200,11 +187,12 @@ export function useWishlistDetails(wishlistId?: string) {
   const deleteWishlist = useCallback(async () => {
     const token = await firebaseUser?.getIdToken();
     if (!token || !wishlistId) return false;
-    const response = await apiFetch(`/api/wishlists/${wishlistId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.ok;
+    try {
+      await apiClient.del<void>(`/api/wishlists/${wishlistId}`, { token });
+      return true;
+    } catch {
+      return false;
+    }
   }, [firebaseUser, wishlistId]);
 
   const isOwner = useMemo(

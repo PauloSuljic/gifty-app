@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import { useAuth } from "./useAuth";
 
 export interface UpcomingBirthday {
@@ -8,6 +8,17 @@ export interface UpcomingBirthday {
   date: Date;
   daysLeft: number;
 }
+
+type SharedWithMeItem = {
+  ownerId: string;
+  ownerName: string;
+  ownerDateOfBirth?: string | null;
+};
+
+const hasOwnerDateOfBirth = (
+  item: SharedWithMeItem
+): item is SharedWithMeItem & { ownerDateOfBirth: string } =>
+  typeof item.ownerDateOfBirth === "string" && item.ownerDateOfBirth.length > 0;
 
 function calculateDaysUntilBirthday(dateString: string): number {
   const today = new Date();
@@ -27,25 +38,27 @@ export function useUpcomingBirthdays(limit?: number) {
 
     const fetchBirthdays = async () => {
       const token = await firebaseUser.getIdToken();
-      const res = await apiFetch("/api/shared-links/shared-with-me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const data = await apiClient.get<SharedWithMeItem[]>("/api/shared-links/shared-with-me", {
+          token,
+        });
 
-      if (!res.ok) return setLoading(false);
+        const mapped: UpcomingBirthday[] = data
+          .filter(hasOwnerDateOfBirth)
+          .map((u) => ({
+            id: u.ownerId,
+            name: u.ownerName,
+            date: new Date(u.ownerDateOfBirth),
+            daysLeft: calculateDaysUntilBirthday(u.ownerDateOfBirth),
+          }))
+          .sort((a, b) => a.daysLeft - b.daysLeft);
 
-      const data = await res.json();
-      const mapped = data
-        .filter((u: any) => u.ownerDateOfBirth)
-        .map((u: any) => ({
-          id: u.ownerId,
-          name: u.ownerName,
-          date: new Date(u.ownerDateOfBirth),
-          daysLeft: calculateDaysUntilBirthday(u.ownerDateOfBirth),
-        }))
-        .sort((a: any, b: any) => a.daysLeft - b.daysLeft);
-
-      setBirthdays(limit ? mapped.slice(0, limit) : mapped);
-      setLoading(false);
+        setBirthdays(limit ? mapped.slice(0, limit) : mapped);
+      } catch (error) {
+        console.error("Failed to fetch upcoming birthdays:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchBirthdays();

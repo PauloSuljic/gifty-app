@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
 import UserHeader from "../components/UserHeader";
@@ -36,22 +36,12 @@ const SharedWishlist = () => {
   useEffect(() => {
     const fetchSharedWishlist = async () => {
       setLoading(true);
-      const token = await firebaseUser?.getIdToken();
-      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-
       try {
-        const response = await apiFetch(`/api/shared-links/${shareCode}`, {
-          method: "GET",
-          headers,
+        const token = await firebaseUser?.getIdToken();
+        const data = await apiClient.get<WishlistType>(`/api/shared-links/${shareCode}`, {
+          token,
         });
-
-        if (response.ok) {
-          const data = await response.json();
-          setWishlist(data);
-        } else {
-          console.error("Failed to fetch shared wishlist.");
-          setWishlist(null);
-        }
+        setWishlist(data);
       } catch (error) {
         console.error("Error fetching shared wishlist:", error);
         setWishlist(null);

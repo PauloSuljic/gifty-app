@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
-import { apiFetch } from "../../api";
+import { apiClient } from "../../shared/lib/apiClient";
 import { useNavigate } from "react-router-dom";
 
 interface EventItem {
@@ -12,6 +12,17 @@ interface EventItem {
   date: Date;
   daysLeft: number;
 }
+
+type SharedUserDto = {
+  ownerId: number;
+  ownerName: string;
+  ownerDateOfBirth?: string | null;
+};
+
+const hasDateOfBirth = (
+  user: SharedUserDto
+): user is SharedUserDto & { ownerDateOfBirth: string } =>
+  typeof user.ownerDateOfBirth === "string" && user.ownerDateOfBirth.length > 0;
 
 function calculateDaysUntilBirthday(dateString: string): number {
   const today = new Date();
@@ -40,26 +51,20 @@ export default function CalendarPage() {
   const fetchSharedUsers = async () => {
     try {
       const token = await firebaseUser.getIdToken();
-      const response = await apiFetch("/api/shared-links/shared-with-me", {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await apiClient.get<SharedUserDto[]>("/api/shared-links/shared-with-me", {
+        token,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        const fetchedEvents: EventItem[] = data
-          .filter((user: any) => user.ownerDateOfBirth)
-          .map((user: any) => ({
-            id: user.ownerId,
-            name: user.ownerName,
-            type: "birthday",
-            date: new Date(user.ownerDateOfBirth),
-            daysLeft: calculateDaysUntilBirthday(user.ownerDateOfBirth),
-          }))
-          .sort((a: EventItem, b: EventItem) => a.daysLeft - b.daysLeft);
-        setEvents(fetchedEvents);
-      } else {
-        console.error("Error fetching shared users:", response.statusText);
-      }
+      const fetchedEvents: EventItem[] = data
+        .filter(hasDateOfBirth)
+        .map((user): EventItem => ({
+          id: user.ownerId,
+          name: user.ownerName,
+          type: "birthday",
+          date: new Date(user.ownerDateOfBirth),
+          daysLeft: calculateDaysUntilBirthday(user.ownerDateOfBirth),
+        }))
+        .sort((a, b) => a.daysLeft - b.daysLeft);
+      setEvents(fetchedEvents);
     } catch (error) {
       console.error("Failed to fetch shared users:", error);
     }

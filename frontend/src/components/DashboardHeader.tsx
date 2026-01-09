@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { GiftyUser } from "../components/PrivateRoute";
-import { apiFetch } from "../api";
+import { apiClient } from "../shared/lib/apiClient";
 import UserHeader from "./UserHeader";
 
 const DashboardHeader = () => {
@@ -13,12 +13,9 @@ const DashboardHeader = () => {
     if (firebaseUser) {
       const fetchUserData = async () => {
         const token = await firebaseUser.getIdToken();
-        const response = await apiFetch(`/api/users/${firebaseUser.uid}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const userData = await apiClient.get<GiftyUser>(`/api/users/${firebaseUser.uid}`, {
+          token,
         });
-
-        if (!response.ok) throw new Error("Failed to fetch user data");
-        const userData = await response.json();
         setUser(userData);
       };
 
