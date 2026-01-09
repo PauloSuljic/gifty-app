@@ -12,9 +12,10 @@ import { DndContext } from "@dnd-kit/core";
 
 import { SortableContext } from "@dnd-kit/sortable";
 import { SortableItem } from "./ui/SortableItem";
-import { useWishlists, WishlistItemType, WishlistType } from "../hooks/useWishlists";
+import { useWishlists, WishlistType } from "../hooks/useWishlists";
 import { useWishlistDnd } from "../hooks/useWishlistDnd";
 import { useShareLink } from "../hooks/useShareLink";
+import { getWishlistCoverImage } from "../shared/lib/getWishlistCoverImage";
 
 const fallbackCoverImage =
   "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
@@ -116,22 +117,10 @@ const Wishlist = () => {
                         );
                       }
 
-                      const highestOrderedItemWithImage = items.reduce<WishlistItemType | null>(
-                        (best, item) => {
-                          if (!item.imageUrl) return best;
-
-                          if (!best) return item;
-
-                          const bestOrder = best.order ?? 0;
-                          const itemOrder = item.order ?? 0;
-
-                          return itemOrder > bestOrder ? item : best;
-                        },
-                        null
-                      );
-
-                      const coverImageUrl =
-                        highestOrderedItemWithImage?.imageUrl || fallbackCoverImage;
+                      const coverImageUrl = getWishlistCoverImage({
+                        items,
+                        fallbackImage: fallbackCoverImage,
+                      });
 
                       return (
                         <WishlistCard
