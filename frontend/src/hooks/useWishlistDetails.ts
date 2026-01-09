@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { apiFetch } from "../api";
 import { useAuth } from "./useAuth";
-import { useNotificationContext } from "../context/NotificationContext";
+import { useNotificationContext } from "../context/useNotificationContext";
 import { WishlistItemType, WishlistType } from "./useWishlists";
 
 export type WishlistDetailsType = WishlistType;

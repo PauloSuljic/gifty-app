@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useNotificationContext } from "../context/NotificationContext";
+import { useNotificationContext } from "../context/useNotificationContext";
 import { FiGift, FiBell, FiUser, FiCalendar, FiLock } from "react-icons/fi";
 import { useUpcomingBirthdays } from "../hooks/useUpcomingBirthdays";
 

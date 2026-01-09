@@ -1,32 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  ReactNode
-} from "react";
+import { useState, useEffect, useCallback, ReactNode } from "react";
 import { apiFetch } from "../api";
 import { useAuth } from "../hooks/useAuth";
-
-interface NotificationItem {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  createdAt: string;
-  isRead: boolean;
-}
-
-interface NotificationContextValue {
-  notifications: NotificationItem[];
-  unreadCount: number;
-  loadNotifications: () => Promise<void>;
-  refreshNotifications: () => Promise<void>;   // ✅ NEW
-  markAllAsRead: () => Promise<void>;
-}
-
-const NotificationContext = createContext<NotificationContextValue | null>(null);
+import { NotificationContext, NotificationItem } from "./NotificationContextCore";
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { firebaseUser } = useAuth();
@@ -96,18 +71,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         notifications,
         unreadCount,
         loadNotifications,
-        refreshNotifications,  // ✅ Added
+        refreshNotifications,
         markAllAsRead
       }}
     >
       {children}
     </NotificationContext.Provider>
   );
-}
-
-export function useNotificationContext() {
-  const ctx = useContext(NotificationContext);
-  if (!ctx)
-    throw new Error("useNotificationContext must be used inside provider");
-  return ctx;
 }

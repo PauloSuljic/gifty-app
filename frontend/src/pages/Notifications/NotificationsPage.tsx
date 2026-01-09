@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { FiBell, FiGift, FiUser } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
 import { apiFetch } from "../../api";
-import { useNotificationContext } from "../../context/NotificationContext";
+import { useNotificationContext } from "../../context/useNotificationContext";
 import Spinner from "../../components/ui/Spinner";
 
 interface NotificationItem {

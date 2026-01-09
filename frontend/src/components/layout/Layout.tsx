@@ -5,7 +5,7 @@ import DashboardHeader from "../DashboardHeader";
 import { FiMenu, FiBell } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { useNotificationContext } from "../../context/NotificationContext";
+import { useNotificationContext } from "../../context/useNotificationContext";
 import NotificationsModal from "../ui/modals/NotificationsModal";
 import RightSidebar from "../RightSidebar";
 
