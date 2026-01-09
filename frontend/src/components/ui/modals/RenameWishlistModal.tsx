@@ -2,7 +2,7 @@ import { toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
 import Modal from "../Modal";
 import { apiFetch } from "../../../api";
-import { useAuth } from "../../AuthProvider";
+import { useAuth } from "../../../hooks/useAuth";
 
 interface RenameWishlistModalProps {
   isOpen: boolean;

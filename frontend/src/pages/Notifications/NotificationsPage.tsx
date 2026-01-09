@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { FiBell, FiGift, FiUser } from "react-icons/fi";
-import { useAuth } from "../../components/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 import { apiFetch } from "../../api";
 import { useNotificationContext } from "../../context/NotificationContext";
 import Spinner from "../../components/ui/Spinner";

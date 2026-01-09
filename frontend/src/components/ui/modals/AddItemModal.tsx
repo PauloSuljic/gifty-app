@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import Modal from "../Modal";
 import { apiFetch } from "../../../api";
-import { useAuth } from "../../AuthProvider";
+import { useAuth } from "../../../hooks/useAuth";
 
 interface AddItemModalProps {
   isOpen: boolean;

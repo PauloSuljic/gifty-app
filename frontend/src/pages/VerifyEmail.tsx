@@ -1,4 +1,4 @@
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { sendEmailVerification } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";

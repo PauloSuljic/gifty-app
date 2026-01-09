@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { apiFetch } from "../api";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "./useAuth";
 
 export function useShareLink() {
   const { firebaseUser } = useAuth();

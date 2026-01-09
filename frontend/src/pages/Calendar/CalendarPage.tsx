@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
-import { useAuth } from "../../components/AuthProvider";
+import { useAuth } from "../../hooks/useAuth";
 import { apiFetch } from "../../api";
 import { useNavigate } from "react-router-dom";
 

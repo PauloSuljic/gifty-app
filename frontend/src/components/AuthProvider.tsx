@@ -1,33 +1,20 @@
-import { createContext, useContext } from "react";
 import {
   GoogleAuthProvider,
   signOut,
   signInWithPopup,
   createUserWithEmailAndPassword,
   updateProfile,
-  sendEmailVerification,
-  User as FirebaseUser
+  sendEmailVerification
 } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Spinner from "./ui/Spinner";
-import { useDatabaseUser, GiftyUser } from "../hooks/useDatabaseUser";
+import { useDatabaseUser } from "../hooks/useDatabaseUser";
 import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
+import { AuthContext } from "../context/AuthContext";
 
-// ✅ Define context type
-interface AuthContextType {
-  firebaseUser: FirebaseUser | null;
-  loading: boolean;
-  loginWithGoogle: () => Promise<void>;
-  register: (email: string, password: string, username: string, dateOfBirth: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshFirebaseUser: () => Promise<void>;
-  databaseUser: GiftyUser | null;
-  refreshDatabaseUser: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export { AuthContext };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading, refreshFirebaseUser, clearFirebaseUser } = useFirebaseAuth();
@@ -102,10 +89,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {loading ? <Spinner /> : children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
-  return context;
 };

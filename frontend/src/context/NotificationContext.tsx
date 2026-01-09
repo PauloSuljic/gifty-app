@@ -6,7 +6,7 @@ import {
   ReactNode
 } from "react";
 import { apiFetch } from "../api";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 
 interface NotificationItem {
   id: string;

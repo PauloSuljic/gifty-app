@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { useEffect, useState, useRef } from "react";
 import { apiFetch } from "../api";
 import Spinner from "./ui/Spinner";

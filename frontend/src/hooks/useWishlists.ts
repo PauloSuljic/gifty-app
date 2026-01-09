@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { apiFetch } from "../api";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "./useAuth";
 
 export type WishlistType = {
   id: string;

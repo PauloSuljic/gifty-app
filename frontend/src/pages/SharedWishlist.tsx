@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { apiFetch } from "../api";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";

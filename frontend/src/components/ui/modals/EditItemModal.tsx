@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Modal from "../Modal";
-import { useAuth } from "../../AuthProvider";
+import { useAuth } from "../../../hooks/useAuth";
 import { toast } from "react-hot-toast";
 
 interface EditItemModalProps {

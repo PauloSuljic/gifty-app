@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../hooks/useAuth";
 import { Link } from "react-router-dom";
 import { FiEye, FiEyeOff, FiCalendar } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
