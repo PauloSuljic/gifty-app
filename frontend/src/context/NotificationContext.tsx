@@ -1,60 +1,85 @@
-import { useState, useEffect, useCallback, ReactNode } from "react";
-import { apiClient } from "../shared/lib/apiClient";
+import { useCallback, ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth";
 import { NotificationContext, NotificationItem } from "./NotificationContextCore";
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+  notificationsQueryKey,
+} from "../features/notifications/api/notificationsApi";
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { firebaseUser } = useAuth();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const userId = firebaseUser?.uid;
+  const queryClient = useQueryClient();
+  const queryKey = notificationsQueryKey(userId);
 
-  const loadNotifications = useCallback(async () => {
-    if (!firebaseUser) return;
-
-    try {
-      const token = await firebaseUser.getIdToken();
-      const data = await apiClient.get<NotificationItem[]>("/api/notifications", {
-        token,
-      });
-      const sorted = data.sort(
+  const { data = [], refetch, isLoading } = useQuery<NotificationItem[]>({
+    queryKey,
+    enabled: !!firebaseUser,
+    queryFn: async ({ signal }) => {
+      if (!firebaseUser) return [];
+      try {
+        const token = await firebaseUser.getIdToken();
+        return await fetchNotifications(token, signal);
+      } catch (error) {
+        console.error("Failed loading notifications", error);
+        throw error;
+      }
+    },
+    select: (items) =>
+      [...items].sort(
         (a: NotificationItem, b: NotificationItem) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      ),
+  });
 
-      setNotifications(sorted);
-    } catch (err) {
-      console.error("Failed loading notifications", err);
-    }
-  }, [firebaseUser]);
+  const notifications = firebaseUser ? data : [];
 
   // ✅ Safe wrapper – same as loadNotifications but semantic name
   const refreshNotifications = useCallback(async () => {
-    await loadNotifications();
-  }, [loadNotifications]);
-
-  const markAllAsRead = async () => {
     if (!firebaseUser) return;
+    await refetch();
+  }, [firebaseUser, refetch]);
 
-    try {
+  const loadNotifications = refreshNotifications;
+
+  const markAllMutation = useMutation({
+    mutationFn: async () => {
+      if (!firebaseUser) return;
       const token = await firebaseUser.getIdToken();
-      await apiClient.post<void>("/api/notifications/mark-read", undefined, {
-        token,
-      });
+      await markAllNotificationsRead(token);
+    },
+    onMutate: async () => {
+      if (!firebaseUser) return undefined;
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<NotificationItem[]>(queryKey);
+      queryClient.setQueryData<NotificationItem[]>(queryKey, (current = []) =>
+        current.map((notification) => ({ ...notification, isRead: true }))
+      );
+      return { previous };
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+      console.error("Failed to mark as read:", error);
+    },
+    onSettled: () => {
+      if (firebaseUser) {
+        queryClient.invalidateQueries({ queryKey });
+      }
+    },
+  });
 
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (e) {
-      console.error("Failed to mark as read:", e);
+  const markAllAsRead = useCallback(async () => {
+    if (!firebaseUser) return;
+    try {
+      await markAllMutation.mutateAsync();
+    } catch (error) {
+      console.error("Failed to mark as read:", error);
     }
-  };
-
-  // 🔄 Refresh notifications when window regains focus
-  useEffect(() => {
-    const handleFocus = () => {
-      if (firebaseUser) refreshNotifications();
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [firebaseUser, refreshNotifications]);
+  }, [firebaseUser, markAllMutation]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -62,6 +87,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     <NotificationContext.Provider
       value={{
         notifications,
+        isLoading,
         unreadCount,
         loadNotifications,
         refreshNotifications,
