@@ -2,26 +2,20 @@ import { useState, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
-import { apiClient } from "../../shared/lib/apiClient";
+import { getSharedWithMe, SharedWithMeGroup } from "../../shared/lib/sharedLinks";
 import { useNavigate } from "react-router-dom";
 
 interface EventItem {
-  id: number;
+  id: string;
   name: string;
   type: "birthday" | "gift";
   date: Date;
   daysLeft: number;
 }
 
-type SharedUserDto = {
-  ownerId: number;
-  ownerName: string;
-  ownerDateOfBirth?: string | null;
-};
-
 const hasDateOfBirth = (
-  user: SharedUserDto
-): user is SharedUserDto & { ownerDateOfBirth: string } =>
+  user: SharedWithMeGroup
+): user is SharedWithMeGroup & { ownerDateOfBirth: string } =>
   typeof user.ownerDateOfBirth === "string" && user.ownerDateOfBirth.length > 0;
 
 function calculateDaysUntilBirthday(dateString: string): number {
@@ -51,9 +45,7 @@ export default function CalendarPage() {
   const fetchSharedUsers = async () => {
     try {
       const token = await firebaseUser.getIdToken();
-      const data = await apiClient.get<SharedUserDto[]>("/api/shared-links/shared-with-me", {
-        token,
-      });
+      const data = await getSharedWithMe(token);
       const fetchedEvents: EventItem[] = data
         .filter(hasDateOfBirth)
         .map((user): EventItem => ({

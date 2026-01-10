@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { ApiError, apiClient } from "../shared/lib/apiClient";
+import { ApiError } from "../shared/lib/apiClient";
+import { generateShareLink as generateShareLinkApi } from "../shared/lib/sharedLinks";
 import { useAuth } from "./useAuth";
 
 export function useShareLink() {
@@ -11,11 +12,7 @@ export function useShareLink() {
     async (wishlistId: string) => {
       const token = await firebaseUser?.getIdToken();
       try {
-        const data = await apiClient.post<{ shareCode: string }>(
-          `/api/shared-links/${wishlistId}/generate`,
-          undefined,
-          { token }
-        );
+        const data = await generateShareLinkApi(wishlistId, token);
         const generatedUrl = `${window.location.origin}/shared/${data.shareCode}`;
 
         setShareUrl(generatedUrl);

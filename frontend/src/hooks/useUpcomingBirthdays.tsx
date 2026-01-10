@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiClient } from "../shared/lib/apiClient";
+import { getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
 import { useAuth } from "./useAuth";
 
 export interface UpcomingBirthday {
@@ -9,15 +9,9 @@ export interface UpcomingBirthday {
   daysLeft: number;
 }
 
-type SharedWithMeItem = {
-  ownerId: string;
-  ownerName: string;
-  ownerDateOfBirth?: string | null;
-};
-
 const hasOwnerDateOfBirth = (
-  item: SharedWithMeItem
-): item is SharedWithMeItem & { ownerDateOfBirth: string } =>
+  item: SharedWithMeGroup
+): item is SharedWithMeGroup & { ownerDateOfBirth: string } =>
   typeof item.ownerDateOfBirth === "string" && item.ownerDateOfBirth.length > 0;
 
 function calculateDaysUntilBirthday(dateString: string): number {
@@ -39,9 +33,7 @@ export function useUpcomingBirthdays(limit?: number) {
     const fetchBirthdays = async () => {
       const token = await firebaseUser.getIdToken();
       try {
-        const data = await apiClient.get<SharedWithMeItem[]>("/api/shared-links/shared-with-me", {
-          token,
-        });
+        const data = await getSharedWithMe(token);
 
         const mapped: UpcomingBirthday[] = data
           .filter(hasOwnerDateOfBirth)

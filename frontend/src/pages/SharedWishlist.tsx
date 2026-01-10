@@ -1,34 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { apiClient } from "../shared/lib/apiClient";
+import { getSharedWishlist, SharedWishlistDetails } from "../shared/lib/sharedLinks";
 import Spinner from "../components/ui/Spinner";
 import WishlistItem from "../components/WishlistItem";
 import UserHeader from "../components/UserHeader";
 
-type WishlistItemType = {
-  id: string;
-  name: string;
-  link: string;
-  description?: string;
-  isReserved: boolean;
-  reservedBy?: string | null;
-};
-
-type WishlistType = {
-  id: string;
-  name: string;
-  items: WishlistItemType[];
-  ownerId: string;
-  ownerName: string;
-  ownerAvatar: string;
-  ownerBio?: string;
-  coverImage?: string;
-};
-
 const SharedWishlist = () => {
   const { shareCode } = useParams<{ shareCode: string }>();
-  const [wishlist, setWishlist] = useState<WishlistType | null>(null);
+  const [wishlist, setWishlist] = useState<SharedWishlistDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const { firebaseUser } = useAuth();
   const navigate = useNavigate();
@@ -38,9 +18,7 @@ const SharedWishlist = () => {
       setLoading(true);
       try {
         const token = await firebaseUser?.getIdToken();
-        const data = await apiClient.get<WishlistType>(`/api/shared-links/${shareCode}`, {
-          token,
-        });
+        const data = await getSharedWishlist(shareCode ?? "undefined", token);
         setWishlist(data);
       } catch (error) {
         console.error("Error fetching shared wishlist:", error);
