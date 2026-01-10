@@ -11,6 +11,7 @@ export interface NotificationItem {
 
 export interface NotificationContextValue {
   notifications: NotificationItem[];
+  isLoading: boolean;
   unreadCount: number;
   loadNotifications: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
