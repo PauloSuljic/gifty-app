@@ -42,6 +42,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     await refetch();
   }, [firebaseUser, refetch]);
 
+  const loadNotifications = refreshNotifications;
+
   const markAllMutation = useMutation({
     mutationFn: async () => {
       if (!firebaseUser) return;
@@ -78,11 +80,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       console.error("Failed to mark as read:", error);
     }
   }, [firebaseUser, markAllMutation]);
-
-  const loadNotifications = useCallback(async () => {
-    if (!firebaseUser) return;
-    await refetch();
-  }, [firebaseUser, refetch]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
