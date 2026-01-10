@@ -50,16 +50,28 @@ export type ShareLinkResponse = {
   shareCode: string;
 };
 
+const requireToken = (token: string | undefined, action: string) => {
+  if (!token) {
+    throw new Error(`Auth token is required to ${action}.`);
+  }
+  return token;
+};
+
 export const generateShareLink = (wishlistId: string, token?: string) =>
   apiClient.post<ShareLinkResponse>(`/api/shared-links/${wishlistId}/generate`, undefined, {
-    token,
+    token: requireToken(token, "generate a share link"),
   });
 
-export const getSharedWithMe = (token: string) =>
-  apiClient.get<SharedWithMeGroup[]>("/api/shared-links/shared-with-me", { token });
+export const getSharedWithMe = (token?: string) =>
+  apiClient.get<SharedWithMeGroup[]>("/api/shared-links/shared-with-me", {
+    token: requireToken(token, "load shared wishlists"),
+  });
 
-export const removeSharedWithMe = (ownerId: string, token: string) =>
-  apiClient.del<void>(`/api/shared-links/shared-with-me/${ownerId}`, { token });
+export const removeSharedWithMe = (ownerId: string, token?: string) =>
+  apiClient.del<void>(`/api/shared-links/shared-with-me/${ownerId}`, {
+    token: requireToken(token, "remove shared wishlists"),
+  });
 
+// Token is optional: shared wishlists are public by shareCode, auth may add user context if supported.
 export const getSharedWishlist = (shareCode: string, token?: string) =>
-  apiClient.get<SharedWishlistDetails>(`/api/shared-links/${shareCode}`, { token });
+  apiClient.get<SharedWishlistDetails>(`/api/shared-links/${shareCode}`, token ? { token } : undefined);
