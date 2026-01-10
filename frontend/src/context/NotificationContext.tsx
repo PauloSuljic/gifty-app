@@ -72,7 +72,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const markAllAsRead = useCallback(async () => {
     if (!firebaseUser) return;
-    await markAllMutation.mutateAsync();
+    try {
+      await markAllMutation.mutateAsync();
+    } catch (error) {
+      console.error("Failed to mark as read:", error);
+    }
   }, [firebaseUser, markAllMutation]);
 
   const loadNotifications = useCallback(async () => {
