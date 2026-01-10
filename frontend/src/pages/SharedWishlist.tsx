@@ -15,10 +15,16 @@ const SharedWishlist = () => {
 
   useEffect(() => {
     const fetchSharedWishlist = async () => {
+      if (!shareCode) {
+        setWishlist(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const token = await firebaseUser?.getIdToken();
-        const data = await getSharedWishlist(shareCode ?? "undefined", token);
+        const data = await getSharedWishlist(shareCode, token);
         setWishlist(data);
       } catch (error) {
         console.error("Error fetching shared wishlist:", error);
