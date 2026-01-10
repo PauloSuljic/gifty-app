@@ -73,5 +73,9 @@ export const removeSharedWithMe = (ownerId: string, token?: string) =>
     token: requireToken(token, "remove shared wishlists"),
   });
 
+// Token is optional: shared wishlists are public by shareCode, auth may add user context if supported.
 export const getSharedWishlist = (shareCode: string, token?: string) =>
-  apiClient.get<SharedWishlistDetails>(`/api/shared-links/${shareCode}`, token ? { token } : undefined);
+  apiClient.get<SharedWishlistDetails>(
+    `/api/shared-links/${shareCode}`,
+    token ? { token } : undefined
+  );
