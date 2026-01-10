@@ -2,35 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-hot-toast";
-import { apiClient } from "../shared/lib/apiClient";
+import {
+  getSharedWithMe,
+  removeSharedWithMe,
+  SharedWithMeGroup,
+  SharedWithMeWishlistItem,
+} from "../shared/lib/sharedLinks";
 import { FiTrash2 } from "react-icons/fi";
 import ConfirmRemoveSharedModal from "../components/ui/modals/ConfirmRemoveSharedModal";
 
-type SharedWishlistItem = {
-  id: string;
-  name: string;
-  link?: string;
-  isReserved: boolean;
-  reservedBy?: string | null;
-  imageUrl?: string;
-  order?: number | null;
-};
-
-type SharedWishlist = {
-  id: string;
-  name: string;
-  items: SharedWishlistItem[];
-  coverImage?: string;
-  shareCode: string;
-};
-
-type GroupedWishlists = {
-  ownerId: string;
-  ownerName: string;
-  ownerAvatar: string;
-  ownerDateOfBirth?: string;
-  wishlists: SharedWishlist[];
-};
 
 const calculateDaysUntilBirthday = (dateOfBirth: string) => {
   const today = new Date();
@@ -47,7 +27,7 @@ const calculateDaysUntilBirthday = (dateOfBirth: string) => {
 
 const SharedWithMe = () => {
   const { firebaseUser } = useAuth();
-  const [sharedWishlists, setSharedWishlists] = useState<GroupedWishlists[]>([]);
+  const [sharedWishlists, setSharedWishlists] = useState<SharedWithMeGroup[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [removeModalOwnerId, setRemoveModalOwnerId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -68,9 +48,7 @@ const SharedWithMe = () => {
     const fetchSharedWishlists = async () => {
       const token = await firebaseUser.getIdToken();
       try {
-        const data = await apiClient.get<GroupedWishlists[]>("/api/shared-links/shared-with-me", {
-          token,
-        });
+        const data = await getSharedWithMe(token);
 
         // ✅ Move the highlighted user to the top
         if (highlightUserId) {
@@ -125,7 +103,7 @@ const SharedWithMe = () => {
             </div>
 
             {(expandedGroups.includes(group.ownerId) ? group.wishlists : group.wishlists.slice(0, 1)).map(wl => {
-              const highestOrderedItemWithImage = wl.items.reduce<SharedWishlistItem | null>(
+              const highestOrderedItemWithImage = wl.items.reduce<SharedWithMeWishlistItem | null>(
                 (best, item) => {
                   if (!item.imageUrl) return best;
 
@@ -189,9 +167,7 @@ const SharedWithMe = () => {
           const token = await firebaseUser?.getIdToken();
           if (!token) return;
           try {
-            await apiClient.del<void>(`/api/shared-links/shared-with-me/${removeModalOwnerId}`, {
-              token,
-            });
+            await removeSharedWithMe(removeModalOwnerId, token);
             setSharedWishlists(prev => prev.filter(g => g.ownerId !== removeModalOwnerId));
             toast.success("Removed shared wishlists");
           } catch {
