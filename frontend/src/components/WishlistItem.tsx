@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy, FiMove } from "react-icons/fi";
 import ConfirmReserveModal from "./ui/modals/ConfirmReserveModal";
 import Modal from "./ui/Modal";
+import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 type WishlistItemProps = {
   id: string;
@@ -17,8 +18,8 @@ type WishlistItemProps = {
   onToggleReserve?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
-  listeners?: any;
-  attributes?: any;
+  listeners?: DraggableSyntheticListeners;
+  attributes?: DraggableAttributes;
   setNodeRef?: (node: HTMLElement | null) => void;
 };
 
@@ -63,7 +64,6 @@ const WishlistItem = ({
   return (
   <>
     <div
-      ref={attributes?.ref}
       className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-default transition-transform duration-200 ease-in-out active:scale-[0.99] active:shadow-lg"
     >
       {/* 🟣 Drag handle */}
@@ -189,7 +189,9 @@ const WishlistItem = ({
       onClose={() => setModalAction(null)}
       onConfirm={() => {
         setModalAction(null);
-        onToggleReserve && onToggleReserve();
+        if (onToggleReserve) {
+          onToggleReserve();
+        }
       }}
       itemName={name}
       actionType={modalAction || "reserve"}

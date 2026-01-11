@@ -64,8 +64,9 @@ const Register = () => {
 
     try {
       await register(email, password, username, dateOfBirth);
-    } catch (err: any) {
-      if (err.message.includes("auth/email-already-in-use")) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      if (message.includes("auth/email-already-in-use")) {
         setError("This email is already registered.");
       } else {
         setError("Failed to register. Please try again.");

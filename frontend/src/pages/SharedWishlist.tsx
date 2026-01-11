@@ -12,6 +12,7 @@ const SharedWishlist = () => {
   const [loading, setLoading] = useState(true);
   const { firebaseUser } = useAuth();
   const navigate = useNavigate();
+  const currentUserId = firebaseUser?.uid;
 
   useEffect(() => {
     const fetchSharedWishlist = async () => {
@@ -91,7 +92,7 @@ const SharedWishlist = () => {
               isReserved={item.isReserved}
               reservedBy={item.reservedBy}
               wishlistOwner={wishlist.ownerId}
-              currentUser={firebaseUser ? (firebaseUser as any).uid : undefined}
+              currentUser={currentUserId}
               context="guest"
               description={item.description}
             />
