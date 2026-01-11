@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ApiError } from "../shared/lib/apiClient";
+import { ApiError } from "../../shared/lib/apiClient";
 
 const queryClient = new QueryClient({
   defaultOptions: {

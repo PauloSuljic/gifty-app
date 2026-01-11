@@ -6,13 +6,13 @@ import {
   updateProfile,
   sendEmailVerification
 } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
+import { auth } from "../../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import Spinner from "./ui/Spinner";
-import { useDatabaseUser } from "../hooks/useDatabaseUser";
-import { useFirebaseAuth } from "../hooks/useFirebaseAuth";
-import { AuthContext } from "../context/AuthContext";
+import Spinner from "../../components/ui/Spinner";
+import { useDatabaseUser } from "../../hooks/useDatabaseUser";
+import { useFirebaseAuth } from "../../hooks/useFirebaseAuth";
+import { AuthContext } from "../../context/AuthContext";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading, refreshFirebaseUser, clearFirebaseUser } = useFirebaseAuth();
