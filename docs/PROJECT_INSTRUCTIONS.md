@@ -85,7 +85,7 @@ CI/CD runs **all tests on PRs** before deploy.
 - GitHub Actions: build → test → deploy
 - PRs must be green (backend + frontend) before merge.
 - Production: merge to `master` auto-deploys to production.
-- Staging: push to `staging` auto-deploys to staging.
+Development environment may be added later; currently Production only.
 
 ---
 

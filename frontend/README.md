@@ -73,7 +73,7 @@ Testing is planned with:
 
 ## CI/CD
 
-Continuous integration and deployment pipelines are configured using GitHub Actions. PRs must pass CI; `master` auto-deploys to production and `staging` auto-deploys to staging on Azure.
+Continuous integration and deployment pipelines are configured using GitHub Actions. PRs must pass CI; `master` auto-deploys to production on Azure. Development environment may be added later; currently Production only.
 
 ---
 
