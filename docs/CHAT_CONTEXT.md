@@ -8,10 +8,10 @@ Author: Paulo Suljic
 
 ## Quick summary
 - Repo: monorepo with **frontend** (React + Vite + Firebase + Tailwind) and **backend** (ASP.NET Core 8 + PostgreSQL + EF Core; Redis optional).
-- Current milestone: **Web MVP — Strong foundation** (friendships + birthdays upcoming).
+- Current milestone: **Web MVP — Strong foundation** (friendships upcoming).
 - Backend refactor: ✅ CQRS/MediatR, FluentValidation pipeline, centralized exception middleware, domain events + handlers, Serilog with correlation IDs.
 - Tests: ✅ All unit + integration tests green (xUnit).
-- CI/CD: GitHub Actions for backend + frontend; PRs merge to `master`; merges to `master` auto-deploy to production (no staging branch today; dev env may come later).
+- CI/CD: GitHub Actions for backend + frontend; PRs merge to `master`; `master` deploys production; `staging` deploys staging.
 - Known failing items: none (last run green).
 
 ## Recent commits / important PRs
@@ -20,7 +20,7 @@ Author: Paulo Suljic
 
 ## Open high-priority tasks
 1. **Frontend UX polish** — My Wishlists redesign, Shared With Me grouping/detail, add item images.
-2. **Backend additions** — PictureUrl for WishlistItem, friendship endpoints scaffold, birthdays + calendar endpoint.
+2. **Backend additions** — friendship endpoints scaffold, birthdays + calendar endpoint.
 3. **Housekeeping** — Keep `/docs` files updated after each feature (including this snapshot).
 
 ## Local dev quick commands (current snapshot)
@@ -31,8 +31,8 @@ dotnet restore
 dotnet ef database update
 dotnet run
 ```
-- API: https://localhost:5140
-- Swagger: https://localhost:5140/swagger
+- API: http://localhost:5140
+- Swagger: http://localhost:5140/swagger
 
 ### Frontend
 ```bash

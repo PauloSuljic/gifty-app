@@ -22,8 +22,8 @@ Built with a full-stack architecture powered by **React + Vite + Firebase** on t
 ```
 gifty-app/
 ├── frontend/   # Vite + React + Firebase + Tailwind
-├── backend/    # ASP.NET Core Web API + PostgreSQL + Redis
-├── .github/    # CI/CD workflows (CI on PRs, prod deploys on master)
+├── backend/    # ASP.NET Core Web API + PostgreSQL (Redis planned)
+├── .github/    # CI/CD workflows (PR CI; deploys on master + staging)
 └── README.md   # You're here
 ```
 
@@ -54,7 +54,7 @@ gifty-app/
 
 - RESTful endpoints secured with Firebase JWT
 - PostgreSQL DB (code-first via EF Core)
-- Redis integration (rate limiting & caching)
+- Redis (planned; not implemented yet)
 - Clear separation of layers (auth, validation, data)
 
 ---
@@ -66,7 +66,7 @@ gifty-app/
 - Node.js 20+
 - .NET SDK 8.x
 - PostgreSQL
-- Redis (Currently disabled, but recommended for future use)
+- Redis (planned; not used in code yet)
 
 ---
 
@@ -102,14 +102,20 @@ dotnet ef database update
 dotnet run
 ```
 
-> 🛠 Create `backend/appsettings.Development.json`:
+> 🛠 Update `backend/Gifty.Api/appsettings.Development.json`:
 
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=giftydb;Username=postgres;Password=password"
   },
-  "Redis": "localhost:6379"
+  "Firebase": {
+    "CredentialsJson": "<firebase-service-account-json>"
+  },
+  "AzureStorage": {
+    "ConnectionString": "<azure-storage-connection-string>",
+    "ContainerName": "<container-name>"
+  }
 }
 ```
 
@@ -134,41 +140,60 @@ Coming soon! (e.g. Vitest or Playwright)
 
 CI/CD is fully automated using **GitHub Actions** + **Azure**:
 
-| Branch    | Environment | Workflow Type                  |
-| --------- | ----------- | ------------------------------ |
-| `master`  | Production  | 🚀 Full production deploys on merge |
+| Branch    | Environment | Workflow Type                       |
+| --------- | ----------- | ----------------------------------- |
+| `master`  | Production  | 🚀 Deploy backend + frontend        |
+| `staging` | Staging     | 🧪 Deploy backend + frontend         |
 
 Workflows are separated by:
 
-- CI (pull requests) → build & test both frontend + backend
+- CI (pull requests) → backend tests; frontend lint, typecheck, build
 - CD (master) → build, test, deploy to Azure production
+- CD (staging) → build, test, deploy to Azure staging
 - Artifact caching + per-path triggers for faster builds
 
 ---
 
 ## 📡 API Reference
 
-**Base URL**: `https://gifty-api.azurewebsites.net/api`
+**Base URL**: `https://gifty-api.azurewebsites.net`
 
-| Method | Endpoint                              | Description            | Auth |
-| ------ | ------------------------------------- | ---------------------- | ---- |
-| GET    | `/users/{id}`                         | Get user profile       | ✅   |
-| POST   | `/users`                              | Create user            | ✅   |
-| GET    | `/wishlists`                          | List wishlists         | ✅   |
-| POST   | `/wishlists`                          | Create wishlist        | ✅   |
-| DELETE | `/wishlists/{id}`                     | Delete wishlist        | ✅   |
-| GET    | `/wishlist-items/{wishlistId}`        | Get wishlist items     | ✅   |
-| POST   | `/wishlist-items`                     | Add item               | ✅   |
-| PATCH  | `/wishlist-items/{itemId}`            | Edit item              | ✅   |
-| DELETE | `/wishlist-items/{itemId}`            | Delete item            | ✅   |
-| PATCH  | `/wishlist-items/{itemId}/reserve`    | Reserve/unreserve item | ✅   |
-| POST   | `/shared-links/{wishlistId}/generate` | Generate share link    | ✅   |
-| GET    | `/shared-links/{shareCode}`           | View shared wishlist   | ❌   |
+| Method | Endpoint                                              | Description                       | Auth |
+| ------ | ----------------------------------------------------- | --------------------------------- | ---- |
+| POST   | `/api/auth/login`                                     | Login with Firebase ID token      | ❌   |
+| GET    | `/api/users/{firebaseUid}`                            | Get user profile                  | ✅   |
+| POST   | `/api/users`                                          | Create user                       | ✅   |
+| PUT    | `/api/users/{firebaseUid}`                            | Update user                       | ✅   |
+| DELETE | `/api/users/{firebaseUid}`                            | Delete user                       | ✅   |
+| GET    | `/api/wishlists`                                      | List wishlists                    | ✅   |
+| GET    | `/api/wishlists/{id}`                                 | Get wishlist                      | ❌   |
+| POST   | `/api/wishlists`                                      | Create wishlist                   | ✅   |
+| PUT    | `/api/wishlists/{id}`                                 | Update wishlist                   | ✅   |
+| PATCH  | `/api/wishlists/{id}`                                 | Rename wishlist                   | ✅   |
+| PUT    | `/api/wishlists/reorder`                              | Reorder wishlists                 | ✅   |
+| DELETE | `/api/wishlists/{id}`                                 | Delete wishlist                   | ✅   |
+| GET    | `/api/wishlists/{wishlistId}/items`                   | Get wishlist items                | ❌   |
+| POST   | `/api/wishlists/{wishlistId}/items`                   | Add item                          | ✅   |
+| GET    | `/api/wishlists/{wishlistId}/items/{itemId}`          | Get item                          | ✅   |
+| PUT    | `/api/wishlists/{wishlistId}/items/{itemId}`          | Update item                       | ✅   |
+| DELETE | `/api/wishlists/{wishlistId}/items/{itemId}`          | Delete item                       | ✅   |
+| PUT    | `/api/wishlists/{wishlistId}/items/reorder`           | Reorder items                     | ✅   |
+| PATCH  | `/api/wishlists/{wishlistId}/items/{itemId}/reserve`  | Reserve/unreserve item            | ✅   |
+| PATCH  | `/api/wishlists/{wishlistId}/items/{itemId}/image`    | Update item image (multipart)     | ✅   |
+| POST   | `/api/shared-links/{wishlistId}/generate`             | Generate share link               | ✅   |
+| GET    | `/api/shared-links/{shareCode}`                       | View shared wishlist              | ❌   |
+| GET    | `/api/shared-links/shared-with-me`                    | List shared-with-me wishlists     | ✅   |
+| DELETE | `/api/shared-links/shared-with-me/{ownerId}`          | Remove shared-with-me wishlists   | ✅   |
+| GET    | `/api/notifications`                                  | List notifications                | ✅   |
+| GET    | `/api/notifications/unread-count`                     | Unread count                      | ✅   |
+| POST   | `/api/notifications`                                  | Create notification               | ✅   |
+| POST   | `/api/notifications/mark-read`                        | Mark notifications as read        | ✅   |
 
 ---
 
-## 🧠 Rate Limiting & Caching (Currently disabled)
+## 🧠 Rate Limiting & Caching (Planned)
 
+Planned (not implemented yet):
 - Redis-backed rate limiting for unauthenticated requests
 - Caching for common GETs (e.g. shared links)
 

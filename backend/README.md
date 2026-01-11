@@ -46,7 +46,8 @@ It provides secure endpoints for authentication, wishlist management, shared lin
    ```
 
 API will be available at:  
-👉 https://localhost:5140 (dev)
+👉 http://localhost:5140 (HTTP)  
+👉 https://localhost:7252 (HTTPS)
 
 Swagger docs:  
 👉 https://localhost:5140/swagger
@@ -54,12 +55,19 @@ Swagger docs:
 ---
 
 ### 📂 Config
-Create a appsettings.Development.json file in /backend:
+Create `backend/Gifty.Api/appsettings.Development.json` (or set env vars):
 
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=giftydb;Username=postgres;Password=password"
+  },
+  "Firebase": {
+    "CredentialsJson": "<firebase-service-account-json>"
+  },
+  "AzureStorage": {
+    "ConnectionString": "<azure-storage-connection-string>",
+    "ContainerName": "<container-name>"
   }
 }
 ```
@@ -87,7 +95,8 @@ Types of tests:
 
 ## 🚀 Deployment
 
-- Production: auto-deployed from `master` via GitHub Actions (no staging branch today).
+- Production: auto-deployed from `master` via GitHub Actions.
+- Staging: auto-deployed from `staging` via GitHub Actions.
 
 Workflow stages:  
 1. Build → restore, compile.  
