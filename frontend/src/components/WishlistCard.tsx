@@ -1,6 +1,7 @@
 import { FiMove, FiMoreVertical, FiLink, FiEdit, FiTrash2 } from "react-icons/fi";
 import { Menu } from "@headlessui/react";
 import { HTMLAttributes, useRef } from "react";
+import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 type WishlistCardProps = {
   id: string;
@@ -11,8 +12,8 @@ type WishlistCardProps = {
   onShare: () => void;
   onRename: () => void;
   onDelete: () => void;
-  listeners?: any;       // 👈 from dnd-kit
-  attributes?: any;      // 👈 from dnd-kit
+  listeners?: DraggableSyntheticListeners; // 👈 from dnd-kit
+  attributes?: DraggableAttributes; // 👈 from dnd-kit
 } & HTMLAttributes<HTMLDivElement>;
 
 export const WishlistCard = ({

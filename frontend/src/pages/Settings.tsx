@@ -28,7 +28,7 @@ const SettingsPage = () => {
       toast.success("Account deleted.");
       await logout(); // Log out user and clear state
       navigate("/");  // Redirect to homepage
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong.");
     } finally {
       setIsDeleting(false);

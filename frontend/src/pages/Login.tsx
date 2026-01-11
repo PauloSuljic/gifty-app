@@ -24,7 +24,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/dashboard");
-    } catch (err) {
+    } catch {
       setError("Invalid email or password");
     }
   };
@@ -37,7 +37,7 @@ const Login = () => {
       await sendPasswordResetEmail(auth, resetEmail);
       setResetMessage("Password reset email sent!");
       setShowReset(false);
-    } catch (err) {
+    } catch {
       setError("Failed to send reset email. Make sure the email is correct.");
     }
   };

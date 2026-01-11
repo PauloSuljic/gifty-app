@@ -1,6 +1,7 @@
 import { FiBell, FiGift, FiUser, FiX } from "react-icons/fi";
 import { useNotificationContext } from "../../../context/useNotificationContext";
 import { useNavigate } from "react-router-dom";
+import type { NotificationItem } from "../../../context/NotificationContextCore";
 
 export default function NotificationsModal({
   isOpen,
@@ -27,7 +28,7 @@ export default function NotificationsModal({
     navigate("/notifications");
   };
 
-  const iconOf = (type: string) => {
+  const iconOf = (type: NotificationItem["type"]) => {
     switch (type) {
       case "BirthdayReminder":
       case "ItemReserved":
@@ -60,7 +61,7 @@ export default function NotificationsModal({
         </div>
 
         <ul className="flex flex-col space-y-3">
-          {recentNotifications.map((n: any) => (
+          {recentNotifications.map((n) => (
             <li
               key={n.id}
               className={`flex items-start justify-between p-4 rounded-lg ${

@@ -32,7 +32,7 @@ const SharedWithMe = () => {
   const [removeModalOwnerId, setRemoveModalOwnerId] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const highlightUserId = location.state?.highlightUserId;
+  const highlightUserId = (location.state as { highlightUserId?: string } | null)?.highlightUserId;
 
   const toggleGroup = (ownerId: string) => {
     setExpandedGroups((prev) =>
@@ -52,7 +52,7 @@ const SharedWithMe = () => {
 
         // ✅ Move the highlighted user to the top
         if (highlightUserId) {
-          data.sort((a: any, b: any) =>
+          data.sort((a, b) =>
             a.ownerId === highlightUserId ? -1 : b.ownerId === highlightUserId ? 1 : 0
           );
         }
