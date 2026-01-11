@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SharedWishlist from "./pages/SharedWishlist";
-import PrivateRoute from "./components/PrivateRoute";
+import PrivateRoute from "./app/routes/PrivateRoute";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import SharedWithMe from "./pages/SharedWithMe";

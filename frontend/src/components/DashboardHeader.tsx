@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { GiftyUser } from "../components/PrivateRoute";
+import { GiftyUser } from "../app/routes/PrivateRoute";
 import { apiClient } from "../shared/lib/apiClient";
 import UserHeader from "./UserHeader";
 

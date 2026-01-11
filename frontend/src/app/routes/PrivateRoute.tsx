@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState, useRef } from "react";
-import { ApiError, apiClient } from "../shared/lib/apiClient";
-import Spinner from "./ui/Spinner";
+import { ApiError, apiClient } from "../../shared/lib/apiClient";
+import Spinner from "../../components/ui/Spinner";
 
 // Define our database user type
 export type GiftyUser = {
