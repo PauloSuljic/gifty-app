@@ -1,25 +1,25 @@
 import { Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import SharedWishlist from "./pages/SharedWishlist";
-import PrivateRoute from "./app/routes/PrivateRoute";
-import NotFound from "./pages/NotFound";
-import Profile from "./pages/Profile";
-import SharedWithMe from "./pages/SharedWithMe";
+import Home from "../pages/Home";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import Dashboard from "../pages/Dashboard";
+import SharedWishlist from "../pages/SharedWishlist";
+import PrivateRoute from "./routes/PrivateRoute";
+import NotFound from "../pages/NotFound";
+import Profile from "../pages/Profile";
+import SharedWithMe from "../pages/SharedWithMe";
 import { ToastContainer } from "react-toastify";
 import { Toaster } from "react-hot-toast";
-import VerifyEmail from "./pages/VerifyEmail";
-import SettingsPage from "./pages/Settings";
-import TermsOfService from "./pages/TermsOfService";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import WishlistDetail from "./pages/WishlistDetails";
-import CalendarPage from "./pages/Calendar/CalendarPage";
-import { NotificationProvider } from "./context/NotificationContext";
-import NotificationsPage from "./pages/Notifications/NotificationsPage";
-import LayoutWrapper from "./components/layout/LayoutWrapper";
-import Layout from "./components/layout/Layout";
+import VerifyEmail from "../pages/VerifyEmail";
+import SettingsPage from "../pages/Settings";
+import TermsOfService from "../pages/TermsOfService";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import WishlistDetail from "../pages/WishlistDetails";
+import CalendarPage from "../pages/Calendar/CalendarPage";
+import { NotificationProvider } from "../context/NotificationContext";
+import NotificationsPage from "../pages/Notifications/NotificationsPage";
+import LayoutWrapper from "../components/layout/LayoutWrapper";
+import Layout from "../components/layout/Layout";
 
 const App = () => {
   return (
