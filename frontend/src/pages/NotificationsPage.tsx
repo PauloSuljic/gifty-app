@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { FiBell, FiGift, FiUser } from "react-icons/fi";
-import { useNotificationContext } from "../../context/useNotificationContext";
-import Spinner from "../../components/ui/Spinner";
+import { useNotificationContext } from "../context/useNotificationContext";
+import Spinner from "../components/ui/Spinner";
 
 const PAGE_SIZE = 20;
 

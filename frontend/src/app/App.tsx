@@ -15,9 +15,9 @@ import SettingsPage from "../pages/Settings";
 import TermsOfService from "../pages/TermsOfService";
 import PrivacyPolicy from "../pages/PrivacyPolicy";
 import WishlistDetail from "../pages/WishlistDetails";
-import CalendarPage from "../pages/Calendar/CalendarPage";
+import CalendarPage from "../pages/CalendarPage";
 import { NotificationProvider } from "../context/NotificationContext";
-import NotificationsPage from "../pages/Notifications/NotificationsPage";
+import NotificationsPage from "../pages/NotificationsPage";
 import LayoutWrapper from "../components/layout/LayoutWrapper";
 import Layout from "../components/layout/Layout";
 
