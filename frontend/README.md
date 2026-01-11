@@ -10,7 +10,7 @@ This is the frontend application for Gifty, built with React, Vite, Firebase, an
 |------------|--------------------------|
 | React      | UI library               |
 | Vite       | Build tool and dev server|
-| Firebase   | Authentication & backend |
+| Firebase   | Authentication |
 | Tailwind   | Styling framework        |
 
 ---
@@ -20,7 +20,7 @@ This is the frontend application for Gifty, built with React, Vite, Firebase, an
 - Responsive UI for desktop and mobile
 - Route protection with Firebase Authentication
 - Google login integration
-- Wishlist management with real-time updates
+- Wishlist management with API-driven updates
 - Toast notifications for user feedback
 
 ---
@@ -43,6 +43,7 @@ This is the frontend application for Gifty, built with React, Vite, Firebase, an
    VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
    VITE_FIREBASE_APP_ID=your_firebase_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
 
    VITE_API_BASE_URL=https://your-backend-api-url
    ```
@@ -72,7 +73,7 @@ Testing is planned with:
 
 ## CI/CD
 
-Continuous integration and deployment pipelines are configured using GitHub Actions. PRs must pass CI, and merges to `master` auto-deploy to production on Azure (no staging branch at present).
+Continuous integration and deployment pipelines are configured using GitHub Actions. PRs must pass CI; `master` auto-deploys to production and `staging` auto-deploys to staging on Azure.
 
 ---
 

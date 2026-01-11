@@ -18,8 +18,8 @@ gifty-app/
 ├── frontend/     # Vite + React + Firebase + Tailwind
 ├── backend/      # ASP.NET Core 8 + PostgreSQL + CQRS + Redis (future)
 ├── .github/      # CI/CD workflows
-├── PROJECT_INSTRUCTIONS.md   # You’re here
-└── FOLDER_STRUCTURE.md       # Keep updated repo tree here
+├── docs/PROJECT_INSTRUCTIONS.md   # You’re here
+└── docs/FOLDER_STRUCTURE.md       # Keep updated repo tree here
 
 ---
 
@@ -64,7 +64,7 @@ Always PR into **master**. Use feature branches for all work; keep master releas
 ### Frontend Conventions
 - React + Vite + Tailwind (mobile-first).
 - Feature-based foldering: `/features/<entity>/components`.
-- Global state: Firebase Auth + React Query (planned).
+- Global state: Firebase Auth + React Query.
 - Tests: Vitest (unit), Playwright (e2e).
 
 ---
@@ -84,7 +84,8 @@ CI/CD runs **all tests on PRs** before deploy.
 ### CI/CD
 - GitHub Actions: build → test → deploy
 - PRs must be green (backend + frontend) before merge.
-- Production: merge to `master` auto-deploys to production (no staging branch today; dev env may be added later).
+- Production: merge to `master` auto-deploys to production.
+- Staging: push to `staging` auto-deploys to staging.
 
 ---
 

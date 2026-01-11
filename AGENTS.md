@@ -34,6 +34,7 @@
 - `make backend-test` — `cd backend && dotnet test` (restores/builds as needed).
 - `make frontend-build` — `cd frontend && npm run build`.
 - `make frontend-lint` — `cd frontend && npm run lint`.
+- `make frontend-typecheck` — `tsc -b frontend/tsconfig.json --noEmit`.
 - Helpers: `make backend-restore` (`cd backend && dotnet restore`), `make frontend-install` (`cd frontend && npm ci`).
 - If `make` is unavailable, run the underlying commands shown above. Install frontend deps with `npm ci` before build/lint.
 
@@ -41,7 +42,7 @@
 
 ## Getting started
 1. Read the docs listed below (they define conventions and current context).
-2. Ensure you have .NET 8 SDK, Node 18+, and PostgreSQL if running the API locally.
+2. Ensure you have .NET 8 SDK, Node 20+, and PostgreSQL if running the API locally.
 3. Install deps where needed (`make backend-restore`, `make frontend-install`).
 4. Run `make check` before opening a PR; fix issues or note blockers.
 5. Keep changes localized; update the relevant README or doc if behavior changes.
