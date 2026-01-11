@@ -11,7 +11,7 @@ Author: Paulo Suljic
 - Current milestone: **Web MVP — Strong foundation** (friendships upcoming).
 - Backend refactor: ✅ CQRS/MediatR, FluentValidation pipeline, centralized exception middleware, domain events + handlers, Serilog with correlation IDs.
 - Tests: ✅ All unit + integration tests green (xUnit).
-- CI/CD: GitHub Actions for backend + frontend; PRs merge to `master`; `master` deploys production; `staging` deploys staging.
+- CI/CD: GitHub Actions for backend + frontend; PRs merge to `master`; `master` deploys production. Development environment may be added later; currently Production only.
 - Known failing items: none (last run green).
 
 ## Recent commits / important PRs
