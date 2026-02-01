@@ -1,0 +1,74 @@
+name: Epic
+description: Multi-role initiative tracked via child tasks (links)
+title: "EPIC: "
+labels: ["type:epic", "status:proposed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Rules**
+        - Epics coordinate **multiple child tasks** (one execution role each).
+        - CEO/PO is the decision owner.
+        - Progress is tracked by linking child tasks below.
+
+  - type: textarea
+    id: problem_goal
+    attributes:
+      label: Problem / Goal
+      placeholder: What are we trying to achieve and why?
+    validations:
+      required: true
+
+  - type: textarea
+    id: success_definition
+    attributes:
+      label: Success definition
+      description: Concrete outcomes and how success is measured.
+      placeholder: |
+        - Metric X improves from A → B
+        - Docs reflect reality
+        - CI is green
+    validations:
+      required: true
+
+  - type: textarea
+    id: child_tasks
+    attributes:
+      label: Child tasks (links)
+      description: Create tasks using the Task template; paste links here.
+      placeholder: |
+        - [ ] #123
+        - [ ] #124
+        - [ ] #125
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies_risks
+    attributes:
+      label: Dependencies / Risks
+      placeholder: |
+        - Depends on #999
+        - Risk: breaking change to XYZ
+    validations:
+      required: false
+
+  - type: dropdown
+    id: decision_owner
+    attributes:
+      label: Decision owner
+      options:
+        - ceo-po
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status (keep label in sync)
+      options:
+        - proposed
+        - active
+        - completed
+    validations:
+      required: true

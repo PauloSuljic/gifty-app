@@ -1,0 +1,100 @@
+name: Task
+description: Single-owner executable task (requires CEO/PO approval)
+title: "TASK: "
+labels: ["type:task", "status:proposed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Rules**
+        - Tasks require **CEO/PO approval** before execution.
+        - Exactly **one execution role** per task.
+        - All outputs should be added as **Issue comments** (reports, PR links, metrics).
+
+  - type: dropdown
+    id: proposed_by_role
+    attributes:
+      label: Proposed by role
+      options:
+        - product
+        - developer
+        - marketing
+        - finance-ops
+        - ceo-po
+    validations:
+      required: true
+
+  - type: dropdown
+    id: execution_role
+    attributes:
+      label: Execution role (single owner)
+      options:
+        - product
+        - developer
+        - marketing
+        - finance-ops
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - frontend
+        - backend
+        - infra
+        - docs
+        - marketing
+        - finance
+        - ops
+    validations:
+      required: true
+
+  - type: textarea
+    id: context_inputs
+    attributes:
+      label: Context / Input artifacts
+      description: Link relevant reports, issues, PRs, docs, logs.
+      placeholder: |
+        - Report: #123 (comment link)
+        - Related: #456
+        - PR: (link)
+    validations:
+      required: false
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints (must NOT change)
+      description: Guardrails and scope boundaries.
+      placeholder: |
+        - Do not touch authentication
+        - No schema changes
+        - No workflow changes
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria (definition of done)
+      description: Objective, testable outcomes.
+      placeholder: |
+        - [ ] Builds pass in CI
+        - [ ] Docs updated
+        - [ ] Feature works on route /x
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status (keep label in sync)
+      options:
+        - proposed
+        - approved
+        - in-progress
+        - done
+    validations:
+      required: true
