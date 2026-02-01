@@ -65,10 +65,10 @@ body:
   - type: dropdown
     id: status
     attributes:
-      label: Status (keep label in sync)
+      label: Status (must match GitHub status:* label)
       options:
-        - proposed
-        - active
-        - completed
+        - status:proposed
+        - status:active
+        - status:completed
     validations:
       required: true

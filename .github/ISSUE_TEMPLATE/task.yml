@@ -10,6 +10,7 @@ body:
         - Tasks require **CEO/PO approval** before execution.
         - Exactly **one execution role** per task.
         - All outputs should be added as **Issue comments** (reports, PR links, metrics).
+        - CEO/PO may propose and approve tasks but is **not an execution role**.
 
   - type: dropdown
     id: proposed_by_role
@@ -90,11 +91,11 @@ body:
   - type: dropdown
     id: status
     attributes:
-      label: Status (keep label in sync)
+      label: Status (must match GitHub status:* label)
       options:
-        - proposed
-        - approved
-        - in-progress
-        - done
+        - status:proposed
+        - status:approved
+        - status:in-progress
+        - status:done
     validations:
       required: true
