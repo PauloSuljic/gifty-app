@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a bug
+title: "Bug: <short summary>"
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill out the details below.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: What is happening?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Be precise (URLs, inputs, device/browser, account state)
+      placeholder: |
+        1) ...
+        2) ...
+        3) ...
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, logs, console output (if any)
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

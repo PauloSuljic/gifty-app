@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an enhancement for Gifty
+labels:
+  - feature
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: What do you want to build?
+      required: true
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User story
+      placeholder: As a [user], I want [feature] so that [benefit]
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      placeholder: Bullet list of criteria
+  - type: textarea
+    id: ux_ui_notes
+    attributes:
+      label: UX/UI notes
+      placeholder: Design references, interactions, mobile considerations
+  - type: textarea
+    id: success_metrics
+    attributes:
+      label: Success metrics
+      placeholder: e.g. activation, retention, lower support tickets
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      placeholder: Links, screenshots, examples
