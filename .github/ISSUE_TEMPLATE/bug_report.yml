@@ -13,19 +13,23 @@ body:
     attributes:
       label: Summary
       placeholder: What is happening?
+    validations:
+      required: true
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
       description: Be precise (URLs, inputs, device/browser, account state)
-      placeholder: |-
+      placeholder: |
         1) ...
         2) ...
         3) ...
-      value: |-
+      value: |
         1.
         2.
         3.
+    validations:
+      required: true
   - type: textarea
     id: expected
     attributes:
