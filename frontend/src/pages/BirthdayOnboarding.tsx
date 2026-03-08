@@ -34,12 +34,11 @@ const BirthdayOnboarding = () => {
       return "Please select your date of birth.";
     }
 
-    const dob = new Date(value);
-    if (dob > new Date(maxDate)) {
+    if (value > maxDate) {
       return "You're too young for Gifty! 🎂 Come back in a few years.";
     }
 
-    if (dob < new Date(minDate)) {
+    if (value < minDate) {
       return "Please enter a valid date of birth.";
     }
 

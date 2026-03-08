@@ -1,4 +1,6 @@
 ﻿using System;
+using Gifty.Infrastructure;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Gifty.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(GiftyDbContext))]
+    [Migration("20260308110000_MakeUserDateOfBirthNullable")]
     public partial class MakeUserDateOfBirthNullable : Migration
     {
         /// <inheritdoc />

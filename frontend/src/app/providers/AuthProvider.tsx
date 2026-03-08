@@ -8,7 +8,6 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import Spinner from "../../components/ui/Spinner";
 import { useDatabaseUser } from "../../hooks/useDatabaseUser";
 import { useFirebaseAuth } from "../../hooks/useFirebaseAuth";
@@ -56,10 +55,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/verify-email");
     } catch (error) {
       console.error("Registration Error:", error);
-      toast.error("Failed to register. Please try again.", {
-        duration: 3000,
-        position: "bottom-center",
-      });
       throw error;
     }
   };
