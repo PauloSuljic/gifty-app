@@ -39,6 +39,24 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoggingIn(true);
+    setError("");
+
+    await loginWithGoogle();
+
+    // Reset local loading only when auth did not complete and we remain on this page.
+    if (!auth.currentUser) {
+      isSubmittingRef.current = false;
+      setIsLoggingIn(false);
+    }
+  };
+
   const handlePasswordReset = async () => {
     setResetMessage("");
     setError("");
@@ -119,7 +137,7 @@ const Login = () => {
         </form>
 
         <button
-          onClick={loginWithGoogle}
+          onClick={handleGoogleLogin}
           className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded flex items-center justify-center gap-2 shadow hover:bg-gray-600 transition"
           disabled={isLoggingIn}
         >
