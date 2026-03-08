@@ -23,8 +23,16 @@ const Home = () => {
           </Link>
         </div>
       </div>
-      <footer className="mt-8 text-sm text-gray-500 text-center">
-        Developed by Paulo Suljic
+      <footer className="mt-8 text-sm text-gray-400 text-center space-y-2">
+        <p>Developed by Paulo Suljic</p>
+        <p className="space-x-4">
+          <Link to="/terms" className="underline hover:text-purple-300">
+            Terms
+          </Link>
+          <Link to="/privacy" className="underline hover:text-purple-300">
+            Privacy
+          </Link>
+        </p>
       </footer>
     </div>
   );
