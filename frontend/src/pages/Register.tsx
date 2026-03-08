@@ -38,6 +38,7 @@ const getRegistrationErrorMessage = (error: unknown): string => {
 
 const Register = () => {
   const { register, loginWithGoogle } = useAuth();
+  const emailSignupPanelId = "email-signup-panel";
   const [signupMethod, setSignupMethod] = useState<"email" | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,6 +86,8 @@ const Register = () => {
 
     try {
       await loginWithGoogle();
+    } catch {
+      setError("Failed to sign in with Google. Please try again.");
     } finally {
       setGoogleLoading(false);
     }
@@ -126,12 +129,15 @@ const Register = () => {
             }}
             className="w-full px-4 py-3 rounded bg-purple-600 hover:bg-purple-700 transition disabled:cursor-not-allowed disabled:opacity-70"
             disabled={loading || googleLoading}
+            aria-expanded={signupMethod === "email"}
+            aria-controls={emailSignupPanelId}
           >
             Register with Email
           </button>
         </div>
 
         <div
+          id={emailSignupPanelId}
           className={`overflow-hidden transition-all duration-300 ease-out ${
             signupMethod === "email" ? "max-h-[700px] opacity-100" : "max-h-0 opacity-0"
           }`}
@@ -156,7 +162,16 @@ const Register = () => {
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    const nextPassword = e.target.value;
+                    setPassword(nextPassword);
+
+                    if (confirmPassword) {
+                      setPasswordMatchError(confirmPassword !== nextPassword);
+                    } else {
+                      setPasswordMatchError(false);
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 pr-10"
                   required
                 />

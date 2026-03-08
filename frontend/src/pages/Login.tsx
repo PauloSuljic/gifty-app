@@ -48,12 +48,16 @@ const Login = () => {
     setIsLoggingIn(true);
     setError("");
 
-    await loginWithGoogle();
-
-    // Reset local loading only when auth did not complete and we remain on this page.
-    if (!auth.currentUser) {
-      isSubmittingRef.current = false;
-      setIsLoggingIn(false);
+    try {
+      await loginWithGoogle();
+    } catch {
+      setError("Failed to sign in with Google. Please try again.");
+    } finally {
+      // Reset local loading only when auth did not complete and we remain on this page.
+      if (!auth.currentUser) {
+        isSubmittingRef.current = false;
+        setIsLoggingIn(false);
+      }
     }
   };
 

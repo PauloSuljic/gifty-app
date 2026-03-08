@@ -37,6 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Google Sign-In Error", error);
+      throw error;
     }
   };
 
