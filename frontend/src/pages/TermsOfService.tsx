@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
-
-const LAST_UPDATED = "March 8, 2026";
-const CONTACT_EMAIL = "support@giftyapp.live";
+import { LEGAL_CONTACT_EMAIL, LEGAL_LAST_UPDATED } from "../shared/constants/legal";
 
 const TermsOfService = () => {
   return (
@@ -27,9 +25,9 @@ const TermsOfService = () => {
               These Terms govern your use of Gifty. By creating an account or using the service, you agree to follow these Terms.
             </p>
             <p className="text-sm text-gray-400 mt-4">
-              Last updated: {LAST_UPDATED} • Contact:{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-purple-300 hover:text-purple-200 underline underline-offset-2">
-                {CONTACT_EMAIL}
+              Last updated: {LEGAL_LAST_UPDATED} • Contact:{" "}
+              <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="text-purple-300 hover:text-purple-200 underline underline-offset-2">
+                {LEGAL_CONTACT_EMAIL}
               </a>
             </p>
           </header>
@@ -127,8 +125,8 @@ const TermsOfService = () => {
               <h2 className="text-xl sm:text-2xl font-semibold text-white mb-3">10. Contact</h2>
               <p>
                 If you have questions about these Terms, contact us at{" "}
-                <a href={`mailto:${CONTACT_EMAIL}`} className="text-purple-300 hover:text-purple-200 underline underline-offset-2">
-                  {CONTACT_EMAIL}
+                <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="text-purple-300 hover:text-purple-200 underline underline-offset-2">
+                  {LEGAL_CONTACT_EMAIL}
                 </a>.
               </p>
             </section>

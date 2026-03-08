@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../shared/lib/apiClient";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import Modal from "../components/ui/Modal";
 
@@ -9,7 +9,6 @@ const SettingsPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { firebaseUser, databaseUser, logout } = useAuth();
-  const navigate = useNavigate();
 
   const handleDeleteAccount = async () => {
     if (!firebaseUser || isDeleting) return;
@@ -20,7 +19,6 @@ const SettingsPage = () => {
       await apiClient.del<void>(`/api/users/${firebaseUser.uid}`, { token });
       toast.success("Account deleted. Redirecting to home...");
       await logout();
-      navigate("/", { replace: true });
     } catch {
       toast.error("Failed to delete account. Please try again.");
     } finally {
