@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotificationContext } from "../../context/useNotificationContext";
 import NotificationsModal from "../ui/modals/NotificationsModal";
-import RightSidebar from "../RightSidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -146,6 +145,25 @@ const UserLayoutInner = ({
         )}
 
         <div className="flex-1 flex flex-col p-4 pt-4 lg:pt-6">
+          {firebaseUser && (
+            <div className="hidden lg:flex justify-end mb-4">
+              <button
+                onClick={toggleNotifications}
+                className="p-2.5 bg-gray-800/90 hover:bg-gray-700 rounded-lg shadow-lg text-white relative transition-colors"
+                aria-label="Open notifications panel"
+                aria-expanded={isNotificationsOpen}
+                aria-controls="desktop-notifications-panel"
+              >
+                <FiBell size={22} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-purple-500 text-xs text-white rounded-full px-1.5 py-0.5 leading-none">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
           {!hideHeader && (
             <Link
               to="/profile"
@@ -158,8 +176,6 @@ const UserLayoutInner = ({
 
           <div className="flex-1 overflow-y-auto p-2">{children}</div>
         </div>
-
-        {firebaseUser && <RightSidebar />}
       </div>
     </div>
   );
