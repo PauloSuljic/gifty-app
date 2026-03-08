@@ -34,8 +34,16 @@ namespace Gifty.Domain.Entities.Users
         public void UpdateProfile(string username, string? bio, string? avatarUrl, DateOnly? dateOfBirth)
         {
             Username = username;
-            Bio = bio;
-            AvatarUrl = avatarUrl;
+            if (bio != null)
+            {
+                Bio = bio;
+            }
+
+            if (avatarUrl != null)
+            {
+                AvatarUrl = avatarUrl;
+            }
+
             if (dateOfBirth.HasValue)
             {
                 DateOfBirth = dateOfBirth.Value;

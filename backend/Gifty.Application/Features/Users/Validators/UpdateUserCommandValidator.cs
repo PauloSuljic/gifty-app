@@ -11,7 +11,7 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("User ID is required.");
 
-        // Username optional, but if provided it must follow rules
+        // Username is required and must follow rules
         RuleFor(x => x.Username)
             .NotEmpty()
             .MinimumLength(3)

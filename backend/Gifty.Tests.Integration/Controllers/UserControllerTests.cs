@@ -16,7 +16,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"TestUser_{Guid.NewGuid()}",
                 $"test_{Guid.NewGuid()}@example.com",
                 "Just testing"
@@ -37,7 +36,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"DuplicateUser_{Guid.NewGuid()}",
                 $"dup_{Guid.NewGuid()}@example.com",
                 "First"
@@ -59,7 +57,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"Fetcher_{Guid.NewGuid()}",
                 $"fetch_{Guid.NewGuid()}@example.com",
                 "Here to be fetched"
@@ -83,7 +80,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"NoDob_{Guid.NewGuid()}",
                 $"nodob_{Guid.NewGuid()}@example.com",
                 "No birthday yet"
@@ -120,7 +116,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"BeforeUpdate_{Guid.NewGuid()}",
                 $"before_{Guid.NewGuid()}@update.com",
                 "Old bio"
@@ -153,7 +148,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"ToBeDeleted_{Guid.NewGuid()}",
                 $"delete_{Guid.NewGuid()}@me.com",
                 "I'm doomed"
