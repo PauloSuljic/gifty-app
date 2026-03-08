@@ -172,18 +172,28 @@ const Register = () => {
             )}
           </div>
 
-          {/* Date of Birth with white calendar icon */}
+          {/* Date of Birth */}
           <div className="relative">
-            <FiCalendar className="absolute left-3 top-3 text-white pointer-events-none" />
+            <label htmlFor="dateOfBirth" className="sr-only">
+              Date of birth
+            </label>
+            <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white pointer-events-none" />
+            {!dateOfBirth && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-10 flex items-center text-gray-300"
+              >
+                Select your birthday
+              </span>
+            )}
             <input
               id="dateOfBirth"
               type="date"
-              placeholder="Select your birthday"
               value={dateOfBirth}
               min={minDate}
               max={maxDate}
               onChange={(e) => setDateOfBirth(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 appearance-none"
+              className="w-full pl-10 pr-12 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 appearance-none [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
               required
             />
           </div>
