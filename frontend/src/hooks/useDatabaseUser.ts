@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { User as FirebaseUser } from "firebase/auth";
 import { ApiError, apiClient } from "../shared/lib/apiClient";
+import { createPendingDisplayName } from "../shared/lib/pendingDisplayName";
 
 export type GiftyUser = {
   id: string;
@@ -23,10 +24,13 @@ const getAvatarUrl = (photoUrl?: string | null) => {
   return photoUrl || randomAvatar;
 };
 
-const getPendingDisplayName = (uid: string) => `pending_${uid.substring(0, 6)}`;
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Failed to load your account data. Please try again.";
 
 export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
   const [databaseUser, setDatabaseUser] = useState<GiftyUser | null>(null);
+  const [databaseUserLoading, setDatabaseUserLoading] = useState(false);
+  const [databaseUserError, setDatabaseUserError] = useState<string | null>(null);
 
   const fetchDatabaseUser = useCallback(async (token: string, uid: string) => {
     try {
@@ -53,7 +57,7 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
           "/api/users",
           {
             id: user.uid,
-            username: getPendingDisplayName(user.uid),
+            username: createPendingDisplayName(user.uid),
             email: user.email,
             bio: "",
             avatarUrl,
@@ -72,12 +76,24 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
     const syncDatabaseUser = async () => {
       if (!firebaseUser) {
         setDatabaseUser(null);
+        setDatabaseUserError(null);
+        setDatabaseUserLoading(false);
         return;
       }
 
-      await ensureDatabaseUser(firebaseUser);
-      const token = await firebaseUser.getIdToken();
-      await fetchDatabaseUser(token, firebaseUser.uid);
+      setDatabaseUserLoading(true);
+      setDatabaseUserError(null);
+
+      try {
+        await ensureDatabaseUser(firebaseUser);
+        const token = await firebaseUser.getIdToken();
+        await fetchDatabaseUser(token, firebaseUser.uid);
+      } catch (error) {
+        setDatabaseUser(null);
+        setDatabaseUserError(getErrorMessage(error));
+      } finally {
+        setDatabaseUserLoading(false);
+      }
     };
 
     void syncDatabaseUser();
@@ -85,9 +101,19 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
 
   const refreshDatabaseUser = useCallback(async () => {
     if (firebaseUser) {
-      await ensureDatabaseUser(firebaseUser);
-      const token = await firebaseUser.getIdToken();
-      await fetchDatabaseUser(token, firebaseUser.uid);
+      setDatabaseUserLoading(true);
+      setDatabaseUserError(null);
+
+      try {
+        await ensureDatabaseUser(firebaseUser);
+        const token = await firebaseUser.getIdToken();
+        await fetchDatabaseUser(token, firebaseUser.uid);
+      } catch (error) {
+        setDatabaseUser(null);
+        setDatabaseUserError(getErrorMessage(error));
+      } finally {
+        setDatabaseUserLoading(false);
+      }
     }
   }, [firebaseUser, ensureDatabaseUser, fetchDatabaseUser]);
 
@@ -125,10 +151,14 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
 
   const clearDatabaseUser = useCallback(() => {
     setDatabaseUser(null);
+    setDatabaseUserError(null);
+    setDatabaseUserLoading(false);
   }, []);
 
   return {
     databaseUser,
+    databaseUserLoading,
+    databaseUserError,
     refreshDatabaseUser,
     ensureDatabaseUser,
     createDatabaseUser,

@@ -11,18 +11,20 @@ import Spinner from "../../components/ui/Spinner";
 import { useDatabaseUser } from "../../hooks/useDatabaseUser";
 import { useFirebaseAuth } from "../../hooks/useFirebaseAuth";
 import { AuthContext } from "../../context/AuthContext";
+import { createPendingDisplayName } from "../../shared/lib/pendingDisplayName";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading, refreshFirebaseUser, clearFirebaseUser } = useFirebaseAuth();
   const {
     databaseUser,
+    databaseUserLoading,
+    databaseUserError,
     refreshDatabaseUser,
     ensureDatabaseUser,
     createDatabaseUser,
     clearDatabaseUser,
   } = useDatabaseUser(firebaseUser);
   const navigate = useNavigate();
-  const getPendingDisplayName = (uid: string) => `pending_${uid.substring(0, 6)}`;
 
   const loginWithGoogle = async () => {
     try {
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await createDatabaseUser({
         user,
         email,
-        username: getPendingDisplayName(user.uid),
+        username: createPendingDisplayName(user.uid),
       });
 
       navigate("/verify-email");
@@ -75,6 +77,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         refreshFirebaseUser,
         databaseUser,
+        databaseUserLoading,
+        databaseUserError,
         refreshDatabaseUser,
       }}
     >

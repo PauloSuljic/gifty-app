@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../shared/lib/apiClient";
-
-const isPendingDisplayName = (value?: string) => /^pending_[a-z0-9]{6}$/i.test((value || "").trim());
+import { isPendingDisplayName } from "../shared/lib/pendingDisplayName";
 
 const ProfileNameOnboarding = () => {
   const { firebaseUser, databaseUser, refreshDatabaseUser } = useAuth();

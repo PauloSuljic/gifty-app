@@ -11,6 +11,8 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   refreshFirebaseUser: () => Promise<void>;
   databaseUser: GiftyUser | null;
+  databaseUserLoading: boolean;
+  databaseUserError: string | null;
   refreshDatabaseUser: () => Promise<void>;
 }
 
