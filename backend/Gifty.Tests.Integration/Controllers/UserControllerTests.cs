@@ -16,7 +16,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"TestUser_{Guid.NewGuid()}",
                 $"test_{Guid.NewGuid()}@example.com",
                 "Just testing"
@@ -37,7 +36,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"DuplicateUser_{Guid.NewGuid()}",
                 $"dup_{Guid.NewGuid()}@example.com",
                 "First"
@@ -59,7 +57,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"Fetcher_{Guid.NewGuid()}",
                 $"fetch_{Guid.NewGuid()}@example.com",
                 "Here to be fetched"
@@ -74,6 +71,33 @@ namespace Gifty.Tests.Integration.Controllers
             var returned = await response.Content.ReadFromJsonAsync<UserDto>();
             returned.Should().NotBeNull();
             returned?.Username.Should().Be(user.Username);
+        }
+
+        [Fact]
+        public async Task CreateUser_WithoutDateOfBirth_ShouldPersistNullDateOfBirth()
+        {
+            var userId = "no-dob-user";
+            var client = factory.CreateClientWithTestAuth(userId);
+
+            var user = BuildUserDto(
+                $"NoDob_{Guid.NewGuid()}",
+                $"nodob_{Guid.NewGuid()}@example.com",
+                "No birthday yet"
+            );
+
+            var createResponse = await client.PostAsJsonAsync("/api/users", user);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var created = await createResponse.Content.ReadFromJsonAsync<UserDto>();
+            created.Should().NotBeNull();
+            created?.DateOfBirth.Should().BeNull();
+
+            var getResponse = await client.GetAsync($"/api/users/{userId}");
+            getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var fetched = await getResponse.Content.ReadFromJsonAsync<UserDto>();
+            fetched.Should().NotBeNull();
+            fetched?.DateOfBirth.Should().BeNull();
         }
 
         [Fact]
@@ -92,7 +116,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"BeforeUpdate_{Guid.NewGuid()}",
                 $"before_{Guid.NewGuid()}@update.com",
                 "Old bio"
@@ -125,7 +148,6 @@ namespace Gifty.Tests.Integration.Controllers
             var client = factory.CreateClientWithTestAuth(userId);
 
             var user = BuildUserDto(
-                userId,
                 $"ToBeDeleted_{Guid.NewGuid()}",
                 $"delete_{Guid.NewGuid()}@me.com",
                 "I'm doomed"

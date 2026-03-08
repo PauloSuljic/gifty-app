@@ -11,12 +11,12 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("User ID is required.");
 
-        // Username optional, but if provided it must follow rules
+        // Username is required and must follow rules
         RuleFor(x => x.Username)
-            .NotEmpty().When(x => x.Username != null)
-            .MinimumLength(3).When(x => x.Username != null)
-            .MaximumLength(30).When(x => x.Username != null)
-            .Matches("^[a-zA-Z0-9_]+$").When(x => x.Username != null)
+            .NotEmpty()
+            .MinimumLength(3)
+            .MaximumLength(30)
+            .Matches("^[a-zA-Z0-9_]+$")
             .WithMessage("Username can only contain letters, numbers, and underscores.");
 
         // Bio optional but limited in length
@@ -28,5 +28,9 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
             .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))
             .When(x => x.AvatarUrl != null)
             .WithMessage("AvatarUrl must be a valid URL.");
+
+        RuleFor(x => x.DateOfBirth)
+            .Must(x => x == null || x != DateOnly.MinValue)
+            .WithMessage("DateOfBirth must be a valid date.");
     }
 }

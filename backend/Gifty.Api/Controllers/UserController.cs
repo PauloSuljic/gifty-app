@@ -59,7 +59,7 @@ namespace gifty_web_backend.Controllers
 
             var command = new UpdateUserCommand(
                 firebaseUid,
-                model.Username!,
+                model.Username,
                 model.Bio,
                 model.AvatarUrl,
                 model.DateOfBirth

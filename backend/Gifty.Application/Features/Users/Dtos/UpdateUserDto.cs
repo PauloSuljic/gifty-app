@@ -2,8 +2,8 @@ namespace Gifty.Application.Features.Users.Dtos;
 
 public class UpdateUserDto
 {
-    public string? Username { get; set; }
+    public string Username { get; set; } = string.Empty;
     public string? Bio { get; set; }
     public string? AvatarUrl { get; set; }
-    public DateOnly DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
 }

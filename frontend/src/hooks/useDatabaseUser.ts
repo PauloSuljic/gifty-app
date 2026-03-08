@@ -15,7 +15,7 @@ type CreateDatabaseUserInput = {
   user: FirebaseUser;
   email: string;
   username: string;
-  dateOfBirth: string;
+  dateOfBirth?: string;
 };
 
 const getAvatarUrl = (photoUrl?: string | null) => {
@@ -75,7 +75,6 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
           email: user.email,
           bio: "",
           avatarUrl,
-          dateOfBirth: "2000-01-01",
         },
         { token }
       );
@@ -86,18 +85,26 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
     const token = await input.user.getIdToken();
     const avatarUrl = getAvatarUrl(input.user.photoURL);
 
-    await apiClient.post<void>(
-      "/api/users",
-      {
-        id: input.user.uid,
-        username: input.username,
-        email: input.email,
-        bio: "",
-        avatarUrl,
-        dateOfBirth: input.dateOfBirth,
-      },
-      { token }
-    );
+    const body: {
+      id: string;
+      username: string;
+      email: string;
+      bio: string;
+      avatarUrl: string;
+      dateOfBirth?: string;
+    } = {
+      id: input.user.uid,
+      username: input.username,
+      email: input.email,
+      bio: "",
+      avatarUrl,
+    };
+
+    if (input.dateOfBirth) {
+      body.dateOfBirth = input.dateOfBirth;
+    }
+
+    await apiClient.post<void>("/api/users", body, { token });
   }, []);
 
   const clearDatabaseUser = useCallback(() => {

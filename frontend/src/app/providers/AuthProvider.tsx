@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, username: string, dateOfBirth: string) => {
+  const register = async (email: string, password: string, username: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -51,7 +51,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         email,
         username,
-        dateOfBirth,
       });
 
       navigate("/verify-email");
@@ -61,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         duration: 3000,
         position: "bottom-center",
       });
+      throw error;
     }
   };
 

@@ -11,7 +11,7 @@ public record UpdateUserCommand(
     string Username,
     string? Bio,
     string? AvatarUrl,
-    DateOnly DateOfBirth
+    DateOnly? DateOfBirth
 ) : IRequest<UserDto>
 {
     public class UpdateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<UpdateUserCommand, UserDto>
