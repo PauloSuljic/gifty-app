@@ -7,6 +7,7 @@ import Modal from "./ui/Modal";
 
 import ConfirmDeleteModal from "./ui/modals/ConfirmDeleteModal";
 import ShareLinkModal from "./ui/modals/ShareLinkModal";
+import Spinner from "./ui/Spinner";
 
 import { DndContext } from "@dnd-kit/core";
 
@@ -40,6 +41,7 @@ const Wishlist = () => {
     setWishlistItems,
     wishlistOrder,
     setWishlistOrder,
+    isWishlistsLoading,
     createWishlist,
     deleteWishlist,
     persistWishlistOrder,
@@ -82,7 +84,9 @@ const Wishlist = () => {
         </button>
       </div>
   
-      {wishlists.length > 0 ? (
+      {isWishlistsLoading ? (
+        <Spinner />
+      ) : wishlists.length > 0 ? (
         <DndContext {...dndContextProps}>
           <SortableContext items={wishlistOrder} strategy={sortableStrategy}>
             <div className="grid grid-cols-2 gap-4 p-4 select-none" style={{ touchAction: "pan-y" }}>
