@@ -65,12 +65,10 @@ const BirthdayOnboarding = () => {
     try {
       const token = await firebaseUser.getIdToken();
       const requestBody: {
-        username: string;
         bio: string;
         dateOfBirth: string;
         avatarUrl?: string;
       } = {
-        username: databaseUser.username,
         bio: databaseUser.bio,
         dateOfBirth,
       };

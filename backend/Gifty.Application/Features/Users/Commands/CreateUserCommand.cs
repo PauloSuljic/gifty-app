@@ -25,17 +25,6 @@ public record CreateUserCommand(
                 throw new ConflictException($"User with ID '{request.Id}' already exists.");
             }
 
-            // ✅ TEMP HOTFIX: allow duplicate full names by auto-incrementing
-            var baseUsername = request.Username.Trim();
-            var uniqueUsername = baseUsername;
-            int counter = 1;
-
-            while (await userRepository.GetUserByUsernameAsync(uniqueUsername) != null)
-            {
-                uniqueUsername = $"{baseUsername}{counter}";
-                counter++;
-            }
-
             var existingUserByEmail = await userRepository.GetUserByEmailAsync(request.Email);
             if (existingUserByEmail != null)
             {
@@ -44,7 +33,7 @@ public record CreateUserCommand(
 
             var user = User.Create(
                 request.Id,
-                uniqueUsername,
+                request.Username.Trim(),
                 request.Email,
                 request.Bio,
                 request.AvatarUrl,

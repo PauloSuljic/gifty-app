@@ -51,6 +51,38 @@ namespace Gifty.Tests.Integration.Controllers
         }
 
         [Fact]
+        public async Task CreateUser_ShouldAllowDuplicateUsernames_ForDifferentUserIds()
+        {
+            var duplicateUsername = "Paulo Suljic";
+
+            var firstUserId = $"dup-name-1-{Guid.NewGuid():N}";
+            var firstClient = factory.CreateClientWithTestAuth(firstUserId);
+            var firstUser = BuildUserDto(
+                duplicateUsername,
+                $"dup_name_1_{Guid.NewGuid():N}@example.com",
+                "First user"
+            );
+
+            var firstResponse = await firstClient.PostAsJsonAsync("/api/users", firstUser);
+            firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var secondUserId = $"dup-name-2-{Guid.NewGuid():N}";
+            var secondClient = factory.CreateClientWithTestAuth(secondUserId);
+            var secondUser = BuildUserDto(
+                duplicateUsername,
+                $"dup_name_2_{Guid.NewGuid():N}@example.com",
+                "Second user"
+            );
+
+            var secondResponse = await secondClient.PostAsJsonAsync("/api/users", secondUser);
+            secondResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var createdSecond = await secondResponse.Content.ReadFromJsonAsync<UserDto>();
+            createdSecond.Should().NotBeNull();
+            createdSecond?.Username.Should().Be(duplicateUsername);
+        }
+
+        [Fact]
         public async Task GetUserByFirebaseUid_ShouldReturnUser_WhenExists()
         {
             var userId = "fetch-me";
@@ -139,6 +171,36 @@ namespace Gifty.Tests.Integration.Controllers
             updated?.Username.Should().Be("UpdatedUser");
             updated?.Bio.Should().Be("Updated bio");
             updated?.AvatarUrl.Should().Be("/avatars/avatar1.png");
+        }
+
+        [Fact]
+        public async Task UpdateUser_ShouldAllowBirthdayOnlyUpdate_WithoutUsername()
+        {
+            var userId = $"birthday-only-{Guid.NewGuid():N}";
+            var client = factory.CreateClientWithTestAuth(userId);
+
+            var user = BuildUserDto(
+                $"BeforeBirthday_{Guid.NewGuid():N}",
+                $"birthday_only_{Guid.NewGuid():N}@update.com",
+                "Old bio"
+            );
+
+            var createResponse = await client.PostAsJsonAsync("/api/users", user);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var updatePayload = new
+            {
+                Bio = "Old bio",
+                DateOfBirth = new DateOnly(1993, 6, 2)
+            };
+
+            var updateResponse = await client.PutAsJsonAsync($"/api/users/{userId}", updatePayload);
+            updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var updated = await updateResponse.Content.ReadFromJsonAsync<UserDto>();
+            updated.Should().NotBeNull();
+            updated?.Username.Should().Be(user.Username);
+            updated?.DateOfBirth.Should().Be(new DateOnly(1993, 6, 2));
         }
 
         [Fact]

@@ -11,12 +11,11 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("User ID is required.");
 
-        // Username rules
+        // Full name / username rules
         RuleFor(x => x.Username)
             .NotEmpty().WithMessage("Username is required.")
-            .MinimumLength(3).WithMessage("Username must be at least 3 characters long.")
-            .MaximumLength(30).WithMessage("Username cannot exceed 30 characters.")
-            .Matches("^[a-zA-Z0-9_]+$").WithMessage("Username can only contain letters, numbers, and underscores.");
+            .MinimumLength(2).WithMessage("Username must be at least 2 characters long.")
+            .MaximumLength(60).WithMessage("Username cannot exceed 60 characters.");
 
         // Email rules
         RuleFor(x => x.Email)

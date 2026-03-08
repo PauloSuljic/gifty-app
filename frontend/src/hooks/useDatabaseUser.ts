@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { User as FirebaseUser } from "firebase/auth";
 import { ApiError, apiClient } from "../shared/lib/apiClient";
+import { createPendingDisplayName } from "../shared/lib/pendingDisplayName";
 
 export type GiftyUser = {
   id: string;
@@ -23,8 +24,22 @@ const getAvatarUrl = (photoUrl?: string | null) => {
   return photoUrl || randomAvatar;
 };
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Failed to load your account data. Please try again.";
+
 export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
   const [databaseUser, setDatabaseUser] = useState<GiftyUser | null>(null);
+  const [databaseUserLoading, setDatabaseUserLoading] = useState(false);
+  const [databaseUserError, setDatabaseUserError] = useState<string | null>(null);
+
+  const verifyUserExistsById = useCallback(async (token: string, uid: string) => {
+    try {
+      await apiClient.get<GiftyUser>(`/api/users/${uid}`, { token });
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
 
   const fetchDatabaseUser = useCallback(async (token: string, uid: string) => {
     try {
@@ -34,27 +49,6 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
       console.error("Failed to fetch database user:", error);
     }
   }, []);
-
-  useEffect(() => {
-    const syncDatabaseUser = async () => {
-      if (!firebaseUser) {
-        setDatabaseUser(null);
-        return;
-      }
-
-      const token = await firebaseUser.getIdToken();
-      await fetchDatabaseUser(token, firebaseUser.uid);
-    };
-
-    void syncDatabaseUser();
-  }, [firebaseUser, fetchDatabaseUser]);
-
-  const refreshDatabaseUser = useCallback(async () => {
-    if (firebaseUser) {
-      const token = await firebaseUser.getIdToken();
-      await fetchDatabaseUser(token, firebaseUser.uid);
-    }
-  }, [firebaseUser, fetchDatabaseUser]);
 
   const ensureDatabaseUser = useCallback(async (user: FirebaseUser) => {
     const token = await user.getIdToken();
@@ -67,19 +61,75 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
 
       const avatarUrl = getAvatarUrl(user.photoURL);
 
-      await apiClient.post<void>(
-        "/api/users",
-        {
-          id: user.uid,
-          username: user.displayName || `user_${user.uid.substring(0, 6)}`,
-          email: user.email,
-          bio: "",
-          avatarUrl,
-        },
-        { token }
-      );
+      try {
+        await apiClient.post<void>(
+          "/api/users",
+          {
+            id: user.uid,
+            username: createPendingDisplayName(user.uid),
+            email: user.email,
+            bio: "",
+            avatarUrl,
+          },
+          { token }
+        );
+      } catch (createError) {
+        if (!(createError instanceof ApiError) || createError.status !== 409) {
+          throw createError;
+        }
+
+        const existsById = await verifyUserExistsById(token, user.uid);
+        if (!existsById) {
+          throw createError;
+        }
+      }
     }
-  }, []);
+  }, [verifyUserExistsById]);
+
+  useEffect(() => {
+    const syncDatabaseUser = async () => {
+      if (!firebaseUser) {
+        setDatabaseUser(null);
+        setDatabaseUserError(null);
+        setDatabaseUserLoading(false);
+        return;
+      }
+
+      setDatabaseUserLoading(true);
+      setDatabaseUserError(null);
+
+      try {
+        await ensureDatabaseUser(firebaseUser);
+        const token = await firebaseUser.getIdToken();
+        await fetchDatabaseUser(token, firebaseUser.uid);
+      } catch (error) {
+        setDatabaseUser(null);
+        setDatabaseUserError(getErrorMessage(error));
+      } finally {
+        setDatabaseUserLoading(false);
+      }
+    };
+
+    void syncDatabaseUser();
+  }, [firebaseUser, ensureDatabaseUser, fetchDatabaseUser]);
+
+  const refreshDatabaseUser = useCallback(async () => {
+    if (firebaseUser) {
+      setDatabaseUserLoading(true);
+      setDatabaseUserError(null);
+
+      try {
+        await ensureDatabaseUser(firebaseUser);
+        const token = await firebaseUser.getIdToken();
+        await fetchDatabaseUser(token, firebaseUser.uid);
+      } catch (error) {
+        setDatabaseUser(null);
+        setDatabaseUserError(getErrorMessage(error));
+      } finally {
+        setDatabaseUserLoading(false);
+      }
+    }
+  }, [firebaseUser, ensureDatabaseUser, fetchDatabaseUser]);
 
   const createDatabaseUser = useCallback(async (input: CreateDatabaseUserInput) => {
     const token = await input.user.getIdToken();
@@ -104,15 +154,30 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
       body.dateOfBirth = input.dateOfBirth;
     }
 
-    await apiClient.post<void>("/api/users", body, { token });
-  }, []);
+    try {
+      await apiClient.post<void>("/api/users", body, { token });
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 409) {
+        throw error;
+      }
+
+      const existsById = await verifyUserExistsById(token, input.user.uid);
+      if (!existsById) {
+        throw error;
+      }
+    }
+  }, [verifyUserExistsById]);
 
   const clearDatabaseUser = useCallback(() => {
     setDatabaseUser(null);
+    setDatabaseUserError(null);
+    setDatabaseUserLoading(false);
   }, []);
 
   return {
     databaseUser,
+    databaseUserLoading,
+    databaseUserError,
     refreshDatabaseUser,
     ensureDatabaseUser,
     createDatabaseUser,

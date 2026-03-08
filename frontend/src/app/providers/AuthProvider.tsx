@@ -3,7 +3,6 @@ import {
   signOut,
   signInWithPopup,
   createUserWithEmailAndPassword,
-  updateProfile,
   sendEmailVerification
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
@@ -12,11 +11,14 @@ import Spinner from "../../components/ui/Spinner";
 import { useDatabaseUser } from "../../hooks/useDatabaseUser";
 import { useFirebaseAuth } from "../../hooks/useFirebaseAuth";
 import { AuthContext } from "../../context/AuthContext";
+import { createPendingDisplayName } from "../../shared/lib/pendingDisplayName";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading, refreshFirebaseUser, clearFirebaseUser } = useFirebaseAuth();
   const {
     databaseUser,
+    databaseUserLoading,
+    databaseUserError,
     refreshDatabaseUser,
     ensureDatabaseUser,
     createDatabaseUser,
@@ -38,18 +40,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (email: string, password: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await updateProfile(user, { displayName: username });
       await sendEmailVerification(user);
 
       await createDatabaseUser({
         user,
         email,
-        username,
+        username: createPendingDisplayName(user.uid),
       });
 
       navigate("/verify-email");
@@ -76,6 +77,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         refreshFirebaseUser,
         databaseUser,
+        databaseUserLoading,
+        databaseUserError,
         refreshDatabaseUser,
       }}
     >

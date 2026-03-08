@@ -1,14 +1,14 @@
 using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.Users.Dtos;
-using Gifty.Application.Common.Exceptions;
 using Gifty.Domain.Entities.Users;
+using Gifty.Application.Common.Exceptions;
 
 namespace Gifty.Application.Features.Users.Commands;
 
 public record UpdateUserCommand(
     string Id,
-    string Username,
+    string? Username,
     string? Bio,
     string? AvatarUrl,
     DateOnly? DateOfBirth
@@ -24,17 +24,12 @@ public record UpdateUserCommand(
             {
                 throw new NotFoundException(nameof(User), request.Id);
             }
-            
-            if (existingUser.Username != request.Username)
-            {
-                var userWithSameUsername = await userRepository.GetUserByUsernameAsync(request.Username);
-                if (userWithSameUsername != null)
-                {
-                    throw new ConflictException($"Username '{request.Username}' is already taken by another user.");
-                }
-            }
 
-            existingUser.UpdateProfile(request.Username, request.Bio, request.AvatarUrl, request.DateOfBirth);
+            var usernameToPersist = string.IsNullOrWhiteSpace(request.Username)
+                ? existingUser.Username
+                : request.Username.Trim();
+
+            existingUser.UpdateProfile(usernameToPersist, request.Bio, request.AvatarUrl, request.DateOfBirth);
 
             await userRepository.UpdateAsync(existingUser);
             await userRepository.SaveChangesAsync();

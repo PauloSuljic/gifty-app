@@ -4,6 +4,38 @@ import { Link } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 
+const getRegistrationErrorMessage = (error: unknown): string => {
+  const code =
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+      ? error.code
+      : "";
+
+  const message =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+      ? error.message
+      : "";
+
+  if (code === "auth/email-already-in-use" || message.includes("auth/email-already-in-use")) {
+    return "This email is already registered.";
+  }
+
+  if (code === "auth/weak-password" || message.includes("WEAK_PASSWORD")) {
+    return "Password is too weak. Use at least 6 characters.";
+  }
+
+  if (code === "auth/invalid-email" || message.includes("auth/invalid-email")) {
+    return "Please enter a valid email address.";
+  }
+
+  return "Failed to register. Please try again.";
+};
+
 const Register = () => {
   const { register, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
@@ -11,7 +43,6 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [username, setUsername] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,17 +69,12 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(email, password, username);
+      await register(email, password);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "";
-      if (message.includes("auth/email-already-in-use")) {
-        setError("This email is already registered.");
-      } else {
-        setError("Failed to register. Please try again.");
-      }
+      setError(getRegistrationErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -68,18 +94,6 @@ const Register = () => {
         {error && <p className="text-red-500 text-center">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Smaller consistent input sizes */}
-          <input
-            id="username"
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
-            required
-            autoFocus
-          />
-
           <input
             id="email"
             type="email"
@@ -88,6 +102,7 @@ const Register = () => {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
             required
+            autoFocus
           />
 
           {/* Password */}
@@ -112,34 +127,36 @@ const Register = () => {
           </div>
 
           {/* Confirm Password */}
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setPasswordMatchError(false);
-              }}
-              onBlur={() => {
-                if (confirmPassword && confirmPassword !== password) {
-                  setPasswordMatchError(true);
-                } else {
+          <div>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
                   setPasswordMatchError(false);
-                }
-              }}
-              className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 
-                        focus:outline-none focus:border-purple-500 pr-10"
-              required
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
+                }}
+                onBlur={() => {
+                  if (confirmPassword && confirmPassword !== password) {
+                    setPasswordMatchError(true);
+                  } else {
+                    setPasswordMatchError(false);
+                  }
+                }}
+                className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 
+                          focus:outline-none focus:border-purple-500 pr-10"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
             {passwordMatchError && (
               <p className="text-red-400 text-xs mt-1">
                 Passwords do not match.

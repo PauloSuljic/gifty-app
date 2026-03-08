@@ -11,13 +11,11 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
         RuleFor(x => x.Id)
             .NotEmpty().WithMessage("User ID is required.");
 
-        // Username is required and must follow rules
+        // Username is optional on update. When provided, validate basic length bounds.
         RuleFor(x => x.Username)
-            .NotEmpty()
-            .MinimumLength(3)
-            .MaximumLength(30)
-            .Matches("^[a-zA-Z0-9_]+$")
-            .WithMessage("Username can only contain letters, numbers, and underscores.");
+            .MinimumLength(2)
+            .MaximumLength(60)
+            .When(x => !string.IsNullOrWhiteSpace(x.Username));
 
         // Bio optional but limited in length
         RuleFor(x => x.Bio)
