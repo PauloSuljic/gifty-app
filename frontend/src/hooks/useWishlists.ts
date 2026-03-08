@@ -53,8 +53,8 @@ export function useWishlists() {
     }
 
     setIsWishlistsLoading(true);
-    const token = await firebaseUser.getIdToken();
     try {
+      const token = await firebaseUser.getIdToken();
       const data = await apiClient.get<WishlistType[]>("/api/wishlists", {
         token,
       });
@@ -63,6 +63,7 @@ export function useWishlists() {
       data.forEach((wishlist: WishlistType) => fetchWishlistItems(wishlist.id));
     } catch (error) {
       console.error("Failed to fetch wishlists:", error);
+      toast.error("Failed to load wishlists.");
     } finally {
       setIsWishlistsLoading(false);
     }
