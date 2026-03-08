@@ -47,6 +47,7 @@ public class GetAllWishlistItemsHandler(
 
                 // 🔒 Optional: show only to owner / authenticated users
                 ReservedBy = isOwner ? item.ReservedBy : null,
+                IsReservedByCurrentUser = isAuthenticated && item.ReservedBy == userId,
 
                 IsOwner = isOwner
             })

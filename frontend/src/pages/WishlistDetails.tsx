@@ -68,7 +68,9 @@ const WishlistDetail = () => {
 
   const fallbackCoverImage =
     "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-  const hasReservedItemByCurrentUser = items.some((item) => item.reservedBy === currentUserId);
+  const hasReservedItemByCurrentUser = items.some(
+    (item) => item.isReservedByCurrentUser === true || item.reservedBy === currentUserId
+  );
 
   const coverImageUrl = getWishlistCoverImage<WishlistDetailsItemType>({
     items,
@@ -164,6 +166,7 @@ const WishlistDetail = () => {
                   reservedBy={item.reservedBy}
                   wishlistOwner={wishlist.userId}
                   currentUser={currentUserId}
+                  isReservedByCurrentUser={item.isReservedByCurrentUser}
                   imageUrl={item.imageUrl}
                   description={item.description}
                   context={isOtherUser ? "shared" : "guest"}

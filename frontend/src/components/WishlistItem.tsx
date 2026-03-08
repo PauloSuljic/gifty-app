@@ -13,6 +13,7 @@ type WishlistItemProps = {
   reservedBy?: string | null;
   wishlistOwner: string;
   currentUser?: string;
+  isReservedByCurrentUser?: boolean;
   hasReservedItemByCurrentUser?: boolean;
   imageUrl?: string;
   context: "own" | "shared" | "guest";
@@ -31,6 +32,7 @@ const WishlistItem = ({
   isReserved,
   reservedBy,
   currentUser,
+  isReservedByCurrentUser,
   hasReservedItemByCurrentUser = false,
   imageUrl,
   context = "own",
@@ -44,7 +46,7 @@ const WishlistItem = ({
   const [modalAction, setModalAction] = useState<"reserve" | "unreserve" | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
-  const isReserver = reservedBy === currentUser;
+  const isReserver = isReservedByCurrentUser ?? reservedBy === currentUser;
   const reservationState = !isReserved
     ? "available"
     : isReserver
@@ -71,6 +73,13 @@ const WishlistItem = ({
     isReservationBlockedByLimit ||
     isReservationBlockedByOtherUser ||
     isReserver;
+  const reserveActionLabel = isReserver
+    ? "Unreserve item"
+    : isReservationBlockedByLimit
+      ? "Cannot reserve item: you already reserved an item in this wishlist"
+      : isReservationBlockedByOtherUser
+        ? "Cannot reserve item: already reserved by someone else"
+        : "Reserve item";
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -188,11 +197,26 @@ const WishlistItem = ({
                 return;
               }
 
+              if (!isReserved && isReservationBlockedByLimit) {
+                import("react-hot-toast").then(({ toast }) => {
+                  toast.error("You can only reserve one item from this wishlist.", {
+                    duration: 3000,
+                    position: "bottom-center",
+                    style: {
+                      background: "#333",
+                      color: "#fff",
+                      border: "1px solid #555",
+                    },
+                  });
+                });
+                return;
+              }
+
               handleConfirmClick(isReserved ? "unreserve" : "reserve");
             }}
             className={reserveButtonClass}
-            title={reservationLabel}
-            aria-label={reservationLabel}
+            title={reserveActionLabel}
+            aria-label={reserveActionLabel}
           >
             {isReserved ? <FiLock className="text-large" /> : <FiUnlock className="text-large" />}
           </button>

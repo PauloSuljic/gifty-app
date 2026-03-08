@@ -110,10 +110,11 @@ export function useWishlistDetails(wishlistId?: string) {
         setItems((prev) =>
           prev.map((i) =>
             i.id === itemId
-              ? {
+                ? {
                   ...i,
                   isReserved: updatedItem.isReserved,
                   reservedBy: updatedItem.reservedBy,
+                  isReservedByCurrentUser: updatedItem.isReservedByCurrentUser,
                 }
               : i
           )

@@ -17,7 +17,8 @@ export type WishlistItemType = {
   link: string;
   wishlistId: string;
   isReserved: boolean;
-  reservedBy: string;
+  reservedBy?: string | null;
+  isReservedByCurrentUser?: boolean;
   imageUrl?: string;
   order?: number;
   description?: string;
