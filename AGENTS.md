@@ -7,7 +7,7 @@
 ## Repo layout (root)
 - `frontend/` — React + Vite + Firebase + Tailwind.
 - `backend/` — ASP.NET Core 8 API + EF Core + MediatR.
-- `.github/` — GitHub Actions workflows.
+- `.github/` — GitHub workflows, templates, and AI/review instructions.
 - `docs/` — Source-of-truth context (see links below).
 
 ---

@@ -6,6 +6,11 @@
 .DS_Store
 Thumbs.db
 
+# Local Codex workspace notes (do not commit)
+.codex/codex-global-personalization.md
+.codex/engineering-notes.md
+.codex/work/
+
 # Logs
 logs/
 *.log
