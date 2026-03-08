@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import { useAuth } from "../hooks/useAuth";
@@ -14,11 +14,19 @@ const Login = () => {
   const [resetMessage, setResetMessage] = useState("");
   const [showReset, setShowReset] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const isSubmittingRef = useRef(false);
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current) {
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoggingIn(true);
     setError("");
 
     try {
@@ -26,6 +34,26 @@ const Login = () => {
       navigate("/dashboard");
     } catch {
       setError("Invalid email or password");
+      isSubmittingRef.current = false;
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
+    isSubmittingRef.current = true;
+    setIsLoggingIn(true);
+    setError("");
+
+    await loginWithGoogle();
+
+    // Reset local loading only when auth did not complete and we remain on this page.
+    if (!auth.currentUser) {
+      isSubmittingRef.current = false;
+      setIsLoggingIn(false);
     }
   };
 
@@ -54,7 +82,11 @@ const Login = () => {
       </div>
 
       {/* Login Card */}
-      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
+      <div
+        className={`w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg transition-opacity ${
+          isLoggingIn ? "opacity-80" : "opacity-100"
+        }`}
+      >
         <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         {resetMessage && <p className="text-green-400 text-center">{resetMessage}</p>}
@@ -65,6 +97,7 @@ const Login = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 hover:border-purple-400 transition"
+            disabled={isLoggingIn}
             required
           />
           <div className="relative">
@@ -74,6 +107,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 hover:border-purple-400 transition"
+              disabled={isLoggingIn}
               required
             />
             <button
@@ -81,18 +115,31 @@ const Login = () => {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
               aria-label={showPassword ? "Hide password" : "Show password"}
+              disabled={isLoggingIn}
             >
               {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
             </button>
           </div>
-          <button className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded">
-            Login
+          <button
+            type="submit"
+            className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded disabled:opacity-70 disabled:cursor-not-allowed"
+            disabled={isLoggingIn}
+          >
+            {isLoggingIn ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Logging in...
+              </span>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 
         <button
-          onClick={loginWithGoogle}
+          onClick={handleGoogleLogin}
           className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded flex items-center justify-center gap-2 shadow hover:bg-gray-600 transition"
+          disabled={isLoggingIn}
         >
           <FcGoogle size={20} />
           Login with Google
@@ -102,6 +149,7 @@ const Login = () => {
           <button
             onClick={() => setShowReset(!showReset)}
             className="text-sm text-blue-400 hover:underline mt-2"
+            disabled={isLoggingIn}
           >
             Forgot Password?
           </button>
@@ -115,10 +163,12 @@ const Login = () => {
               value={resetEmail}
               onChange={(e) => setResetEmail(e.target.value)}
               className="w-full px-4 py-2 rounded bg-gray-700 focus:outline-none"
+              disabled={isLoggingIn}
             />
             <button
               onClick={handlePasswordReset}
               className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded"
+              disabled={isLoggingIn}
             >
               Send Reset Link
             </button>

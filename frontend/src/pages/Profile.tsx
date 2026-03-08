@@ -157,17 +157,19 @@ const Profile = () => {
           </div>
         </div>
   
-        {/* Save Button */}
-        {isDirty && (
-          <p className="text-sm text-amber-300 mt-6 mb-2">Unsaved changes</p>
-        )}
-        <button
-          onClick={handleUpdateProfile}
-          disabled={!isDirty || isSaving}
-          className="px-6 py-3 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/60 disabled:cursor-not-allowed rounded-lg transition shadow-lg w-full mt-1"
-        >
-          Save Changes
-        </button>
+        {/* Save Section */}
+        <div className="mt-8">
+          {isDirty && (
+            <p className="text-sm text-amber-300 mb-2">Unsaved changes</p>
+          )}
+          <button
+            onClick={handleUpdateProfile}
+            disabled={!isDirty || isSaving}
+            className="px-6 py-3 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/60 disabled:cursor-not-allowed rounded-lg transition shadow-lg w-full"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
     </>
   );  
