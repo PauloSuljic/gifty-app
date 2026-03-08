@@ -127,34 +127,36 @@ const Register = () => {
           </div>
 
           {/* Confirm Password */}
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                setPasswordMatchError(false);
-              }}
-              onBlur={() => {
-                if (confirmPassword && confirmPassword !== password) {
-                  setPasswordMatchError(true);
-                } else {
+          <div>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
                   setPasswordMatchError(false);
-                }
-              }}
-              className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 
-                        focus:outline-none focus:border-purple-500 pr-10"
-              required
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
+                }}
+                onBlur={() => {
+                  if (confirmPassword && confirmPassword !== password) {
+                    setPasswordMatchError(true);
+                  } else {
+                    setPasswordMatchError(false);
+                  }
+                }}
+                className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 
+                          focus:outline-none focus:border-purple-500 pr-10"
+                required
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
             {passwordMatchError && (
               <p className="text-red-400 text-xs mt-1">
                 Passwords do not match.
