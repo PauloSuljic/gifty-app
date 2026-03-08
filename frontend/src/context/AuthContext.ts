@@ -7,7 +7,7 @@ export interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshFirebaseUser: () => Promise<void>;
   databaseUser: GiftyUser | null;

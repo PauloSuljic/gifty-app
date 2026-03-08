@@ -43,7 +43,6 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [username, setUsername] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -70,7 +69,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(email, password, username);
+      await register(email, password);
     } catch (error) {
       setError(getRegistrationErrorMessage(error));
     } finally {
@@ -95,18 +94,6 @@ const Register = () => {
         {error && <p className="text-red-500 text-center">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Smaller consistent input sizes */}
-          <input
-            id="username"
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
-            required
-            autoFocus
-          />
-
           <input
             id="email"
             type="email"
@@ -115,6 +102,7 @@ const Register = () => {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
             required
+            autoFocus
           />
 
           {/* Password */}

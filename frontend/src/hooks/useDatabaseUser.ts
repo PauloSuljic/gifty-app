@@ -23,6 +23,8 @@ const getAvatarUrl = (photoUrl?: string | null) => {
   return photoUrl || randomAvatar;
 };
 
+const getPendingDisplayName = (uid: string) => `pending_${uid.substring(0, 6)}`;
+
 export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
   const [databaseUser, setDatabaseUser] = useState<GiftyUser | null>(null);
 
@@ -71,7 +73,7 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
         "/api/users",
         {
           id: user.uid,
-          username: user.displayName || `user_${user.uid.substring(0, 6)}`,
+          username: getPendingDisplayName(user.uid),
           email: user.email,
           bio: "",
           avatarUrl,

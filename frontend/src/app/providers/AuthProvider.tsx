@@ -3,7 +3,6 @@ import {
   signOut,
   signInWithPopup,
   createUserWithEmailAndPassword,
-  updateProfile,
   sendEmailVerification
 } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
@@ -23,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     clearDatabaseUser,
   } = useDatabaseUser(firebaseUser);
   const navigate = useNavigate();
+  const getPendingDisplayName = (uid: string) => `pending_${uid.substring(0, 6)}`;
 
   const loginWithGoogle = async () => {
     try {
@@ -38,18 +38,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (email: string, password: string) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await updateProfile(user, { displayName: username });
       await sendEmailVerification(user);
 
       await createDatabaseUser({
         user,
         email,
-        username,
+        username: getPendingDisplayName(user.uid),
       });
 
       navigate("/verify-email");

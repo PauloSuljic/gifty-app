@@ -14,6 +14,8 @@ export type GiftyUser = {
   dateOfBirth?: string;
 };
 
+const isPendingDisplayName = (value?: string) => /^pending_[a-z0-9]{6}$/i.test((value || "").trim());
+
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading } = useAuth();
   const location = useLocation();
@@ -51,7 +53,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
               "/api/users",
               {
                 id: firebaseUser.uid,
-                username: firebaseUser.displayName || "New User",
+                username: `pending_${firebaseUser.uid.substring(0, 6)}`,
                 email: firebaseUser.email,
                 avatarUrl: "",
                 bio: "",
@@ -93,14 +95,25 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/verify-email" />;
   }
 
+  const isOnboardingProfileRoute = location.pathname === "/onboarding/profile";
   const isOnboardingBirthdayRoute = location.pathname === "/onboarding/birthday";
+  const isOnboardingRoute = isOnboardingProfileRoute || isOnboardingBirthdayRoute;
+  const hasDisplayName = Boolean(user?.username?.trim()) && !isPendingDisplayName(user?.username);
   const hasBirthday = Boolean(user?.dateOfBirth?.trim());
 
-  if (firebaseUser && user && !hasBirthday && !isOnboardingBirthdayRoute) {
+  if (firebaseUser && user && !hasDisplayName && !isOnboardingProfileRoute) {
+    return <Navigate to="/onboarding/profile" replace />;
+  }
+
+  if (firebaseUser && user && hasDisplayName && !hasBirthday && !isOnboardingBirthdayRoute) {
     return <Navigate to="/onboarding/birthday" replace />;
   }
 
-  if (firebaseUser && user && hasBirthday && isOnboardingBirthdayRoute) {
+  if (firebaseUser && user && hasDisplayName && isOnboardingProfileRoute) {
+    return <Navigate to={hasBirthday ? "/dashboard" : "/onboarding/birthday"} replace />;
+  }
+
+  if (firebaseUser && user && hasBirthday && isOnboardingRoute) {
     return <Navigate to="/dashboard" replace />;
   }
 
