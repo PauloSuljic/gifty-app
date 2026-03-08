@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         duration: 3000,
         position: "bottom-center",
       });
+      throw error;
     }
   };
 

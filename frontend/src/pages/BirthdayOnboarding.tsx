@@ -3,59 +3,31 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../shared/lib/apiClient";
 
-type ExistingUserProfile = {
-  username: string;
-  bio: string;
-  avatarUrl: string;
-  dateOfBirth?: string;
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
+const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
+
 const BirthdayOnboarding = () => {
-  const { firebaseUser, refreshDatabaseUser } = useAuth();
+  const { firebaseUser, databaseUser, refreshDatabaseUser } = useAuth();
   const navigate = useNavigate();
-  const [userProfile, setUserProfile] = useState<ExistingUserProfile | null>(null);
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [error, setError] = useState("");
-  const [loadingProfile, setLoadingProfile] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const today = useMemo(() => new Date(), []);
-  const maxDate = useMemo(
-    () =>
-      new Date(today.getFullYear() - 12, today.getMonth(), today.getDate())
-        .toISOString()
-        .split("T")[0],
-    [today]
-  );
-  const minDate = useMemo(
-    () =>
-      new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
-        .toISOString()
-        .split("T")[0],
-    [today]
-  );
+  const maxDate = useMemo(() => formatLocalDate(new Date(today.getFullYear() - 12, today.getMonth(), today.getDate())), [today]);
+  const minDate = useMemo(() => formatLocalDate(new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())), [today]);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!firebaseUser) return;
-
-      try {
-        const token = await firebaseUser.getIdToken();
-        const profile = await apiClient.get<ExistingUserProfile>(`/api/users/${firebaseUser.uid}`, { token });
-        setUserProfile(profile);
-
-        if (profile.dateOfBirth) {
-          navigate("/dashboard", { replace: true });
-        }
-      } catch {
-        setError("Failed to load onboarding data. Please refresh and try again.");
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-
-    void fetchUserProfile();
-  }, [firebaseUser, navigate]);
+    if (databaseUser?.dateOfBirth) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [databaseUser?.dateOfBirth, navigate]);
 
   const validateDob = (value: string) => {
     if (!value) {
@@ -78,7 +50,7 @@ const BirthdayOnboarding = () => {
     event.preventDefault();
     setError("");
 
-    if (!firebaseUser || !userProfile) {
+    if (!firebaseUser || !databaseUser) {
       setError("Your session is not ready yet. Please refresh and try again.");
       return;
     }
@@ -93,15 +65,24 @@ const BirthdayOnboarding = () => {
 
     try {
       const token = await firebaseUser.getIdToken();
+      const requestBody: {
+        username: string;
+        bio: string;
+        dateOfBirth: string;
+        avatarUrl?: string;
+      } = {
+        username: databaseUser.username,
+        bio: databaseUser.bio,
+        dateOfBirth,
+      };
+      if (databaseUser.avatarUrl && isAbsoluteUrl(databaseUser.avatarUrl)) {
+        requestBody.avatarUrl = databaseUser.avatarUrl;
+      }
+
       await apiClient.request<void>(`/api/users/${firebaseUser.uid}`, {
         method: "PUT",
         token,
-        body: {
-          username: userProfile.username,
-          bio: userProfile.bio,
-          avatarUrl: userProfile.avatarUrl,
-          dateOfBirth,
-        },
+        body: requestBody,
       });
 
       await refreshDatabaseUser();
@@ -113,7 +94,7 @@ const BirthdayOnboarding = () => {
     }
   };
 
-  if (loadingProfile) {
+  if (!databaseUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white px-4">
         <p>Loading onboarding...</p>

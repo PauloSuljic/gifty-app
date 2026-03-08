@@ -31,12 +31,15 @@ namespace Gifty.Domain.Entities.Users
             return user;
         }
         
-        public void UpdateProfile(string username, string? bio, string? avatarUrl, DateOnly dateOfBirth)
+        public void UpdateProfile(string username, string? bio, string? avatarUrl, DateOnly? dateOfBirth)
         {
             Username = username;
             Bio = bio;
             AvatarUrl = avatarUrl;
-            DateOfBirth = dateOfBirth;
+            if (dateOfBirth.HasValue)
+            {
+                DateOfBirth = dateOfBirth.Value;
+            }
 
             RaiseDomainEvent(new UserUpdatedEvent(this));
         }

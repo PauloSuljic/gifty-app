@@ -23,7 +23,17 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!firebaseUser || !firebaseUser.emailVerified || hasFetched.current) return;
+      if (!firebaseUser) {
+        setFetching(false);
+        return;
+      }
+
+      if (!firebaseUser.emailVerified) {
+        setFetching(false);
+        return;
+      }
+
+      if (hasFetched.current) return;
       hasFetched.current = true;
       setFetching(true);
 

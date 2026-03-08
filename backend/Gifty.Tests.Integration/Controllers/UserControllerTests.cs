@@ -77,6 +77,34 @@ namespace Gifty.Tests.Integration.Controllers
         }
 
         [Fact]
+        public async Task CreateUser_WithoutDateOfBirth_ShouldPersistNullDateOfBirth()
+        {
+            var userId = "no-dob-user";
+            var client = factory.CreateClientWithTestAuth(userId);
+
+            var user = BuildUserDto(
+                userId,
+                $"NoDob_{Guid.NewGuid()}",
+                $"nodob_{Guid.NewGuid()}@example.com",
+                "No birthday yet"
+            );
+
+            var createResponse = await client.PostAsJsonAsync("/api/users", user);
+            createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var created = await createResponse.Content.ReadFromJsonAsync<UserDto>();
+            created.Should().NotBeNull();
+            created?.DateOfBirth.Should().BeNull();
+
+            var getResponse = await client.GetAsync($"/api/users/{userId}");
+            getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var fetched = await getResponse.Content.ReadFromJsonAsync<UserDto>();
+            fetched.Should().NotBeNull();
+            fetched?.DateOfBirth.Should().BeNull();
+        }
+
+        [Fact]
         public async Task GetUserByFirebaseUid_ShouldReturnNotFound_WhenUserMissing()
         {
             var client = factory.CreateClientWithTestAuth("someone");
