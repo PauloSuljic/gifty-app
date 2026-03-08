@@ -43,6 +43,25 @@ const WishlistItem = ({
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
   const isReserver = reservedBy === currentUser;
+  const reservationState = !isReserved
+    ? "available"
+    : isReserver
+      ? "reservedByMe"
+      : "reservedByOther";
+
+  const reservationLabel =
+    reservationState === "reservedByMe"
+      ? "Reserved by you"
+      : reservationState === "reservedByOther"
+        ? "Reserved"
+        : "Available";
+
+  const reserveButtonClass =
+    reservationState === "reservedByMe"
+      ? "text-emerald-400 hover:text-emerald-300"
+      : reservationState === "reservedByOther"
+        ? "text-amber-400 hover:text-amber-300"
+        : "text-gray-400 hover:text-purple-400";
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -87,7 +106,20 @@ const WishlistItem = ({
 
       {/* 📄 Info section */}
       <div className="flex-1 min-w-0" onClick={() => link && setIsLinkModalOpen(true)}>
-        <h3 className="text-sm font-medium">{name}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-medium">{name}</h3>
+          {context !== "own" && isReserved && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                reservationState === "reservedByMe"
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : "bg-amber-500/20 text-amber-300"
+              }`}
+            >
+              {reservationLabel}
+            </span>
+          )}
+        </div>
         {description && (
           <p className="text-xs text-gray-400 line-clamp-2 italic leading-snug">
             {description}
@@ -149,7 +181,9 @@ const WishlistItem = ({
 
               handleConfirmClick(isReserved ? "unreserve" : "reserve");
             }}
-            className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
+            className={reserveButtonClass}
+            title={reservationLabel}
+            aria-label={reservationLabel}
           >
             {isReserved ? <FiLock className="text-large" /> : <FiUnlock className="text-large" />}
           </button>
