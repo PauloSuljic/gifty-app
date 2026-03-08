@@ -28,6 +28,7 @@ export function useWishlists() {
   const [wishlists, setWishlists] = useState<WishlistType[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Record<string, WishlistItemType[]>>({});
   const [wishlistOrder, setWishlistOrder] = useState<string[]>([]);
+  const [isWishlistsLoading, setIsWishlistsLoading] = useState(true);
 
   const fetchWishlistItems = useCallback(
     async (wishlistId: string) => {
@@ -46,7 +47,12 @@ export function useWishlists() {
   );
 
   const fetchWishlists = useCallback(async () => {
-    if (!firebaseUser) return;
+    if (!firebaseUser) {
+      setIsWishlistsLoading(false);
+      return;
+    }
+
+    setIsWishlistsLoading(true);
     const token = await firebaseUser.getIdToken();
     try {
       const data = await apiClient.get<WishlistType[]>("/api/wishlists", {
@@ -57,11 +63,18 @@ export function useWishlists() {
       data.forEach((wishlist: WishlistType) => fetchWishlistItems(wishlist.id));
     } catch (error) {
       console.error("Failed to fetch wishlists:", error);
+    } finally {
+      setIsWishlistsLoading(false);
     }
   }, [firebaseUser, fetchWishlistItems]);
 
   useEffect(() => {
-    if (firebaseUser) fetchWishlists();
+    if (firebaseUser) {
+      fetchWishlists();
+      return;
+    }
+
+    setIsWishlistsLoading(false);
   }, [firebaseUser, fetchWishlists]);
 
   const persistWishlistOrder = useCallback(
@@ -156,6 +169,7 @@ export function useWishlists() {
     setWishlistItems,
     wishlistOrder,
     setWishlistOrder,
+    isWishlistsLoading,
     fetchWishlists,
     createWishlist,
     deleteWishlist,
