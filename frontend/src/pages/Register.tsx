@@ -174,9 +174,15 @@ const Register = () => {
 
           {/* Date of Birth */}
           <div className="relative">
+            <label htmlFor="dateOfBirth" className="sr-only">
+              Date of birth
+            </label>
             <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white pointer-events-none" />
             {!dateOfBirth && (
-              <span className="pointer-events-none absolute inset-y-0 left-10 flex items-center text-gray-300">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-10 flex items-center text-gray-300"
+              >
                 Select your birthday
               </span>
             )}
