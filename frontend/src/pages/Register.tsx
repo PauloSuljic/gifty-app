@@ -38,6 +38,8 @@ const getRegistrationErrorMessage = (error: unknown): string => {
 
 const Register = () => {
   const { register, loginWithGoogle } = useAuth();
+  const emailSignupPanelId = "email-signup-panel";
+  const [signupMethod, setSignupMethod] = useState<"email" | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,6 +47,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [passwordMatchError, setPasswordMatchError] = useState(false);
 
@@ -77,9 +80,21 @@ const Register = () => {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    setError("");
+    setGoogleLoading(true);
+
+    try {
+      await loginWithGoogle();
+    } catch {
+      setError("Failed to sign in with Google. Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white px-4 pt-8"> 
-      {/* added pt-8 for top spacing */}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white px-4 pt-8">
       <div className="mb-8 text-center">
         <img
           src="/gifty-logo.png"
@@ -90,141 +105,175 @@ const Register = () => {
 
       <div className="w-full max-w-md p-6 space-y-6 bg-gray-800 rounded-lg shadow-lg">
         <h2 className="text-2xl font-bold text-center">Register</h2>
+        <p className="text-sm text-gray-300 text-center">
+          Choose how you want to create your account.
+        </p>
 
         {error && <p className="text-red-500 text-center">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            id="email"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
-            required
-            autoFocus
-          />
-
-          {/* Password */}
-          <div className="relative">
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 
-                        focus:outline-none focus:border-purple-500 pr-10"
-              required
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FiEyeOff /> : <FiEye />}
-            </button>
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <div className="relative">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setPasswordMatchError(false);
-                }}
-                onBlur={() => {
-                  if (confirmPassword && confirmPassword !== password) {
-                    setPasswordMatchError(true);
-                  } else {
-                    setPasswordMatchError(false);
-                  }
-                }}
-                className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 
-                          focus:outline-none focus:border-purple-500 pr-10"
-                required
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
-            </div>
-            {passwordMatchError && (
-              <p className="text-red-400 text-xs mt-1">
-                Passwords do not match.
-              </p>
-            )}
-          </div>
-
-          {/* Terms */}
-          <label className="flex items-start gap-2 text-sm text-gray-300">
-            <input
-              ref={checkboxRef}
-              type="checkbox"
-              checked={agreeToTerms}
-              onChange={(e) => setAgreeToTerms(e.target.checked)}
-              className="mt-1 h-5 w-5 accent-purple-600 rounded"
-              required
-            />
-            <span className="pt-1">
-              &nbsp;I agree to Gifty's{" "}
-              <Link
-                to="/terms"
-                className="text-blue-400 underline hover:text-blue-300"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link
-                to="/privacy"
-                className="text-blue-400 underline hover:text-blue-300"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Privacy Policy
-              </Link>
-            </span>
-          </label>
-
-          {/* Register Button */}
-          <button
-            type="submit"
-            className={`w-full px-4 py-2 rounded transition ${
-              loading
-                ? "bg-gray-600 cursor-not-allowed"
-                : "bg-purple-600 hover:bg-purple-700"
-            }`}
-            disabled={loading}
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
-
-          {/* Register with Google */}
+        <div className="space-y-3">
           <button
             type="button"
-            onClick={loginWithGoogle}
-            className="w-full px-4 py-2 rounded border border-gray-600 bg-gray-700 hover:bg-gray-600 flex items-center justify-center gap-2 transition"
+            onClick={handleGoogleSignup}
+            className="w-full px-4 py-3 rounded border border-gray-600 bg-gray-700 hover:bg-gray-600 flex items-center justify-center gap-2 transition disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={loading || googleLoading}
           >
-            <FcGoogle className="text-xl" /> Register with Google
+            <FcGoogle className="text-xl" />
+            {googleLoading ? "Connecting to Google..." : "Register with Google"}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              setSignupMethod("email");
+            }}
+            className="w-full px-4 py-3 rounded bg-purple-600 hover:bg-purple-700 transition disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={loading || googleLoading}
+            aria-expanded={signupMethod === "email"}
+            aria-controls={emailSignupPanelId}
+          >
+            Register with Email
+          </button>
+        </div>
 
-          <p className="text-center text-sm">
-            Already have an account?{" "}
-            <Link to="/login" className="text-blue-400 hover:text-blue-300">
-              Login
-            </Link>
-          </p>
-        </form>
+        <div
+          id={emailSignupPanelId}
+          className={`overflow-hidden transition-all duration-300 ease-out ${
+            signupMethod === "email" ? "max-h-[700px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+          aria-hidden={signupMethod !== "email"}
+        >
+          {signupMethod === "email" && (
+            <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+              <input
+                id="email"
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
+                required
+                autoFocus
+              />
+
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => {
+                    const nextPassword = e.target.value;
+                    setPassword(nextPassword);
+
+                    if (confirmPassword) {
+                      setPasswordMatchError(confirmPassword !== nextPassword);
+                    } else {
+                      setPasswordMatchError(false);
+                    }
+                  }}
+                  className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+
+              <div>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setPasswordMatchError(false);
+                    }}
+                    onBlur={() => {
+                      if (confirmPassword && confirmPassword !== password) {
+                        setPasswordMatchError(true);
+                      } else {
+                        setPasswordMatchError(false);
+                      }
+                    }}
+                    className="w-full px-3 py-2 rounded-md bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  >
+                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                  </button>
+                </div>
+                {passwordMatchError && (
+                  <p className="text-red-400 text-xs mt-1">
+                    Passwords do not match.
+                  </p>
+                )}
+              </div>
+
+              <label className="flex items-start gap-2 text-sm text-gray-300">
+                <input
+                  ref={checkboxRef}
+                  type="checkbox"
+                  checked={agreeToTerms}
+                  onChange={(e) => setAgreeToTerms(e.target.checked)}
+                  className="mt-1 h-5 w-5 accent-purple-600 rounded"
+                  required
+                />
+                <span className="pt-1">
+                  &nbsp;I agree to Gifty&apos;s{" "}
+                  <Link
+                    to="/terms"
+                    className="text-blue-400 underline hover:text-blue-300"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/privacy"
+                    className="text-blue-400 underline hover:text-blue-300"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                className={`w-full px-4 py-2 rounded transition ${
+                  loading
+                    ? "bg-gray-600 cursor-not-allowed"
+                    : "bg-purple-600 hover:bg-purple-700"
+                }`}
+                disabled={loading || googleLoading}
+              >
+                {loading ? "Registering..." : "Register"}
+              </button>
+            </form>
+          )}
+        </div>
+
+        <p className="text-center text-sm">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-400 hover:text-blue-300">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );
