@@ -15,10 +15,36 @@ const avatarOptions = [
   "/avatars/avatar9.png"
 ];
 
+type ProfileFormState = {
+  username: string;
+  bio: string;
+  avatarUrl: string;
+  dateOfBirth: string;
+};
+
 const Profile = () => {
   const { firebaseUser, refreshDatabaseUser } = useAuth();
-  const [user, setUser] = useState({ username: "", bio: "", avatarUrl: "", dateOfBirth: "" });
+  const [user, setUser] = useState<ProfileFormState>({
+    username: "",
+    bio: "",
+    avatarUrl: "",
+    dateOfBirth: "",
+  });
+  const [initialUser, setInitialUser] = useState<ProfileFormState>({
+    username: "",
+    bio: "",
+    avatarUrl: "",
+    dateOfBirth: "",
+  });
   const [selectedAvatar, setSelectedAvatar] = useState("");
+  const [initialSelectedAvatar, setInitialSelectedAvatar] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const isDirty =
+    user.username !== initialUser.username ||
+    user.bio !== initialUser.bio ||
+    user.dateOfBirth !== initialUser.dateOfBirth ||
+    selectedAvatar !== initialSelectedAvatar;
 
   useEffect(() => {
     if (!firebaseUser) return;
@@ -31,20 +57,26 @@ const Profile = () => {
         avatarUrl: string;
         dateOfBirth?: string;
       }>(`/api/users/${firebaseUser.uid}`, { token });
-      setUser({
+      const initialState = {
         username: userData.username,
         bio: userData.bio,
         avatarUrl: userData.avatarUrl,
         dateOfBirth: userData.dateOfBirth || ""
-      });
+      };
+
+      setUser(initialState);
+      setInitialUser(initialState);
       setSelectedAvatar(userData.avatarUrl);
+      setInitialSelectedAvatar(userData.avatarUrl);
     };
 
     fetchUserData();
   }, [firebaseUser]);
 
   const handleUpdateProfile = async () => {
+    if (!firebaseUser || !isDirty || isSaving) return;
     const token = await firebaseUser?.getIdToken();
+    setIsSaving(true);
 
     try {
       await apiClient.request<void>(`/api/users/${firebaseUser?.uid}`, {
@@ -58,10 +90,14 @@ const Profile = () => {
         },
       });
     } catch {
+      setIsSaving(false);
       toast.error("Failed to update profile 😞");
       return;
     }
 
+    setInitialUser(user);
+    setInitialSelectedAvatar(selectedAvatar);
+    setIsSaving(false);
     toast.success("Profile updated successfully! 🎉");
 
     await refreshDatabaseUser(); // ✅ This updates the header instantly
@@ -125,9 +161,13 @@ const Profile = () => {
         </div>
   
         {/* Save Button */}
+        {isDirty && (
+          <p className="text-sm text-amber-300 mt-6 mb-2">Unsaved changes</p>
+        )}
         <button
           onClick={handleUpdateProfile}
-          className="px-6 py-3 bg-purple-500 hover:bg-purple-600 rounded-lg transition shadow-lg w-full mt-6"
+          disabled={!isDirty || isSaving}
+          className="px-6 py-3 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-500/60 disabled:cursor-not-allowed rounded-lg transition shadow-lg w-full mt-1"
         >
           Save Changes
         </button>
