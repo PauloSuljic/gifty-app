@@ -95,12 +95,6 @@ const ProfileNameOnboarding = () => {
         <p className="text-sm text-gray-300 text-center">
           How should your name appear to friends?
         </p>
-        {suggestedName && (
-          <p className="text-sm text-purple-300 text-center">
-            We found a profile name. Is this correct?
-          </p>
-        )}
-
         {error && <p className="text-sm text-red-400 text-center">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
