@@ -18,7 +18,6 @@ const avatarOptions = [
 type ProfileFormState = {
   username: string;
   bio: string;
-  avatarUrl: string;
   dateOfBirth: string;
 };
 
@@ -27,13 +26,11 @@ const Profile = () => {
   const [user, setUser] = useState<ProfileFormState>({
     username: "",
     bio: "",
-    avatarUrl: "",
     dateOfBirth: "",
   });
   const [initialUser, setInitialUser] = useState<ProfileFormState>({
     username: "",
     bio: "",
-    avatarUrl: "",
     dateOfBirth: "",
   });
   const [selectedAvatar, setSelectedAvatar] = useState("");
@@ -50,24 +47,27 @@ const Profile = () => {
     if (!firebaseUser) return;
 
     const fetchUserData = async () => {
-      const token = await firebaseUser.getIdToken();
-      const userData = await apiClient.get<{
-        username: string;
-        bio: string;
-        avatarUrl: string;
-        dateOfBirth?: string;
-      }>(`/api/users/${firebaseUser.uid}`, { token });
-      const initialState = {
-        username: userData.username,
-        bio: userData.bio,
-        avatarUrl: userData.avatarUrl,
-        dateOfBirth: userData.dateOfBirth || ""
-      };
+      try {
+        const token = await firebaseUser.getIdToken();
+        const userData = await apiClient.get<{
+          username: string;
+          bio: string;
+          avatarUrl: string;
+          dateOfBirth?: string;
+        }>(`/api/users/${firebaseUser.uid}`, { token });
+        const initialState = {
+          username: userData.username,
+          bio: userData.bio,
+          dateOfBirth: userData.dateOfBirth || ""
+        };
 
-      setUser(initialState);
-      setInitialUser(initialState);
-      setSelectedAvatar(userData.avatarUrl);
-      setInitialSelectedAvatar(userData.avatarUrl);
+        setUser(initialState);
+        setInitialUser(initialState);
+        setSelectedAvatar(userData.avatarUrl);
+        setInitialSelectedAvatar(userData.avatarUrl);
+      } catch {
+        toast.error("Failed to load profile 😞");
+      }
     };
 
     fetchUserData();
@@ -75,10 +75,10 @@ const Profile = () => {
 
   const handleUpdateProfile = async () => {
     if (!firebaseUser || !isDirty || isSaving) return;
-    const token = await firebaseUser?.getIdToken();
     setIsSaving(true);
 
     try {
+      const token = await firebaseUser.getIdToken();
       await apiClient.request<void>(`/api/users/${firebaseUser?.uid}`, {
         method: "PUT",
         token,
@@ -89,18 +89,15 @@ const Profile = () => {
           dateOfBirth: user.dateOfBirth,
         },
       });
+      setInitialUser(user);
+      setInitialSelectedAvatar(selectedAvatar);
+      toast.success("Profile updated successfully! 🎉");
+      await refreshDatabaseUser(); // ✅ This updates the header instantly
     } catch {
-      setIsSaving(false);
       toast.error("Failed to update profile 😞");
-      return;
+    } finally {
+      setIsSaving(false);
     }
-
-    setInitialUser(user);
-    setInitialSelectedAvatar(selectedAvatar);
-    setIsSaving(false);
-    toast.success("Profile updated successfully! 🎉");
-
-    await refreshDatabaseUser(); // ✅ This updates the header instantly
   };
 
   return (
