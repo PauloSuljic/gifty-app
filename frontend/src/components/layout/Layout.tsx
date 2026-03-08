@@ -3,7 +3,7 @@ import Sidebar from "../Sidebar";
 import GuestSidebar from "../ui/GuestSidebar";
 import DashboardHeader from "../DashboardHeader";
 import { FiMenu, FiBell } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotificationContext } from "../../context/useNotificationContext";
 import NotificationsModal from "../ui/modals/NotificationsModal";
@@ -80,6 +80,7 @@ const UserLayoutInner = ({
   isNotificationsOpen,
   setIsNotificationsOpen,
 }: UserLayoutInnerProps) => {
+  const navigate = useNavigate();
   const { firebaseUser } = useAuth();
   const { unreadCount, markAllAsRead, loadNotifications } = useNotificationContext();
 
@@ -145,37 +146,38 @@ const UserLayoutInner = ({
         )}
 
         <div className="flex-1 flex flex-col p-4 pt-4 lg:pt-6">
-          {firebaseUser && (
-            <div className="hidden lg:flex justify-end mb-4">
-              <button
-                onClick={toggleNotifications}
-                className="p-2.5 bg-gray-800/90 hover:bg-gray-700 rounded-lg shadow-lg text-white relative transition-colors"
-                aria-label="Open notifications panel"
-                aria-expanded={isNotificationsOpen}
-                aria-controls="desktop-notifications-panel"
-              >
-                <FiBell size={22} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-purple-500 text-xs text-white rounded-full px-1.5 py-0.5 leading-none">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          )}
-
           {!hideHeader && (
-            <Link
-              to="/profile"
-              className="cursor-pointer"
-              aria-label="Go to profile"
-            >
-              <DashboardHeader />
-            </Link>
+            <div className="mb-3">
+              <DashboardHeader
+                onClick={() => navigate("/profile")}
+                action={
+                  firebaseUser ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleNotifications();
+                      }}
+                      className="hidden lg:inline-flex items-center justify-center h-10 w-10 rounded-lg border border-gray-700/80 bg-gray-800/70 hover:bg-gray-700/80 text-gray-200 relative transition-colors"
+                      aria-label="Open notifications panel"
+                      aria-expanded={isNotificationsOpen}
+                      aria-controls="desktop-notifications-panel"
+                    >
+                      <FiBell size={18} className="text-purple-300" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-purple-500 text-[10px] font-semibold text-white leading-none">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  ) : null
+                }
+              />
+            </div>
           )}
 
           <div className="flex-1 overflow-y-auto p-2">{children}</div>
         </div>
+
       </div>
     </div>
   );
