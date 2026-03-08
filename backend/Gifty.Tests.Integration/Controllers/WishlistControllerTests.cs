@@ -90,8 +90,41 @@ namespace Gifty.Tests.Integration.Controllers
 
             var result = await response.Content.ReadFromJsonAsync<List<WishlistDto>>();
             result.Should().NotBeNull();
-            result?.Count.Should().Be(2);
+            result?.Count.Should().Be(4);
             result?.All(w => w.UserId == userId).Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetUserWishlists_ForNewUser_ShouldReturnStarterTemplates()
+        {
+            var userId = Guid.NewGuid().ToString();
+            var client = _factory.CreateClientWithTestAuth(userId);
+            await CreateTestUser(userId, client);
+
+            var response = await client.GetAsync("/api/wishlists");
+            response.EnsureSuccessStatusCode();
+
+            var wishlists = await response.Content.ReadFromJsonAsync<List<WishlistDto>>();
+            wishlists.Should().NotBeNull().And.HaveCount(2);
+            wishlists!.Select(w => w.Name).Should().Equal("Christmas", "Birthday");
+        }
+
+        [Fact]
+        public async Task GetUserWishlists_ForNewUser_ShouldNotCreateDuplicatesOnSubsequentFetches()
+        {
+            var userId = Guid.NewGuid().ToString();
+            var client = _factory.CreateClientWithTestAuth(userId);
+            await CreateTestUser(userId, client);
+
+            var firstResponse = await client.GetAsync("/api/wishlists");
+            firstResponse.EnsureSuccessStatusCode();
+
+            var secondResponse = await client.GetAsync("/api/wishlists");
+            secondResponse.EnsureSuccessStatusCode();
+
+            var wishlists = await secondResponse.Content.ReadFromJsonAsync<List<WishlistDto>>();
+            wishlists.Should().NotBeNull().And.HaveCount(2);
+            wishlists!.Select(w => w.Name).Should().Equal("Christmas", "Birthday");
         }
 
         [Fact]
@@ -167,10 +200,15 @@ namespace Gifty.Tests.Integration.Controllers
             finalRes.EnsureSuccessStatusCode();
 
             var wishlists = await finalRes.Content.ReadFromJsonAsync<List<WishlistDto>>();
-            wishlists.Should().NotBeNull().And.HaveCount(2);
-            
-            wishlists![0].Id.Should().Be(created2.Id);
-            wishlists![1].Id.Should().Be(created1.Id);
+            wishlists.Should().NotBeNull();
+
+            var reorderedLists = wishlists!
+                .Where(w => w.Id == created2!.Id || w.Id == created1!.Id)
+                .ToList();
+
+            reorderedLists.Should().HaveCount(2);
+            reorderedLists[0].Id.Should().Be(created2.Id);
+            reorderedLists[1].Id.Should().Be(created1.Id);
         }
     }
 }

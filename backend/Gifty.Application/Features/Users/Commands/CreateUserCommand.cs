@@ -2,6 +2,7 @@ using MediatR;
 using Gifty.Domain.Interfaces;
 using Gifty.Application.Features.Users.Dtos;
 using Gifty.Domain.Entities.Users;
+using Gifty.Domain.Entities;
 using Gifty.Application.Common.Exceptions;
 
 namespace Gifty.Application.Features.Users.Commands;
@@ -15,8 +16,10 @@ public record CreateUserCommand(
     DateOnly? DateOfBirth
 ) : IRequest<UserDto>
 {
-    public class CreateUserCommandHandler(IUserRepository userRepository) : IRequestHandler<CreateUserCommand, UserDto>
+    public class CreateUserCommandHandler(IUserRepository userRepository, IWishlistRepository wishlistRepository) : IRequestHandler<CreateUserCommand, UserDto>
     {
+        private static readonly string[] StarterWishlistNames = ["Christmas", "Birthday"];
+
         public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
         {
             var existingUserById = await userRepository.GetByIdAsync(request.Id);
@@ -42,6 +45,20 @@ public record CreateUserCommand(
 
             await userRepository.AddAsync(user);
             await userRepository.SaveChangesAsync();
+
+            var starterOrder = -1;
+            for (var index = 0; index < StarterWishlistNames.Length; index++)
+            {
+                var wishlist = Wishlist.Create(
+                    StarterWishlistNames[index],
+                    request.Id,
+                    isPublic: false,
+                    order: starterOrder
+                );
+                await wishlistRepository.AddAsync(wishlist);
+                starterOrder--;
+            }
+            await wishlistRepository.SaveChangesAsync();
 
             return new UserDto
             {
