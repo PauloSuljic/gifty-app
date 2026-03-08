@@ -4,6 +4,38 @@ import { Link } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 
+const getRegistrationErrorMessage = (error: unknown): string => {
+  const code =
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+      ? error.code
+      : "";
+
+  const message =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+      ? error.message
+      : "";
+
+  if (code === "auth/email-already-in-use" || message.includes("auth/email-already-in-use")) {
+    return "This email is already registered.";
+  }
+
+  if (code === "auth/weak-password" || message.includes("WEAK_PASSWORD")) {
+    return "Password is too weak. Use at least 6 characters.";
+  }
+
+  if (code === "auth/invalid-email" || message.includes("auth/invalid-email")) {
+    return "Please enter a valid email address.";
+  }
+
+  return "Failed to register. Please try again.";
+};
+
 const Register = () => {
   const { register, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
@@ -40,15 +72,10 @@ const Register = () => {
     try {
       await register(email, password, username);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "";
-      if (message.includes("auth/email-already-in-use")) {
-        setError("This email is already registered.");
-      } else {
-        setError("Failed to register. Please try again.");
-      }
+      setError(getRegistrationErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
