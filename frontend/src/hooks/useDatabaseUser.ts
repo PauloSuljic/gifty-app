@@ -32,6 +32,15 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
   const [databaseUserLoading, setDatabaseUserLoading] = useState(false);
   const [databaseUserError, setDatabaseUserError] = useState<string | null>(null);
 
+  const verifyUserExistsById = useCallback(async (token: string, uid: string) => {
+    try {
+      await apiClient.get<GiftyUser>(`/api/users/${uid}`, { token });
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
   const fetchDatabaseUser = useCallback(async (token: string, uid: string) => {
     try {
       const data = await apiClient.get<GiftyUser>(`/api/users/${uid}`, { token });
@@ -68,9 +77,14 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
         if (!(createError instanceof ApiError) || createError.status !== 409) {
           throw createError;
         }
+
+        const existsById = await verifyUserExistsById(token, user.uid);
+        if (!existsById) {
+          throw createError;
+        }
       }
     }
-  }, []);
+  }, [verifyUserExistsById]);
 
   useEffect(() => {
     const syncDatabaseUser = async () => {
@@ -146,8 +160,13 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
       if (!(error instanceof ApiError) || error.status !== 409) {
         throw error;
       }
+
+      const existsById = await verifyUserExistsById(token, input.user.uid);
+      if (!existsById) {
+        throw error;
+      }
     }
-  }, []);
+  }, [verifyUserExistsById]);
 
   const clearDatabaseUser = useCallback(() => {
     setDatabaseUser(null);
