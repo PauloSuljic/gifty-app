@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiCopy, FiMove } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiLock, FiUnlock, FiExternalLink, FiMove } from "react-icons/fi";
 import ConfirmReserveModal from "./ui/modals/ConfirmReserveModal";
 import Modal from "./ui/Modal";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
@@ -13,6 +13,8 @@ type WishlistItemProps = {
   reservedBy?: string | null;
   wishlistOwner: string;
   currentUser?: string;
+  isReservedByCurrentUser?: boolean;
+  hasReservedItemByCurrentUser?: boolean;
   imageUrl?: string;
   context: "own" | "shared" | "guest";
   onToggleReserve?: () => void;
@@ -30,6 +32,8 @@ const WishlistItem = ({
   isReserved,
   reservedBy,
   currentUser,
+  isReservedByCurrentUser,
+  hasReservedItemByCurrentUser = false,
   imageUrl,
   context = "own",
   onToggleReserve,
@@ -42,7 +46,40 @@ const WishlistItem = ({
   const [modalAction, setModalAction] = useState<"reserve" | "unreserve" | null>(null);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
-  const isReserver = reservedBy === currentUser;
+  const isReserver = isReservedByCurrentUser ?? reservedBy === currentUser;
+  const reservationState = !isReserved
+    ? "available"
+    : isReserver
+      ? "reservedByMe"
+      : "reservedByOther";
+
+  const reservationLabel =
+    reservationState === "reservedByMe"
+      ? "Reserved by you"
+      : reservationState === "reservedByOther"
+        ? "Reserved"
+        : "Available";
+
+  const reserveButtonClass =
+    reservationState === "reservedByMe"
+      ? "text-emerald-400 hover:text-emerald-300"
+      : reservationState === "reservedByOther"
+        ? "text-amber-400 hover:text-amber-300"
+        : "text-gray-400 hover:text-purple-400";
+  const isReservationBlockedByLimit = context === "shared" && hasReservedItemByCurrentUser && !isReserver;
+  const isReservationBlockedByOtherUser = context !== "own" && isReserved && !isReserver;
+  const isReserveDisabled =
+    context === "guest" ||
+    isReservationBlockedByLimit ||
+    isReservationBlockedByOtherUser ||
+    isReserver;
+  const reserveActionLabel = isReserver
+    ? "Unreserve item"
+    : isReservationBlockedByLimit
+      ? "Cannot reserve item: you already reserved an item in this wishlist"
+      : isReservationBlockedByOtherUser
+        ? "Cannot reserve item: already reserved by someone else"
+        : "Reserve item";
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -87,7 +124,20 @@ const WishlistItem = ({
 
       {/* 📄 Info section */}
       <div className="flex-1 min-w-0" onClick={() => link && setIsLinkModalOpen(true)}>
-        <h3 className="text-sm font-medium">{name}</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-medium">{name}</h3>
+          {context !== "own" && isReserved && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                reservationState === "reservedByMe"
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : "bg-amber-500/20 text-amber-300"
+              }`}
+            >
+              {reservationLabel}
+            </span>
+          )}
+        </div>
         {description && (
           <p className="text-xs text-gray-400 line-clamp-2 italic leading-snug">
             {description}
@@ -147,9 +197,26 @@ const WishlistItem = ({
                 return;
               }
 
+              if (!isReserved && isReservationBlockedByLimit) {
+                import("react-hot-toast").then(({ toast }) => {
+                  toast.error("You can only reserve one item from this wishlist.", {
+                    duration: 3000,
+                    position: "bottom-center",
+                    style: {
+                      background: "#333",
+                      color: "#fff",
+                      border: "1px solid #555",
+                    },
+                  });
+                });
+                return;
+              }
+
               handleConfirmClick(isReserved ? "unreserve" : "reserve");
             }}
-            className={isReserved ? "text-purple-400" : "text-gray-400 hover:text-purple-400"}
+            className={reserveButtonClass}
+            title={reserveActionLabel}
+            aria-label={reserveActionLabel}
           >
             {isReserved ? <FiLock className="text-large" /> : <FiUnlock className="text-large" />}
           </button>
@@ -171,16 +238,54 @@ const WishlistItem = ({
         >
           <FiExternalLink className="inline mr-1" /> Open
         </a>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(link);
-            setIsLinkModalOpen(false);
-          }}
-          className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
-        >
-          <FiCopy className="inline mr-1" /> Copy
-        </button>
+        {context === "own" ? (
+          <button
+            onClick={() => {
+              setIsLinkModalOpen(false);
+            }}
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-700 text-white"
+          >
+            Close
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              if (context === "guest") {
+                setIsLinkModalOpen(false);
+                window.location.href = "/login";
+                return;
+              }
+
+              if (isReserveDisabled) return;
+              setIsLinkModalOpen(false);
+              handleConfirmClick("reserve");
+            }}
+            disabled={isReserveDisabled}
+            className={`flex-1 px-4 py-2 rounded-lg text-white ${
+              isReserveDisabled
+                ? "bg-gray-700 cursor-not-allowed opacity-70"
+                : "bg-emerald-600 hover:bg-emerald-500"
+            }`}
+          >
+            Reserve
+          </button>
+        )}
       </div>
+      {context === "shared" && isReservationBlockedByLimit && (
+        <p className="mt-3 text-xs text-amber-300">
+          You already reserved an item in this wishlist.
+        </p>
+      )}
+      {context === "shared" && isReservationBlockedByOtherUser && (
+        <p className="mt-3 text-xs text-amber-300">
+          This item is already reserved by someone else.
+        </p>
+      )}
+      {context === "shared" && isReserver && (
+        <p className="mt-3 text-xs text-emerald-300">
+          This item is reserved by you.
+        </p>
+      )}
     </Modal>
 
     {/* 🎁 Reserve/Unreserve Modal */}

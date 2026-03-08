@@ -365,4 +365,55 @@ public class WishlistItemControllerTests
         // Guests are never owners
         item.IsOwner.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task GetWishlistItems_AsSharedViewer_ShouldSetIsReservedByCurrentUser_WithoutExposingReserver()
+    {
+        var wishlist = await CreateWishlistAsync();
+
+        var item1Res = await _client.PostAsJsonAsync($"/api/wishlists/{wishlist.Id}/items", new CreateWishlistItemDto
+        {
+            Name = "Shared item 1",
+            Link = "https://item1.com"
+        });
+        item1Res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var item1 = await item1Res.Content.ReadFromJsonAsync<WishlistItemDto>();
+        item1.Should().NotBeNull();
+
+        var item2Res = await _client.PostAsJsonAsync($"/api/wishlists/{wishlist.Id}/items", new CreateWishlistItemDto
+        {
+            Name = "Shared item 2",
+            Link = "https://item2.com"
+        });
+        item2Res.StatusCode.Should().Be(HttpStatusCode.OK);
+        var item2 = await item2Res.Content.ReadFromJsonAsync<WishlistItemDto>();
+        item2.Should().NotBeNull();
+
+        var viewerId = Guid.NewGuid().ToString();
+        var viewerClient = _factory.CreateClientWithTestAuth(viewerId);
+        await CreateTestUser(viewerId, viewerClient);
+
+        var reserveAsViewer = await viewerClient.PatchAsync(
+            $"/api/wishlists/{wishlist.Id}/items/{item1!.Id}/reserve",
+            null
+        );
+        reserveAsViewer.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await viewerClient.GetAsync($"/api/wishlists/{wishlist.Id}/items");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var items = await response.Content.ReadFromJsonAsync<List<WishlistItemDto>>();
+        items.Should().NotBeNull();
+        items.Should().HaveCount(2);
+        var fetchedItems = items!;
+
+        var viewerReserved = fetchedItems.Single(i => i.Id == item1.Id);
+        viewerReserved.IsReserved.Should().BeTrue();
+        viewerReserved.IsReservedByCurrentUser.Should().BeTrue();
+        viewerReserved.ReservedBy.Should().BeNull();
+
+        var nonReserved = fetchedItems.Single(i => i.Id == item2!.Id);
+        nonReserved.IsReservedByCurrentUser.Should().BeFalse();
+        nonReserved.ReservedBy.Should().BeNull();
+    }
 }
