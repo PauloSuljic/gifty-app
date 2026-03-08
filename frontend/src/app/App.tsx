@@ -20,6 +20,7 @@ import { NotificationProvider } from "../context/NotificationContext";
 import NotificationsPage from "../pages/NotificationsPage";
 import LayoutWrapper from "../components/layout/LayoutWrapper";
 import Layout from "../components/layout/Layout";
+import BirthdayOnboarding from "../pages/BirthdayOnboarding";
 
 const App = () => {
   return (
@@ -55,6 +56,14 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route
+          path="/onboarding/birthday"
+          element={
+            <PrivateRoute>
+              <BirthdayOnboarding />
+            </PrivateRoute>
+          }
+        />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route

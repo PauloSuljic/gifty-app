@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useEffect, useState, useRef } from "react";
 import { ApiError, apiClient } from "../../shared/lib/apiClient";
@@ -16,6 +16,7 @@ export type GiftyUser = {
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { firebaseUser, loading } = useAuth();
+  const location = useLocation();
   const [user, setUser] = useState<GiftyUser | null>(null);
   const [fetching, setFetching] = useState(true);
   const hasFetched = useRef(false);
@@ -44,7 +45,6 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
                 email: firebaseUser.email,
                 avatarUrl: "",
                 bio: "",
-                dateOfBirth: ""
               },
               { token }
             );
@@ -81,6 +81,17 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   // ✅ Redirect unverified users
   if (firebaseUser && !firebaseUser.emailVerified && firebaseUser.providerData[0]?.providerId === "password") {
     return <Navigate to="/verify-email" />;
+  }
+
+  const isOnboardingBirthdayRoute = location.pathname === "/onboarding/birthday";
+  const hasBirthday = Boolean(user?.dateOfBirth?.trim());
+
+  if (firebaseUser && user && !hasBirthday && !isOnboardingBirthdayRoute) {
+    return <Navigate to="/onboarding/birthday" replace />;
+  }
+
+  if (firebaseUser && user && hasBirthday && isOnboardingBirthdayRoute) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // ✅ Allow route only if both auth and user data exist
