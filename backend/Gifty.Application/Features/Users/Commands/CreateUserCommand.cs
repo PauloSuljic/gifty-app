@@ -44,6 +44,7 @@ public record CreateUserCommand(
             );
 
             await userRepository.AddAsync(user);
+            await userRepository.SaveChangesAsync();
 
             var starterOrder = -1;
             for (var index = 0; index < StarterWishlistNames.Length; index++)
@@ -57,8 +58,7 @@ public record CreateUserCommand(
                 await wishlistRepository.AddAsync(wishlist);
                 starterOrder--;
             }
-
-            await userRepository.SaveChangesAsync();
+            await wishlistRepository.SaveChangesAsync();
 
             return new UserDto
             {
