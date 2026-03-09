@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiBell, FiGift, FiUser, FiX, FiCalendar, FiLock, FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiBell, FiGift, FiUser, FiX, FiCalendar, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useNotificationContext } from "../../../context/useNotificationContext";
 import { useNavigate } from "react-router-dom";
 import type { NotificationItem } from "../../../context/NotificationContextCore";
@@ -40,10 +40,7 @@ export default function NotificationsModal({
 
   if (!isOpen) return null;
 
-  const recentNotifications = notifications
-    .slice()
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  const recentNotifications = notifications.slice(0, 5);
 
   const onCloseModal = () => {
     onClose();
@@ -58,7 +55,7 @@ export default function NotificationsModal({
     switch (type) {
       case "BirthdayReminder":
       case "ItemReserved":
-        return <FiLock className="text-purple-400 shrink-0" size={18} />;
+        return <FiGift className="text-purple-400 shrink-0" size={18} />;
       case "WishlistShared":
         return <FiUser className="text-purple-400 shrink-0" size={18} />;
       default:

@@ -17,12 +17,26 @@ const UserHeader = ({
   action,
   onClick,
 }: UserHeaderProps) => {
+  const isInteractive = typeof onClick === "function";
+
   return (
     <div
       className={`relative flex items-center justify-between p-4 lg:px-4 lg:py-3 bg-gray-800/95 text-white rounded-xl border border-gray-700/70 shadow-lg ${
-        onClick ? "cursor-pointer" : ""
+        isInteractive ? "cursor-pointer" : ""
       }`}
       onClick={onClick}
+      role={isInteractive ? "button" : undefined}
+      tabIndex={isInteractive ? 0 : undefined}
+      onKeyDown={
+        isInteractive
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
     >
       <div
         className={`flex min-w-0 ${
