@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiBell, FiGift, FiUser, FiX, FiCalendar, FiLock, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { useNotificationContext } from "../../../context/useNotificationContext";
 import { useNavigate } from "react-router-dom";
@@ -12,10 +12,31 @@ export default function NotificationsModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { notifications, markAllAsRead } = useNotificationContext();
+  const { notifications } = useNotificationContext();
   const navigate = useNavigate();
   const [isBirthdaysExpanded, setIsBirthdaysExpanded] = useState(true);
-  const { birthdays: upcomingBirthdays, loading: birthdaysLoading } = useUpcomingBirthdays(5, isOpen);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : false
+  );
+  const { birthdays: upcomingBirthdays, loading: birthdaysLoading } = useUpcomingBirthdays(
+    5,
+    isOpen && isDesktopViewport
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateViewport = (event: MediaQueryListEvent) => {
+      setIsDesktopViewport(event.matches);
+    };
+
+    setIsDesktopViewport(mediaQuery.matches);
+    mediaQuery.addEventListener("change", updateViewport);
+    return () => mediaQuery.removeEventListener("change", updateViewport);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -26,7 +47,6 @@ export default function NotificationsModal({
 
   const onCloseModal = () => {
     onClose();
-    markAllAsRead();
   };
 
   const handleViewAll = () => {
@@ -64,6 +84,7 @@ export default function NotificationsModal({
           <button
             onClick={onCloseModal}
             className="text-gray-400 hover:text-gray-200"
+            aria-label="Close notifications"
           >
             <FiX size={24} />
           </button>
@@ -152,25 +173,27 @@ export default function NotificationsModal({
               {!birthdaysLoading && upcomingBirthdays.length > 0 && (
                 <ul className="flex flex-col gap-3">
                   {upcomingBirthdays.map((birthday) => (
-                    <li
-                      key={birthday.id}
-                      onClick={() => {
-                        onCloseModal();
-                        navigate("/shared-with-me", {
-                          state: { highlightUserId: birthday.id },
-                        });
-                      }}
-                      className="flex items-start gap-3 p-3 rounded-xl border border-gray-700 bg-gray-800/60 cursor-pointer hover:bg-gray-700/60 transition-colors"
-                    >
-                      <FiGift size={16} className="text-purple-400 mt-1 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-100 truncate">
-                          {birthday.name}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Birthday in {birthday.daysLeft} days
-                        </p>
-                      </div>
+                    <li key={birthday.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onCloseModal();
+                          navigate("/shared-with-me", {
+                            state: { highlightUserId: birthday.id },
+                          });
+                        }}
+                        className="flex w-full items-start gap-3 p-3 rounded-xl border border-gray-700 bg-gray-800/60 cursor-pointer hover:bg-gray-700/60 transition-colors text-left"
+                      >
+                        <FiGift size={16} className="text-purple-400 mt-1 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-100 truncate">
+                            {birthday.name}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Birthday in {birthday.daysLeft} days
+                          </p>
+                        </div>
+                      </button>
                     </li>
                   ))}
                 </ul>

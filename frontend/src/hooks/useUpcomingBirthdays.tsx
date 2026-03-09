@@ -28,15 +28,22 @@ export function useUpcomingBirthdays(limit?: number, enabled = true) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!firebaseUser || !enabled) {
+    if (!firebaseUser) {
+      setBirthdays([]);
       setLoading(false);
+      return;
+    }
+
+    if (!enabled) {
+      setBirthdays([]);
+      setLoading(true);
       return;
     }
 
     const fetchBirthdays = async () => {
       setLoading(true);
-      const token = await firebaseUser.getIdToken();
       try {
+        const token = await firebaseUser.getIdToken();
         const data = await getSharedWithMe(token);
 
         const mapped: UpcomingBirthday[] = data
