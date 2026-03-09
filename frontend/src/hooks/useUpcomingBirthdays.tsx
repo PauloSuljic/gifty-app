@@ -22,17 +22,28 @@ function calculateDaysUntilBirthday(dateString: string): number {
   return Math.ceil((birthday.getTime() - today.getTime()) / 86400000);
 }
 
-export function useUpcomingBirthdays(limit?: number) {
+export function useUpcomingBirthdays(limit?: number, enabled = true) {
   const { firebaseUser } = useAuth();
   const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!firebaseUser) return;
+    if (!firebaseUser) {
+      setBirthdays([]);
+      setLoading(false);
+      return;
+    }
+
+    if (!enabled) {
+      setBirthdays([]);
+      setLoading(true);
+      return;
+    }
 
     const fetchBirthdays = async () => {
-      const token = await firebaseUser.getIdToken();
+      setLoading(true);
       try {
+        const token = await firebaseUser.getIdToken();
         const data = await getSharedWithMe(token);
 
         const mapped: UpcomingBirthday[] = data
@@ -54,7 +65,7 @@ export function useUpcomingBirthdays(limit?: number) {
     };
 
     fetchBirthdays();
-  }, [firebaseUser, limit]);
+  }, [enabled, firebaseUser, limit]);
 
   return { birthdays, loading };
 }

@@ -4,7 +4,13 @@ import type { GiftyUser } from "../hooks/useDatabaseUser";
 import { apiClient } from "../shared/lib/apiClient";
 import UserHeader from "./UserHeader";
 
-const DashboardHeader = () => {
+interface DashboardHeaderProps {
+  centered?: boolean;
+  action?: React.ReactNode;
+  onClick?: () => void;
+}
+
+const DashboardHeader = ({ centered = false, action, onClick }: DashboardHeaderProps) => {
   const { firebaseUser } = useAuth();
   const [, setUser] = useState<GiftyUser | null>(null);
   const { databaseUser } = useAuth();
@@ -47,6 +53,9 @@ const DashboardHeader = () => {
 
   return (
     <UserHeader
+      centered={centered}
+      action={action}
+      onClick={onClick}
       avatarUrl={databaseUser?.avatarUrl}
       username={databaseUser?.username || "Guest"}
       bio={databaseUser?.bio || "No bio available"}
