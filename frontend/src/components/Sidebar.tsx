@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { FiGift, FiLogOut, FiHome, FiUser, FiX, FiSettings, FiCalendar } from "react-icons/fi";
+import { FiGift, FiLogOut, FiHome, FiX, FiSettings, FiCalendar, FiUsers } from "react-icons/fi";
 import { useAuth } from "../hooks/useAuth";
 import { useState, useEffect } from "react";
 
@@ -14,14 +14,13 @@ const Sidebar = ({ isOpen: isOpenProp, onClose }: SidebarProps) => {
   const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(isOpenProp);
-  const [activePath, setActivePath] = useState(location.pathname);
+  const activePath = location.pathname;
 
   useEffect(() => {
     setIsOpen(isOpenProp);
   }, [isOpenProp]);
 
   const handleLinkClick = (path: string) => {
-    setActivePath(path);
     setIsOpen(false);
     setTimeout(() => {
       navigate(path);
@@ -74,7 +73,15 @@ const Sidebar = ({ isOpen: isOpenProp, onClose }: SidebarProps) => {
               activePath === "/dashboard" ? "font-bold bg-gray-800" : ""
             }`}
           >
-            <FiHome size={20} /> <span>My Wishlists</span>
+            <FiHome size={20} /> <span>Dashboard</span>
+          </button>
+          <button
+            onClick={() => handleLinkClick("/my-wishlists")}
+            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
+              activePath === "/my-wishlists" ? "font-bold bg-gray-800" : ""
+            }`}
+          >
+            <FiGift size={20} /> <span>My Wishlists</span>
           </button>
           <button
             onClick={() => handleLinkClick("/shared-with-me")}
@@ -82,15 +89,7 @@ const Sidebar = ({ isOpen: isOpenProp, onClose }: SidebarProps) => {
               activePath === "/shared-with-me" ? "font-bold bg-gray-800" : ""
             }`}
           >
-            <FiGift size={20} /> <span>Shared With Me</span>
-          </button>
-          <button
-            onClick={() => handleLinkClick("/profile")}
-            className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
-              activePath === "/profile" ? "font-bold bg-gray-800" : ""
-            }`}
-          >
-            <FiUser size={20} /> <span>Profile</span>
+            <FiUsers size={20} /> <span>Friends</span>
           </button>
           <button
             onClick={() => handleLinkClick("/calendar")}
