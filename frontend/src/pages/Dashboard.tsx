@@ -3,59 +3,77 @@ import { FiArrowRight, FiCalendar, FiUsers } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import Spinner from "../components/ui/Spinner";
 import { useAuth } from "../hooks/useAuth";
-import { useUpcomingBirthdays } from "../hooks/useUpcomingBirthdays";
 import { useWishlists } from "../hooks/useWishlists";
+import type { UpcomingBirthday } from "../hooks/useUpcomingBirthdays";
+import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
 import { getWishlistCoverImage } from "../shared/lib/getWishlistCoverImage";
 import { getSharedWithMe, type SharedWithMeGroup } from "../shared/lib/sharedLinks";
 
 const fallbackCoverImage =
   "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
 
-const calculateDaysUntilBirthday = (dateString: string) => {
-  const today = new Date();
-  const birthday = new Date(dateString);
-
-  birthday.setFullYear(today.getFullYear());
-
-  if (birthday < today) {
-    birthday.setFullYear(today.getFullYear() + 1);
-  }
-
-  return Math.ceil((birthday.getTime() - today.getTime()) / 86400000);
-};
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const { firebaseUser } = useAuth();
   const { wishlists, wishlistItems, isWishlistsLoading } = useWishlists();
-  const { birthdays, loading: areBirthdaysLoading } = useUpcomingBirthdays(3);
+  const [birthdays, setBirthdays] = useState<UpcomingBirthday[]>([]);
+  const [areBirthdaysLoading, setAreBirthdaysLoading] = useState(true);
   const [friendActivity, setFriendActivity] = useState<SharedWithMeGroup[]>([]);
   const [isFriendActivityLoading, setIsFriendActivityLoading] = useState(true);
   const dashboardWishlists = wishlists.slice(0, 3);
 
   useEffect(() => {
     if (!firebaseUser) {
+      setBirthdays([]);
+      setAreBirthdaysLoading(false);
       setFriendActivity([]);
       setIsFriendActivityLoading(false);
       return;
     }
 
-    const loadFriendActivity = async () => {
+    const loadSharedWithMeData = async () => {
+      setAreBirthdaysLoading(true);
       setIsFriendActivityLoading(true);
 
       try {
         const token = await firebaseUser.getIdToken();
         const sharedGroups = await getSharedWithMe(token);
+
+        const upcomingBirthdays = sharedGroups
+          .map((group) => {
+            if (!group.ownerDateOfBirth) {
+              return null;
+            }
+
+            const daysLeft = calculateDaysUntilBirthday(group.ownerDateOfBirth);
+            if (daysLeft == null) {
+              return null;
+            }
+
+            return {
+              id: group.ownerId,
+              name: group.ownerName,
+              date: new Date(group.ownerDateOfBirth),
+              daysLeft,
+            };
+          })
+          .filter((birthday): birthday is UpcomingBirthday => birthday !== null)
+          .sort((a, b) => a.daysLeft - b.daysLeft)
+          .slice(0, 3);
+
+        setBirthdays(upcomingBirthdays);
         setFriendActivity(sharedGroups.slice(0, 3));
       } catch (error) {
-        console.error("Failed to load friend activity:", error);
+        console.error("Failed to load dashboard shared data:", error);
+        setBirthdays([]);
         setFriendActivity([]);
       } finally {
+        setAreBirthdaysLoading(false);
         setIsFriendActivityLoading(false);
       }
     };
 
-    loadFriendActivity();
+    loadSharedWithMeData();
   }, [firebaseUser]);
 
   return (
@@ -224,9 +242,15 @@ const Dashboard = () => {
                 <Spinner />
               ) : friendActivity.length > 0 ? (
                 friendActivity.map((group) => {
-                  const birthdayCopy = group.ownerDateOfBirth
-                    ? `${calculateDaysUntilBirthday(group.ownerDateOfBirth)} days to their birthday`
-                    : "No birthday added yet";
+                  const daysLeft =
+                    group.ownerDateOfBirth != null
+                      ? calculateDaysUntilBirthday(group.ownerDateOfBirth)
+                      : null;
+
+                  const birthdayCopy =
+                    daysLeft != null && Number.isFinite(daysLeft)
+                      ? `${daysLeft} day${daysLeft === 1 ? "" : "s"} until birthday`
+                      : "No birthday added yet";
 
                   return (
                     <button

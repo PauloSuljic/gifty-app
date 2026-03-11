@@ -14,14 +14,13 @@ const Sidebar = ({ isOpen: isOpenProp, onClose }: SidebarProps) => {
   const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(isOpenProp);
-  const [activePath, setActivePath] = useState(location.pathname);
+  const activePath = location.pathname;
 
   useEffect(() => {
     setIsOpen(isOpenProp);
   }, [isOpenProp]);
 
   const handleLinkClick = (path: string) => {
-    setActivePath(path);
     setIsOpen(false);
     setTimeout(() => {
       navigate(path);
