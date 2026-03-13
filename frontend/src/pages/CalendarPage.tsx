@@ -1,33 +1,36 @@
-import { useState, useEffect } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from "date-fns";
 import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
-import { useAuth } from "../hooks/useAuth";
-import { getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../components/ui/Spinner";
+import { useAuth } from "../hooks/useAuth";
+import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
+import { getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
 
-interface EventItem {
+type BirthdayEvent = {
   id: string;
   name: string;
-  type: "birthday" | "gift";
   date: Date;
   daysLeft: number;
-}
+};
+
+const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const hasDateOfBirth = (
   user: SharedWithMeGroup
 ): user is SharedWithMeGroup & { ownerDateOfBirth: string } =>
   typeof user.ownerDateOfBirth === "string" && user.ownerDateOfBirth.length > 0;
-
-function calculateDaysUntilBirthday(dateString: string): number {
-  const today = new Date();
-  const birthday = new Date(dateString);
-  birthday.setFullYear(today.getFullYear());
-  if (birthday < today) {
-    birthday.setFullYear(today.getFullYear() + 1);
-  }
-  const diffTime = birthday.getTime() - today.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-}
 
 const occursOn = (eventDate: Date, day: Date) =>
   eventDate.getMonth() === day.getMonth() && eventDate.getDate() === day.getDate();
@@ -37,174 +40,241 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [events, setEvents] = useState<EventItem[]>([]);
+  const [events, setEvents] = useState<BirthdayEvent[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
   useEffect(() => {
-  if (!firebaseUser) return;
-
-  const fetchSharedUsers = async () => {
-    try {
-      const token = await firebaseUser.getIdToken();
-      const data = await getSharedWithMe(token);
-      const fetchedEvents: EventItem[] = data
-        .filter(hasDateOfBirth)
-        .map((user): EventItem => ({
-          id: user.ownerId,
-          name: user.ownerName,
-          type: "birthday",
-          date: new Date(user.ownerDateOfBirth),
-          daysLeft: calculateDaysUntilBirthday(user.ownerDateOfBirth),
-        }))
-        .sort((a, b) => a.daysLeft - b.daysLeft);
-      setEvents(fetchedEvents);
-    } catch (error) {
-      console.error("Failed to fetch shared users:", error);
+    if (!firebaseUser) {
+      setEvents([]);
+      setIsLoadingEvents(false);
+      return;
     }
-  }
 
-  fetchSharedUsers();
-}, [firebaseUser]);
+    const fetchBirthdayEvents = async () => {
+      setIsLoadingEvents(true);
+      try {
+        const token = await firebaseUser.getIdToken();
+        const data = await getSharedWithMe(token);
 
-  const monthDays = eachDayOfInterval({
-    start: startOfMonth(currentDate),
-    end: endOfMonth(currentDate),
-  });
+        const fetchedEvents = data
+          .filter(hasDateOfBirth)
+          .map((user) => {
+            const daysLeft = calculateDaysUntilBirthday(user.ownerDateOfBirth);
+            if (daysLeft == null) {
+              return null;
+            }
 
-  const nextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
-    setSelectedDate(null);
-  };
-  const prevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
-    setSelectedDate(null);
-  };
+            return {
+              id: user.ownerId,
+              name: user.ownerName,
+              date: new Date(user.ownerDateOfBirth),
+              daysLeft,
+            };
+          })
+          .filter((event): event is BirthdayEvent => event !== null)
+          .sort((a, b) => a.daysLeft - b.daysLeft);
 
-  const hasEvent = (date: Date) =>
-    events.some((event) => occursOn(event.date, date));
+        setEvents(fetchedEvents);
+      } catch (error) {
+        console.error("Failed to fetch birthday events:", error);
+        setEvents([]);
+      } finally {
+        setIsLoadingEvents(false);
+      }
+    };
 
-  // Weekdays starting Monday
-  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    fetchBirthdayEvents();
+  }, [firebaseUser]);
 
-  // Reorder monthDays so that the calendar starts on Monday
-  // We will pad the first week with previous month's days to align Monday start
-  const startDay = startOfMonth(currentDate).getDay(); // 0 (Sun) to 6 (Sat)
-  // Calculate how many days to prepend from previous month to start on Monday
-  const prependDaysCount = (startDay === 0 ? 6 : startDay - 1);
+  const calendarDays = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }),
+        end: endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 }),
+      }),
+    [currentDate]
+  );
 
-  // Get days from previous month to prepend
-  const prevMonthEndDay = endOfMonth(subMonths(currentDate, 1));
-
-  const prependDays = [];
-  for (let i = prependDaysCount; i > 0; i--) {
-    prependDays.push(new Date(prevMonthEndDay.getFullYear(), prevMonthEndDay.getMonth(), prevMonthEndDay.getDate() - i + 1));
-  }
-
-  // Combine days for calendar grid
-  const calendarDays = [...prependDays, ...monthDays];
-
-  // Filter events for selectedDate
   const eventsForSelectedDate = selectedDate
     ? events.filter((event) => occursOn(event.date, selectedDate))
     : [];
 
-  const upcomingEventsLimited = !selectedDate
-    ? events.slice(0, 3)
-    : eventsForSelectedDate;
+  const panelEvents = selectedDate ? eventsForSelectedDate : events.slice(0, 4);
+  const panelTitle = selectedDate ? format(selectedDate, "MMMM d") : "Upcoming";
+  const panelDescription = selectedDate
+    ? eventsForSelectedDate.length > 0
+      ? "Events on the selected day"
+      : "No birthdays on this day"
+    : "Next birthdays from your friends";
+
+  const showToday = () => {
+    setCurrentDate(new Date());
+    setSelectedDate(null);
+  };
 
   return (
-    <>
-      <div className="min-h-screen text-gray-200 pt-4 px-2">
-        <h2 className="text-xl sm:text-3xl font-semibold pb-6 text-center">Calendar</h2>
-        {/* Calendar card */}
-        <div className="bg-gray-800 rounded-xl p-4 shadow-sm mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <button onClick={prevMonth} className="p-2 rounded-full hover:bg-gray-600/20">
-              <FiChevronLeft size={18} />
-            </button>
-            <h2 className="text-lg font-medium">{format(currentDate, "MMMM yyyy")}</h2>
-            <button onClick={nextMonth} className="p-2 rounded-full hover:bg-gray-600/20">
-              <FiChevronRight size={18} />
-            </button>
-          </div>
+    <div className="min-h-screen px-2 pt-4 text-gray-200">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <header className="space-y-2 px-1">
+          <h1 className="text-3xl font-semibold tracking-tight text-white">Calendar</h1>
+          <p className="text-sm text-gray-400 sm:text-base">
+            Never miss a friend&apos;s birthday.
+          </p>
+        </header>
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 text-center text-gray-400 text-sm mb-2">
-            {weekdays.map((d) => (
-              <div key={d}>{d}</div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 text-center gap-y-1.5">
-            {calendarDays.map((day: Date, index) => {
-              const today = isSameDay(day, new Date());
-              const eventDay = hasEvent(day);
-              const isCurrentMonth = day.getMonth() === currentDate.getMonth();
-              const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
-
-              return (
-                <div
-                  key={day.toISOString() + index}
-                  onClick={() => {
-                    setSelectedDate(day);
-                  }}
-                  className={`flex flex-col items-center justify-center w-10 h-10 mx-auto rounded-lg text-sm cursor-pointer select-none ${
-                    isSelected ? "bg-purple-500 text-white" : today ? "border border-purple-400" : ""
-                  } ${eventDay ? "relative" : ""} ${!isCurrentMonth ? "text-gray-600" : ""}`}
+        <section className="grid gap-6 xl:grid-cols-[1.9fr_0.9fr]">
+          <div className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg sm:p-6">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <h2 className="text-2xl font-semibold text-white">
+                  <span className="sm:hidden">{format(currentDate, "MMM yyyy")}</span>
+                  <span className="hidden sm:inline">{format(currentDate, "MMMM yyyy")}</span>
+                </h2>
+                <button
+                  type="button"
+                  onClick={showToday}
+                  className="rounded-xl border border-gray-700 bg-gray-900/70 px-3 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-900"
                 >
-                  {format(day, "d")}
-                  {eventDay && (
-                    <span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-purple-400" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  Today
+                </button>
+              </div>
 
-        {/* Upcoming Events or Filtered Events */}
-        <section>
-          {selectedDate && eventsForSelectedDate.length > 0 && (
-            <h3 className="text-gray-300 text-sm mb-3">
-              Events for {format(selectedDate, "MMMM d, yyyy")}
-            </h3>
-          )}
-          {selectedDate && eventsForSelectedDate.length === 0 && (
-            <h3 className="text-gray-300 text-sm mb-3">
-              No events for this date
-            </h3>
-          )}
-          {!selectedDate && (
-            <h3 className="text-gray-300 text-sm mb-3">
-              Upcoming Events
-            </h3>
-          )}
-          <div className="space-y-3">
-            {upcomingEventsLimited.map((event) => (
-              <div
-                key={event.id}
-                onClick={() => navigate("/shared-with-me", { state: { highlightUserId: event.id } })}
-                className="flex justify-between items-center bg-gray-700/50 rounded-xl p-3 cursor-pointer hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="bg-gray-600/20 p-2 rounded-full">
-                    <FiGift size={18} className="text-purple-400" />
-                  </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentDate((prev) => subMonths(prev, 1));
+                    setSelectedDate(null);
+                  }}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-gray-900/70 text-gray-300 transition hover:border-gray-600 hover:bg-gray-900 hover:text-white"
+                  aria-label="View previous month"
+                  >
+                    <FiChevronLeft size={18} />
+                  </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentDate((prev) => addMonths(prev, 1));
+                    setSelectedDate(null);
+                  }}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-gray-900/70 text-gray-300 transition hover:border-gray-600 hover:bg-gray-900 hover:text-white"
+                  aria-label="View next month"
+                >
+                  <FiChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 sm:gap-3">
+              {weekdayLabels.map((weekday) => (
+                <div key={weekday} className="py-2">
+                  {weekday}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 sm:gap-3">
+              {calendarDays.map((day) => {
+                const isToday = isSameDay(day, new Date());
+                const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
+                const isCurrentMonth = isSameMonth(day, currentDate);
+                const eventCount = events.filter((event) => occursOn(event.date, day)).length;
+                const hasEvent = eventCount > 0;
+
+                return (
+                  <button
+                    key={day.toISOString()}
+                    type="button"
+                    onClick={() => setSelectedDate(day)}
+                    className={`relative aspect-square rounded-2xl border text-sm font-medium transition ${
+                      isSelected
+                        ? "border-purple-400 bg-purple-500/30 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.4)]"
+                        : isToday
+                          ? "border-purple-400/70 bg-gray-900/85 text-white"
+                          : hasEvent
+                            ? "border-purple-500/30 bg-purple-500/10 text-white hover:border-purple-400/50 hover:bg-purple-500/15"
+                            : "border-gray-800 bg-gray-900/70 text-gray-200 hover:border-gray-700 hover:bg-gray-900"
+                    } ${!isCurrentMonth ? "text-gray-600" : ""}`}
+                  >
+                    <span className="absolute inset-0 flex items-center justify-center text-base sm:inset-auto sm:left-3 sm:top-3 sm:text-sm">
+                      {format(day, "d")}
+                    </span>
+                    {eventCount > 1 && (
+                      <span className="absolute bottom-2 right-2 hidden min-w-5 items-center justify-center rounded-full bg-purple-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-purple-100 sm:inline-flex">
+                        {eventCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <aside className="space-y-4">
+            <section className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
                   <div>
-                    <p className="font-medium text-sm">{event.name}</p>
-                    <p className="text-xs text-gray-400">
-                      {event.type === "birthday" ? "Birthday" : "Anniversary gift"} •{" "}
-                      {event.daysLeft} days
+                    <h2 className="text-xl font-semibold text-white">{panelTitle}</h2>
+                    <p className="text-sm text-gray-400">{panelDescription}</p>
+                  </div>
+                </div>
+
+                {selectedDate && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(null)}
+                    className="rounded-xl border border-gray-700 bg-gray-900/70 px-3 py-2 text-xs font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-900"
+                  >
+                    Show upcoming
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {isLoadingEvents ? (
+                  <Spinner />
+                ) : panelEvents.length > 0 ? (
+                  panelEvents.map((event) => (
+                    <button
+                      key={`${event.id}-${event.date.toISOString()}`}
+                      type="button"
+                      onClick={() =>
+                        navigate("/shared-with-me", { state: { highlightUserId: event.id } })
+                      }
+                      className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300">
+                          <FiGift size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-semibold text-white">{event.name}</p>
+                          <p className="mt-1 text-sm text-gray-400">
+                            {format(event.date, "MMM d, yyyy")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="ml-3 shrink-0 rounded-full bg-purple-500/20 px-3 py-1 text-xs font-semibold text-purple-200">
+                        {event.daysLeft}d
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-gray-600 bg-gray-900/40 p-4">
+                    <p className="text-sm text-gray-400">
+                      {selectedDate
+                        ? "No birthdays are scheduled for the selected day."
+                        : "No upcoming birthdays to show right now."}
                     </p>
                   </div>
-                </div>
-                <p className="text-xs text-gray-400">
-                  {format(event.date, "MMM d")}
-                </p>
+                )}
               </div>
-            ))}
-          </div>
+            </section>
+          </aside>
         </section>
       </div>
-    </>
+    </div>
   );
 }

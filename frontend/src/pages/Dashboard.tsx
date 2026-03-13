@@ -186,12 +186,12 @@ const Dashboard = () => {
 
         <div className="space-y-4">
           <section className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300">
                 <FiCalendar size={20} />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-white">Upcoming celebrations</h2>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-white">Upcoming birthdays</h2>
                 <p className="text-sm text-gray-400">Birthdays from people sharing wishlists with you.</p>
               </div>
             </div>
@@ -227,11 +227,11 @@ const Dashboard = () => {
           </section>
 
           <section className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300">
                 <FiUsers size={20} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-white">Friends activity</h2>
                 <p className="text-sm text-gray-400">What is happening with the people sharing lists with you.</p>
               </div>
