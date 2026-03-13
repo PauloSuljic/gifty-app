@@ -36,10 +36,13 @@ const Modal = ({ isOpen, onClose, children }: ModalProps) => {
         className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 transition-opacity duration-300" 
         onClick={handleClickOutside} // ✅ Detect clicks outside
       >
-        <div ref={modalRef} className="relative z-10 bg-[#232336] text-white rounded-xl p-6 shadow-xl w-[90%] max-w-md animate-fadeIn">
+        <div
+          ref={modalRef}
+          className="relative z-10 w-[90%] max-w-md rounded-2xl border border-gray-700/70 bg-gray-800/95 p-6 text-white shadow-2xl animate-fadeIn"
+        >
           <button 
             onClick={onClose} 
-            className="absolute top-2 right-3 text-gray-400 hover:text-gray-200 text-xl"
+            className="absolute right-3 top-2 text-xl text-gray-400 hover:text-gray-200"
           >
             ✖
           </button>
