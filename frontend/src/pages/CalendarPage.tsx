@@ -147,17 +147,17 @@ export default function CalendarPage() {
         </header>
 
         <section className="grid gap-6 xl:grid-cols-[1.9fr_0.9fr]">
-          <div className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg sm:p-6">
-            <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg sm:p-6 xl:p-5">
+            <div className="mb-6 flex items-center justify-between gap-3 xl:mb-5">
               <div className="flex min-w-0 items-center gap-3">
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-2xl font-semibold text-white xl:text-xl">
                   <span className="sm:hidden">{format(currentDate, "MMM yyyy")}</span>
                   <span className="hidden sm:inline">{format(currentDate, "MMMM yyyy")}</span>
                 </h2>
                 <button
                   type="button"
                   onClick={showToday}
-                  className="rounded-xl border border-gray-700 bg-gray-900/70 px-3 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-900"
+                  className="rounded-xl border border-gray-700 bg-gray-900/70 px-3 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-900 xl:px-2.5 xl:py-1.5 xl:text-xs"
                 >
                   Today
                 </button>
@@ -170,7 +170,7 @@ export default function CalendarPage() {
                     setCurrentDate((prev) => subMonths(prev, 1));
                     setSelectedDate(null);
                   }}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-gray-900/70 text-gray-300 transition hover:border-gray-600 hover:bg-gray-900 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-gray-900/70 text-gray-300 transition hover:border-gray-600 hover:bg-gray-900 hover:text-white xl:h-9 xl:w-9"
                   aria-label="View previous month"
                   >
                     <FiChevronLeft size={18} />
@@ -181,7 +181,7 @@ export default function CalendarPage() {
                     setCurrentDate((prev) => addMonths(prev, 1));
                     setSelectedDate(null);
                   }}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-gray-900/70 text-gray-300 transition hover:border-gray-600 hover:bg-gray-900 hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-gray-900/70 text-gray-300 transition hover:border-gray-600 hover:bg-gray-900 hover:text-white xl:h-9 xl:w-9"
                   aria-label="View next month"
                 >
                   <FiChevronRight size={18} />
@@ -189,15 +189,15 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 sm:gap-3">
+            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 sm:gap-2.5 xl:gap-1.5 xl:text-[11px]">
               {weekdayLabels.map((weekday) => (
-                <div key={weekday} className="py-2">
+                <div key={weekday} className="py-2 xl:py-1.5">
                   {weekday}
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-2 sm:gap-3">
+            <div className="grid grid-cols-7 gap-2 sm:gap-2.5 xl:gap-1.5">
               {calendarDays.map((day) => {
                 const isToday = isSameDay(day, new Date());
                 const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
@@ -210,7 +210,7 @@ export default function CalendarPage() {
                     key={day.toISOString()}
                     type="button"
                     onClick={() => handleDaySelect(day)}
-                    className={`relative aspect-square rounded-2xl border text-sm font-medium transition ${
+                    className={`relative aspect-square rounded-2xl border text-sm font-medium transition xl:aspect-auto xl:h-[4.65rem] xl:rounded-[1rem] xl:text-[15px] ${
                       isSelected
                         ? "border-purple-400 bg-purple-500/30 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.4)]"
                         : isToday
