@@ -41,6 +41,7 @@ export default function CalendarPage() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isMobileUpcomingOpen, setIsMobileUpcomingOpen] = useState(false);
   const [events, setEvents] = useState<BirthdayEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [isDesktopSidebar, setIsDesktopSidebar] = useState(() =>
@@ -130,11 +131,26 @@ export default function CalendarPage() {
   const showToday = () => {
     setCurrentDate(new Date());
     setSelectedDate(null);
+    setIsMobileUpcomingOpen(false);
   };
 
   const handleDaySelect = (day: Date) => {
+    setIsMobileUpcomingOpen(false);
     setSelectedDate(day);
   };
+
+  const closeMobileModal = () => {
+    setSelectedDate(null);
+    setIsMobileUpcomingOpen(false);
+  };
+
+  const mobileModalEvents = selectedDate ? eventsForSelectedDate : events.slice(0, 4);
+  const mobileModalTitle = selectedDate ? format(selectedDate, "MMMM d") : "Upcoming";
+  const mobileModalDescription = selectedDate
+    ? eventsForSelectedDate.length > 0
+      ? "Birthdays on the selected day"
+      : "No birthdays on this day"
+    : "Next birthdays from your friends";
 
   return (
     <div className="px-2 pt-4 text-gray-200">
@@ -210,6 +226,13 @@ export default function CalendarPage() {
                     key={day.toISOString()}
                     type="button"
                     onClick={() => handleDaySelect(day)}
+                    aria-label={`${format(day, "EEEE, MMMM d, yyyy")}${
+                      eventCount > 0
+                        ? `, ${eventCount} birthday${eventCount === 1 ? "" : "s"}`
+                        : ", no birthdays"
+                    }`}
+                    aria-pressed={isSelected}
+                    aria-current={isToday ? "date" : undefined}
                     className={`relative aspect-square rounded-2xl border text-sm font-medium transition xl:aspect-auto xl:h-[4.65rem] xl:rounded-[1rem] xl:text-[15px] ${
                       isSelected
                         ? "border-purple-400 bg-purple-500/30 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.4)]"
@@ -231,6 +254,20 @@ export default function CalendarPage() {
                   </button>
                 );
               })}
+            </div>
+
+            <div className="mt-4 xl:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDate(null);
+                  setIsMobileUpcomingOpen(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-900/70 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-600 hover:bg-gray-900"
+              >
+                <FiGift size={16} className="text-purple-300" />
+                View upcoming birthdays
+              </button>
             </div>
           </div>
 
@@ -275,7 +312,7 @@ export default function CalendarPage() {
                         <div className="min-w-0">
                           <p className="truncate text-base font-semibold text-white">{event.name}</p>
                           <p className="mt-1 text-sm text-gray-400">
-                            {format(event.date, "MMM d, yyyy")}
+                            {format(event.date, "MMM d")}
                           </p>
                         </div>
                       </div>
@@ -301,31 +338,29 @@ export default function CalendarPage() {
       </div>
 
       <Modal
-        isOpen={!isDesktopSidebar && selectedDate !== null}
-        onClose={() => setSelectedDate(null)}
+        isOpen={!isDesktopSidebar && (selectedDate !== null || isMobileUpcomingOpen)}
+        onClose={closeMobileModal}
       >
         <div className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              {selectedDate ? format(selectedDate, "MMMM d") : "Selected date"}
+              {mobileModalTitle}
             </h2>
             <p className="mt-1 text-sm text-gray-400">
-              {eventsForSelectedDate.length > 0
-                ? "Birthdays on the selected day"
-                : "No birthdays on this day"}
+              {mobileModalDescription}
             </p>
           </div>
 
           {isLoadingEvents ? (
             <Spinner />
-          ) : eventsForSelectedDate.length > 0 ? (
+          ) : mobileModalEvents.length > 0 ? (
             <div className="space-y-3">
-              {eventsForSelectedDate.map((event) => (
+              {mobileModalEvents.map((event) => (
                 <button
                   key={`${event.id}-${event.date.toISOString()}-mobile`}
                   type="button"
                   onClick={() => {
-                    setSelectedDate(null);
+                    closeMobileModal();
                     navigate("/shared-with-me", { state: { highlightUserId: event.id } });
                   }}
                   className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
@@ -337,7 +372,7 @@ export default function CalendarPage() {
                     <div className="min-w-0">
                       <p className="truncate text-base font-semibold text-white">{event.name}</p>
                       <p className="mt-1 text-sm text-gray-400">
-                        {format(event.date, "MMM d, yyyy")}
+                        {format(event.date, "MMM d")}
                       </p>
                     </div>
                   </div>
@@ -351,7 +386,9 @@ export default function CalendarPage() {
           ) : (
             <div className="rounded-2xl border border-dashed border-gray-600 bg-gray-900/40 p-4">
               <p className="text-sm text-gray-400">
-                No birthdays are scheduled for the selected day.
+                {selectedDate
+                  ? "No birthdays are scheduled for the selected day."
+                  : "No upcoming birthdays to show right now."}
               </p>
             </div>
           )}
