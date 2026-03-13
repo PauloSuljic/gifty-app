@@ -13,6 +13,7 @@ import {
 } from "date-fns";
 import { FiChevronLeft, FiChevronRight, FiGift } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import Modal from "../components/ui/Modal";
 import Spinner from "../components/ui/Spinner";
 import { useAuth } from "../hooks/useAuth";
 import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
@@ -42,6 +43,25 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [events, setEvents] = useState<BirthdayEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [isDesktopSidebar, setIsDesktopSidebar] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1280px)").matches
+      : false
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(min-width: 1280px)");
+    const updateViewport = (event: MediaQueryListEvent) => {
+      setIsDesktopSidebar(event.matches);
+    };
+
+    setIsDesktopSidebar(mediaQuery.matches);
+    mediaQuery.addEventListener("change", updateViewport);
+
+    return () => mediaQuery.removeEventListener("change", updateViewport);
+  }, []);
 
   useEffect(() => {
     if (!firebaseUser) {
@@ -112,8 +132,12 @@ export default function CalendarPage() {
     setSelectedDate(null);
   };
 
+  const handleDaySelect = (day: Date) => {
+    setSelectedDate(day);
+  };
+
   return (
-    <div className="min-h-screen px-2 pt-4 text-gray-200">
+    <div className="px-2 pt-4 text-gray-200">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="space-y-2 px-1">
           <h1 className="text-3xl font-semibold tracking-tight text-white">Calendar</h1>
@@ -185,7 +209,7 @@ export default function CalendarPage() {
                   <button
                     key={day.toISOString()}
                     type="button"
-                    onClick={() => setSelectedDate(day)}
+                    onClick={() => handleDaySelect(day)}
                     className={`relative aspect-square rounded-2xl border text-sm font-medium transition ${
                       isSelected
                         ? "border-purple-400 bg-purple-500/30 text-white shadow-[0_0_0_1px_rgba(167,139,250,0.4)]"
@@ -210,7 +234,7 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          <aside className="space-y-4">
+          <aside className="hidden space-y-4 xl:block">
             <section className="rounded-3xl border border-gray-700/70 bg-gray-800/80 p-5 shadow-lg sm:p-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -275,6 +299,64 @@ export default function CalendarPage() {
           </aside>
         </section>
       </div>
+
+      <Modal
+        isOpen={!isDesktopSidebar && selectedDate !== null}
+        onClose={() => setSelectedDate(null)}
+      >
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white">
+              {selectedDate ? format(selectedDate, "MMMM d") : "Selected date"}
+            </h2>
+            <p className="mt-1 text-sm text-gray-400">
+              {eventsForSelectedDate.length > 0
+                ? "Birthdays on the selected day"
+                : "No birthdays on this day"}
+            </p>
+          </div>
+
+          {isLoadingEvents ? (
+            <Spinner />
+          ) : eventsForSelectedDate.length > 0 ? (
+            <div className="space-y-3">
+              {eventsForSelectedDate.map((event) => (
+                <button
+                  key={`${event.id}-${event.date.toISOString()}-mobile`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedDate(null);
+                    navigate("/shared-with-me", { state: { highlightUserId: event.id } });
+                  }}
+                  className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-300">
+                      <FiGift size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold text-white">{event.name}</p>
+                      <p className="mt-1 text-sm text-gray-400">
+                        {format(event.date, "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="ml-3 shrink-0 rounded-full bg-purple-500/20 px-3 py-1 text-xs font-semibold text-purple-200">
+                    {event.daysLeft}d
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-600 bg-gray-900/40 p-4">
+              <p className="text-sm text-gray-400">
+                No birthdays are scheduled for the selected day.
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
