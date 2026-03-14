@@ -17,7 +17,8 @@ import Modal from "../components/ui/Modal";
 import Spinner from "../components/ui/Spinner";
 import { useAuth } from "../hooks/useAuth";
 import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
-import { getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
+import { parseDateOnlyAsLocalDate } from "../shared/lib/dateOnly";
+import { getSharedOwnerName, getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
 
 type BirthdayEvent = {
   id: string;
@@ -87,8 +88,8 @@ export default function CalendarPage() {
 
             return {
               id: user.ownerId,
-              name: user.ownerName,
-              date: new Date(user.ownerDateOfBirth),
+              name: getSharedOwnerName(user.ownerName),
+              date: parseDateOnlyAsLocalDate(user.ownerDateOfBirth) ?? new Date(user.ownerDateOfBirth),
               daysLeft,
             };
           })
@@ -301,7 +302,7 @@ export default function CalendarPage() {
                       key={`${event.id}-${event.date.toISOString()}`}
                       type="button"
                       onClick={() =>
-                        navigate("/shared-with-me", { state: { highlightUserId: event.id } })
+                        navigate("/friends", { state: { highlightUserId: event.id } })
                       }
                       className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                     >
@@ -361,7 +362,7 @@ export default function CalendarPage() {
                   type="button"
                   onClick={() => {
                     closeMobileModal();
-                    navigate("/shared-with-me", { state: { highlightUserId: event.id } });
+                    navigate("/friends", { state: { highlightUserId: event.id } });
                   }}
                   className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                 >

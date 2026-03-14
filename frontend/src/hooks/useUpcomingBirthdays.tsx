@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
+import { getSharedOwnerName, getSharedWithMe, SharedWithMeGroup } from "../shared/lib/sharedLinks";
 import { useAuth } from "./useAuth";
 import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
+import { parseDateOnlyAsLocalDate } from "../shared/lib/dateOnly";
 
 export interface UpcomingBirthday {
   id: string;
@@ -49,8 +50,8 @@ export function useUpcomingBirthdays(limit?: number, enabled = true) {
 
             return {
               id: u.ownerId,
-              name: u.ownerName,
-              date: new Date(u.ownerDateOfBirth),
+              name: getSharedOwnerName(u.ownerName),
+              date: parseDateOnlyAsLocalDate(u.ownerDateOfBirth) ?? new Date(u.ownerDateOfBirth),
               daysLeft,
             };
           })

@@ -175,7 +175,7 @@ export default function NotificationsModal({
                         type="button"
                         onClick={() => {
                           onCloseModal();
-                          navigate("/shared-with-me", {
+                          navigate("/friends", {
                             state: { highlightUserId: birthday.id },
                           });
                         }}

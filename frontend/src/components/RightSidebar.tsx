@@ -111,7 +111,7 @@ export default function RightSidebar() {
             <li
               key={b.id}
               onClick={() =>
-                navigate("/shared-with-me", {
+                navigate("/friends", {
                   state: { highlightUserId: b.id },
                 })
               }

@@ -6,8 +6,13 @@ import { useAuth } from "../hooks/useAuth";
 import { useWishlists } from "../hooks/useWishlists";
 import type { UpcomingBirthday } from "../hooks/useUpcomingBirthdays";
 import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
+import { parseDateOnlyAsLocalDate } from "../shared/lib/dateOnly";
 import { getWishlistCoverImage } from "../shared/lib/getWishlistCoverImage";
-import { getSharedWithMe, type SharedWithMeGroup } from "../shared/lib/sharedLinks";
+import {
+  getSharedOwnerName,
+  getSharedWithMe,
+  type SharedWithMeGroup,
+} from "../shared/lib/sharedLinks";
 
 const fallbackCoverImage =
   "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
@@ -52,8 +57,8 @@ const Dashboard = () => {
 
             return {
               id: group.ownerId,
-              name: group.ownerName,
-              date: new Date(group.ownerDateOfBirth),
+              name: getSharedOwnerName(group.ownerName),
+              date: parseDateOnlyAsLocalDate(group.ownerDateOfBirth) ?? new Date(group.ownerDateOfBirth),
               daysLeft,
             };
           })
@@ -103,7 +108,7 @@ const Dashboard = () => {
               <FiArrowRight size={16} />
             </button>
             <button
-              onClick={() => navigate("/shared-with-me")}
+              onClick={() => navigate("/friends")}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-600 bg-gray-800/70 px-5 py-3 text-sm font-semibold text-gray-100 transition hover:border-gray-500 hover:bg-gray-700/80"
             >
               View Friends
@@ -205,7 +210,7 @@ const Dashboard = () => {
                     key={birthday.id}
                     type="button"
                     onClick={() =>
-                      navigate("/shared-with-me", { state: { highlightUserId: birthday.id } })
+                      navigate("/friends", { state: { highlightUserId: birthday.id } })
                     }
                     className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 px-4 py-3 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                   >
@@ -257,12 +262,12 @@ const Dashboard = () => {
                       key={group.ownerId}
                       type="button"
                       onClick={() =>
-                        navigate("/shared-with-me", { state: { highlightUserId: group.ownerId } })
+                        navigate("/friends", { state: { highlightUserId: group.ownerId } })
                       }
                       className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 px-4 py-3 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                     >
                       <div className="min-w-0">
-                        <p className="font-medium text-white">{group.ownerName}</p>
+                        <p className="font-medium text-white">{getSharedOwnerName(group.ownerName)}</p>
                         <p className="mt-1 text-sm text-gray-400">
                           {group.wishlists.length} {group.wishlists.length === 1 ? "wishlist" : "wishlists"} shared
                         </p>
