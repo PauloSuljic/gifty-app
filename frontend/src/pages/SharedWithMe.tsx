@@ -13,8 +13,14 @@ import ConfirmRemoveSharedModal from "../components/ui/modals/ConfirmRemoveShare
 import Spinner from "../components/ui/Spinner";
 import { useAuth } from "../hooks/useAuth";
 import { calculateDaysUntilBirthday } from "../shared/lib/birthdays";
+import { formatDateOnly } from "../shared/lib/dateOnly";
 import { getWishlistCoverImage } from "../shared/lib/getWishlistCoverImage";
-import { getSharedWithMe, removeSharedWithMe, type SharedWithMeGroup } from "../shared/lib/sharedLinks";
+import {
+  getSharedOwnerName,
+  getSharedWithMe,
+  removeSharedWithMe,
+  type SharedWithMeGroup,
+} from "../shared/lib/sharedLinks";
 
 const fallbackCoverImage =
   "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
@@ -28,15 +34,12 @@ const formatBirthday = (dateOfBirth: string | null | undefined) => {
     return "Birthday not added";
   }
 
-  const parsed = new Date(dateOfBirth);
-  if (Number.isNaN(parsed.getTime())) {
-    return "Birthday not added";
-  }
-
-  return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-  }).format(parsed);
+  return (
+    formatDateOnly(dateOfBirth, {
+      month: "short",
+      day: "numeric",
+    }) ?? "Birthday not added"
+  );
 };
 
 type FriendStatProps = {
@@ -112,7 +115,8 @@ const FriendsPage = () => {
       return true;
     }
 
-    const matchesOwner = group.ownerName.toLowerCase().includes(normalizedQuery);
+    const ownerName = getSharedOwnerName(group.ownerName);
+    const matchesOwner = ownerName.toLowerCase().includes(normalizedQuery);
     const matchesWishlist = group.wishlists.some((wishlist) =>
       wishlist.name.toLowerCase().includes(normalizedQuery)
     );
@@ -185,6 +189,7 @@ const FriendsPage = () => {
                   : null;
               const birthdayLabel = formatBirthday(group.ownerDateOfBirth);
               const isHighlighted = group.ownerId === highlightUserId;
+              const ownerName = getSharedOwnerName(group.ownerName);
 
               return (
                 <article
@@ -198,12 +203,12 @@ const FriendsPage = () => {
                       <div className="flex min-w-0 items-start gap-4">
                         <img
                           src={group.ownerAvatar || "/avatars/avatar1.png"}
-                          alt={`${group.ownerName}'s avatar`}
+                          alt={`${ownerName}'s avatar`}
                           className="h-12 w-12 shrink-0 rounded-full bg-gradient-to-br from-[#6366f1] to-[#a78bfa] object-cover"
                         />
                         <div className="min-w-0">
                           <h2 className="truncate text-[1.35rem] font-semibold leading-none text-white">
-                            {group.ownerName}
+                            {ownerName}
                           </h2>
                           <p className="mt-1 text-sm text-gray-300">
                             {group.wishlists.length}{" "}
@@ -216,7 +221,7 @@ const FriendsPage = () => {
                         type="button"
                         onClick={() => setRemoveModalOwnerId(group.ownerId)}
                         className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-gray-400 transition hover:bg-white/5 hover:text-red-300"
-                        aria-label={`Remove ${group.ownerName}'s shared wishlists`}
+                        aria-label={`Remove ${ownerName}'s shared wishlists`}
                       >
                         <FiMoreVertical size={18} />
                       </button>
@@ -341,7 +346,9 @@ const FriendsPage = () => {
             toast.error("Failed to remove shared wishlists");
           }
         }}
-        ownerName={sharedWishlists.find((group) => group.ownerId === removeModalOwnerId)?.ownerName || ""}
+        ownerName={getSharedOwnerName(
+          sharedWishlists.find((group) => group.ownerId === removeModalOwnerId)?.ownerName
+        )}
       />
     </>
   );

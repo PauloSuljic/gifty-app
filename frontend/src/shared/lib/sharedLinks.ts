@@ -20,7 +20,7 @@ export type SharedWithMeWishlist = {
 
 export type SharedWithMeGroup = {
   ownerId: string;
-  ownerName: string;
+  ownerName?: string | null;
   ownerAvatar: string;
   ownerDateOfBirth?: string | null;
   wishlists: SharedWithMeWishlist[];
@@ -75,3 +75,6 @@ export const removeSharedWithMe = (ownerId: string, token?: string) =>
 // Token is optional: shared wishlists are public by shareCode, auth may add user context if supported.
 export const getSharedWishlist = (shareCode: string, token?: string) =>
   apiClient.get<SharedWishlistDetails>(`/api/shared-links/${shareCode}`, token ? { token } : undefined);
+
+export const getSharedOwnerName = (ownerName?: string | null) =>
+  ownerName?.trim() || "Unknown friend";

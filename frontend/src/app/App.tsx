@@ -8,7 +8,7 @@ import SharedWishlist from "../pages/SharedWishlist";
 import PrivateRoute from "./routes/PrivateRoute";
 import NotFound from "../pages/NotFound";
 import Profile from "../pages/Profile";
-import SharedWithMe from "../pages/SharedWithMe";
+import FriendsPage from "../pages/SharedWithMe";
 import { ToastContainer } from "react-toastify";
 import { Toaster } from "react-hot-toast";
 import VerifyEmail from "../pages/VerifyEmail";
@@ -99,7 +99,7 @@ const App = () => {
         >
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="my-wishlists" element={<MyWishlists />} />
-          <Route path="friends" element={<SharedWithMe />} />
+          <Route path="friends" element={<FriendsPage />} />
           <Route path="shared-with-me" element={<Navigate to="/friends" replace />} />
           <Route path="wishlist/:id" element={<WishlistDetail />} />
           <Route path="profile" element={<Profile />} />
