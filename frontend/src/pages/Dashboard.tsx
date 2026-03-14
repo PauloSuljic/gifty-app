@@ -103,7 +103,7 @@ const Dashboard = () => {
               <FiArrowRight size={16} />
             </button>
             <button
-              onClick={() => navigate("/shared-with-me")}
+              onClick={() => navigate("/friends")}
               className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-600 bg-gray-800/70 px-5 py-3 text-sm font-semibold text-gray-100 transition hover:border-gray-500 hover:bg-gray-700/80"
             >
               View Friends
@@ -205,7 +205,7 @@ const Dashboard = () => {
                     key={birthday.id}
                     type="button"
                     onClick={() =>
-                      navigate("/shared-with-me", { state: { highlightUserId: birthday.id } })
+                      navigate("/friends", { state: { highlightUserId: birthday.id } })
                     }
                     className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 px-4 py-3 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                   >
@@ -257,7 +257,7 @@ const Dashboard = () => {
                       key={group.ownerId}
                       type="button"
                       onClick={() =>
-                        navigate("/shared-with-me", { state: { highlightUserId: group.ownerId } })
+                        navigate("/friends", { state: { highlightUserId: group.ownerId } })
                       }
                       className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 px-4 py-3 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                     >

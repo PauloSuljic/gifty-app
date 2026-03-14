@@ -84,9 +84,9 @@ const Sidebar = ({ isOpen: isOpenProp, onClose }: SidebarProps) => {
             <FiGift size={20} /> <span>My Wishlists</span>
           </button>
           <button
-            onClick={() => handleLinkClick("/shared-with-me")}
+            onClick={() => handleLinkClick("/friends")}
             className={`flex items-center space-x-2 p-3 rounded-md w-full hover:bg-gray-800 ${
-              activePath === "/shared-with-me" ? "font-bold bg-gray-800" : ""
+              activePath === "/friends" ? "font-bold bg-gray-800" : ""
             }`}
           >
             <FiUsers size={20} /> <span>Friends</span>

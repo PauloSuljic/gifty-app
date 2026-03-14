@@ -301,7 +301,7 @@ export default function CalendarPage() {
                       key={`${event.id}-${event.date.toISOString()}`}
                       type="button"
                       onClick={() =>
-                        navigate("/shared-with-me", { state: { highlightUserId: event.id } })
+                        navigate("/friends", { state: { highlightUserId: event.id } })
                       }
                       className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                     >
@@ -361,7 +361,7 @@ export default function CalendarPage() {
                   type="button"
                   onClick={() => {
                     closeMobileModal();
-                    navigate("/shared-with-me", { state: { highlightUserId: event.id } });
+                    navigate("/friends", { state: { highlightUserId: event.id } });
                   }}
                   className="flex w-full items-center justify-between rounded-2xl border border-gray-700 bg-gray-900/70 p-4 text-left transition hover:border-purple-500/40 hover:bg-gray-900"
                 >
