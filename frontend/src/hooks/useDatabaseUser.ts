@@ -12,6 +12,10 @@ export type GiftyUser = {
   dateOfBirth?: string;
 };
 
+type RefreshDatabaseUserOptions = {
+  silent?: boolean;
+};
+
 type CreateDatabaseUserInput = {
   user: FirebaseUser;
   email: string;
@@ -113,19 +117,28 @@ export const useDatabaseUser = (firebaseUser: FirebaseUser | null) => {
     void syncDatabaseUser();
   }, [firebaseUser, ensureDatabaseUser, fetchDatabaseUser]);
 
-  const refreshDatabaseUser = useCallback(async () => {
-    if (firebaseUser) {
-      setDatabaseUserLoading(true);
-      setDatabaseUserError(null);
+  const refreshDatabaseUser = useCallback(async (options?: RefreshDatabaseUserOptions) => {
+    if (!firebaseUser) {
+      return;
+    }
 
-      try {
-        await ensureDatabaseUser(firebaseUser);
-        const token = await firebaseUser.getIdToken();
-        await fetchDatabaseUser(token, firebaseUser.uid);
-      } catch (error) {
-        setDatabaseUser(null);
-        setDatabaseUserError(getErrorMessage(error));
-      } finally {
+    const shouldShowLoading = !options?.silent;
+
+    if (shouldShowLoading) {
+      setDatabaseUserLoading(true);
+    }
+
+    setDatabaseUserError(null);
+
+    try {
+      await ensureDatabaseUser(firebaseUser);
+      const token = await firebaseUser.getIdToken();
+      await fetchDatabaseUser(token, firebaseUser.uid);
+    } catch (error) {
+      setDatabaseUser(null);
+      setDatabaseUserError(getErrorMessage(error));
+    } finally {
+      if (shouldShowLoading) {
         setDatabaseUserLoading(false);
       }
     }
