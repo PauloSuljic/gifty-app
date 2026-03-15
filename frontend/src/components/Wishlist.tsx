@@ -124,6 +124,7 @@ const Wishlist = () => {
                       const coverImageUrl = getWishlistCoverImage({
                         items,
                         fallbackImage: fallbackCoverImage,
+                        wishlistCoverImage: wishlist.coverImage,
                       });
 
                       return (

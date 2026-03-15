@@ -1,6 +1,6 @@
 import { FiMove, FiMoreVertical, FiLink, FiEdit, FiTrash2 } from "react-icons/fi";
 import { Menu } from "@headlessui/react";
-import { HTMLAttributes, useRef } from "react";
+import { HTMLAttributes, useEffect, useRef, useState } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 type WishlistCardProps = {
@@ -28,14 +28,17 @@ export const WishlistCard = ({
   attributes,
   ...rest
 }: WishlistCardProps) => {
-  const isValidImage = coverImage && /\.(jpeg|jpg|gif|png|webp)$/i.test(coverImage);
-  const imageToShow = isValidImage
-    ? coverImage
-    : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
+  const [imageToShow, setImageToShow] = useState(coverImage || fallbackImage);
 
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const pressStart = useRef(0);
   const dragStarted = useRef(false);
+
+  useEffect(() => {
+    setImageToShow(coverImage || fallbackImage);
+  }, [coverImage]);
 
   // 🖐️ Distinguish short tap from drag (for mobile)
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -75,6 +78,7 @@ export const WishlistCard = ({
           alt={name}
           className="w-full h-32 object-cover rounded-t-xl select-none"
           draggable={false}
+          onError={() => setImageToShow(fallbackImage)}
         />
 
         {/* 🟣 Drag handle */}
