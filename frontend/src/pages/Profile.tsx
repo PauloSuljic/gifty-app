@@ -92,7 +92,7 @@ const Profile = () => {
       setInitialUser(user);
       setInitialSelectedAvatar(selectedAvatar);
       toast.success("Profile updated successfully! 🎉");
-      await refreshDatabaseUser(); // ✅ This updates the header instantly
+      await refreshDatabaseUser({ silent: true });
     } catch {
       toast.error("Failed to update profile 😞");
     } finally {

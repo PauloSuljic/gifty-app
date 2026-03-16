@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import Modal from "../Modal";
 import { apiClient } from "../../../shared/lib/apiClient";
@@ -22,11 +22,17 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
   const [name, setName] = useState("");
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const isValidUrl = (value: string) =>
     /^(https?:\/\/)?([\w-]+\.)+[a-z]{2,}(\/\S*)?$/i.test(value.trim());
 
   const handleSubmit = async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
     const newErrors: AddItemErrors = {};
     if (!name.trim()) newErrors.name = "Item name is required.";
     if (!link.trim()) newErrors.link = "Link is required.";
@@ -40,10 +46,15 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
       return;
     }
 
-    const token = await firebaseUser?.getIdToken();
-    if (!token) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
 
     try {
+      const token = await firebaseUser?.getIdToken();
+      if (!token) {
+        return;
+      }
+
       const createdItem = await apiClient.post<WishlistItemType>(
         `/api/wishlists/${wishlistId}/items`,
         { name, link, description, reservedBy: null },
@@ -56,6 +67,9 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
       setDescription("");
     } catch (error) {
       console.error("Failed to add wishlist item:", error);
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -68,6 +82,7 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
+        disabled={isSubmitting}
       />
       <input
         type="text"
@@ -75,6 +90,7 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
         value={link}
         onChange={(e) => setLink(e.target.value)}
         className="w-full px-4 py-2 mb-2 rounded bg-gray-700 text-white"
+        disabled={isSubmitting}
       />
       <textarea
         placeholder="Description (optional)"
@@ -83,12 +99,19 @@ const AddItemModal = ({ isOpen, onClose, wishlistId, onItemAdded }: AddItemModal
         rows={2}
         maxLength={50}
         className="w-full px-4 py-2 mb-1 rounded bg-gray-700 text-white resize-none"
+        disabled={isSubmitting}
       />
       <p className="text-xs text-gray-400 mb-3 text-right">
         {description.length}/50
       </p>
-      <button onClick={handleSubmit} className="w-full px-4 py-2 bg-purple-500 rounded-lg">
-        Confirm
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitting}
+        className={`w-full px-4 py-2 rounded-lg ${
+          isSubmitting ? "bg-gray-600 cursor-not-allowed" : "bg-purple-500 hover:bg-purple-400"
+        }`}
+      >
+        {isSubmitting ? "Adding..." : "Confirm"}
       </button>
     </Modal>
   );

@@ -13,7 +13,7 @@ export interface AuthContextType {
   databaseUser: GiftyUser | null;
   databaseUserLoading: boolean;
   databaseUserError: string | null;
-  refreshDatabaseUser: () => Promise<void>;
+  refreshDatabaseUser: (options?: { silent?: boolean }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

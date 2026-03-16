@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import AddItemModal from "./ui/modals/AddItemModal";
 import RenameWishlistModal from "./ui/modals/RenameWishlistModal";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,8 @@ const Wishlist = () => {
   const [wishlistToDelete, setWishlistToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreatingWishlist, setIsCreatingWishlist] = useState(false);
+  const isCreatingWishlistRef = useRef(false);
 
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [wishlistToRename, setWishlistToRename] = useState<WishlistType | null>(null);
@@ -65,15 +67,27 @@ const Wishlist = () => {
   };
 
   const handleCreateWishlist = async () => {
-    setIsCreateModalOpen(false);
-    const created = await createWishlist(newWishlist);
-    if (created) {
-      setNewWishlist("");
+    if (isCreatingWishlistRef.current || !newWishlist.trim()) {
+      return;
+    }
+
+    isCreatingWishlistRef.current = true;
+    setIsCreatingWishlist(true);
+
+    try {
+      const created = await createWishlist(newWishlist);
+      if (created) {
+        setNewWishlist("");
+        setIsCreateModalOpen(false);
+      }
+    } finally {
+      isCreatingWishlistRef.current = false;
+      setIsCreatingWishlist(false);
     }
   };
   
   return (
-    <div className="max-w-4xl mx-auto text-white">
+    <div className="mx-auto max-w-6xl text-white">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold">Your Wishlists</h2>
         <button
@@ -89,7 +103,10 @@ const Wishlist = () => {
       ) : wishlists.length > 0 ? (
         <DndContext {...dndContextProps}>
           <SortableContext items={wishlistOrder} strategy={sortableStrategy}>
-            <div className="grid grid-cols-2 gap-4 p-4 select-none" style={{ touchAction: "pan-y" }}>
+            <div
+              className="grid grid-cols-2 gap-4 p-2 select-none xl:grid-cols-3"
+              style={{ touchAction: "pan-y" }}
+            >
               {wishlistOrder.map((id) => {
                 const wishlist = wishlists.find((w) => w.id === id);
                 if (!wishlist) return null;
@@ -124,6 +141,7 @@ const Wishlist = () => {
                       const coverImageUrl = getWishlistCoverImage({
                         items,
                         fallbackImage: fallbackCoverImage,
+                        wishlistCoverImage: wishlist.coverImage,
                       });
 
                       return (
@@ -204,13 +222,18 @@ const Wishlist = () => {
           placeholder="Wishlist Name"
           maxLength={30}
           className="w-full px-4 py-2 rounded bg-gray-700 text-white mb-4"
+          disabled={isCreatingWishlist}
         />
         <button
           onClick={handleCreateWishlist}
-          className="px-4 py-2 bg-purple-500 rounded-lg w-full"
-          disabled={!newWishlist.trim()}
+          className={`w-full rounded-lg px-4 py-2 ${
+            isCreatingWishlist || !newWishlist.trim()
+              ? "bg-gray-600 cursor-not-allowed"
+              : "bg-purple-500 hover:bg-purple-400"
+          }`}
+          disabled={!newWishlist.trim() || isCreatingWishlist}
         >
-          Create
+          {isCreatingWishlist ? "Creating..." : "Create"}
         </button>
       </Modal>
 

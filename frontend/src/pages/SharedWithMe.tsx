@@ -3,8 +3,8 @@ import {
   FiArrowRight,
   FiCalendar,
   FiGift,
-  FiMoreVertical,
   FiSearch,
+  FiTrash2,
   FiUserPlus,
 } from "react-icons/fi";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -220,10 +220,11 @@ const FriendsPage = () => {
                       <button
                         type="button"
                         onClick={() => setRemoveModalOwnerId(group.ownerId)}
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-gray-400 transition hover:bg-white/5 hover:text-red-300"
-                        aria-label={`Remove ${ownerName}'s shared wishlists`}
+                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-red-400/15 bg-red-500/8 text-red-200 transition hover:border-red-300/35 hover:bg-red-500/16 hover:text-red-100"
+                        aria-label={`Remove shared wishlists from ${ownerName}`}
+                        title={`Remove shared wishlists from ${ownerName}`}
                       >
-                        <FiMoreVertical size={18} />
+                        <FiTrash2 size={18} />
                       </button>
                     </div>
 
