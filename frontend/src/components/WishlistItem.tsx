@@ -68,8 +68,6 @@ const WishlistItem = ({
         : "text-gray-400 hover:text-purple-400";
   const isReservationBlockedByLimit = context === "shared" && hasReservedItemByCurrentUser && !isReserver;
   const isReservationBlockedByOtherUser = context !== "own" && isReserved && !isReserver;
-  const isModalBlockedForSharedItem =
-    context === "shared" && (isReservationBlockedByLimit || isReservationBlockedByOtherUser);
   const reserveActionLabel = isReserver
     ? "Unreserve item"
     : isReservationBlockedByLimit
@@ -96,7 +94,7 @@ const WishlistItem = ({
   : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
 
   const handleItemLinkClick = () => {
-    if (!link || isModalBlockedForSharedItem) {
+    if (!link) {
       return;
     }
 

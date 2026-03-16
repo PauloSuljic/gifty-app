@@ -3,6 +3,9 @@ import { Menu } from "@headlessui/react";
 import { HTMLAttributes, useEffect, useRef, useState } from "react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
+const fallbackWishlistImage =
+  "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
+
 type WishlistCardProps = {
   id: string;
   name: string;
@@ -28,16 +31,14 @@ export const WishlistCard = ({
   attributes,
   ...rest
 }: WishlistCardProps) => {
-  const fallbackImage =
-    "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
-  const [imageToShow, setImageToShow] = useState(coverImage || fallbackImage);
+  const [imageToShow, setImageToShow] = useState(coverImage || fallbackWishlistImage);
 
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const pressStart = useRef(0);
   const dragStarted = useRef(false);
 
   useEffect(() => {
-    setImageToShow(coverImage || fallbackImage);
+    setImageToShow(coverImage || fallbackWishlistImage);
   }, [coverImage]);
 
   // 🖐️ Distinguish short tap from drag (for mobile)
@@ -78,7 +79,7 @@ export const WishlistCard = ({
           alt={name}
           className="h-28 w-full object-cover select-none xl:h-24"
           draggable={false}
-          onError={() => setImageToShow(fallbackImage)}
+          onError={() => setImageToShow(fallbackWishlistImage)}
         />
 
         {/* 🟣 Drag handle */}
