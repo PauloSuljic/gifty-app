@@ -66,7 +66,7 @@ export const WishlistCard = ({
 
   return (
     <div
-      className="rounded-xl shadow-sm cursor-pointer hover:shadow-md border border-purple-500/20 bg-gray-800 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+      className="overflow-hidden rounded-2xl border border-purple-500/20 bg-gray-800/95 shadow-sm cursor-pointer transition-transform hover:scale-[1.015] hover:border-purple-400/35 hover:shadow-[0_10px_30px_rgba(0,0,0,0.24)] active:scale-[0.99]"
       onClick={onClick}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -76,7 +76,7 @@ export const WishlistCard = ({
         <img
           src={imageToShow}
           alt={name}
-          className="w-full h-32 object-cover rounded-t-xl select-none"
+          className="h-28 w-full object-cover select-none xl:h-24"
           draggable={false}
           onError={() => setImageToShow(fallbackImage)}
         />
@@ -85,7 +85,7 @@ export const WishlistCard = ({
         <div
           {...listeners}
           {...attributes}
-          className="absolute top-2 left-2 p-1 bg-black/40 rounded-md cursor-grab active:cursor-grabbing select-none"
+          className="absolute left-2 top-2 rounded-lg border border-white/10 bg-black/35 p-1 text-gray-100 backdrop-blur-sm cursor-grab active:cursor-grabbing select-none"
           onPointerDown={(e) => e.stopPropagation()}  // 👈 prevent event bubbling to the menu
           onClick={(e) => e.stopPropagation()}
         >
@@ -103,7 +103,7 @@ export const WishlistCard = ({
               e.stopPropagation();
               e.nativeEvent.stopImmediatePropagation();
             }}
-            className="p-1 bg-black/40 rounded-full text-white hover:bg-black/60 pointer-events-auto"
+            className="rounded-full border border-white/10 bg-black/35 p-1 text-white backdrop-blur-sm hover:bg-black/55 pointer-events-auto"
           >
             <FiMoreVertical size={16} />
           </Menu.Button>
@@ -159,9 +159,11 @@ export const WishlistCard = ({
         </Menu>
       </div>
 
-      <div className="p-3">
-        <h4 className="text-sm font-medium mb-1">{name}</h4>
-        <p className="text-xs text-gray-400">{itemCount} items</p>
+      <div className="space-y-1 px-4 py-3">
+        <h4 className="line-clamp-1 text-base font-semibold text-white">{name}</h4>
+        <p className="text-xs uppercase tracking-[0.12em] text-gray-400">
+          {itemCount} {itemCount === 1 ? "item" : "items"}
+        </p>
       </div>
     </div>
   );
