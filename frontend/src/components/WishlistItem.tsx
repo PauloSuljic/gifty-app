@@ -62,17 +62,14 @@ const WishlistItem = ({
 
   const reserveButtonClass =
     reservationState === "reservedByMe"
-      ? "text-emerald-400 hover:text-emerald-300"
+      ? "text-purple-400 hover:text-purple-300"
       : reservationState === "reservedByOther"
-        ? "text-amber-400 hover:text-amber-300"
+        ? "text-purple-500/80 hover:text-purple-400"
         : "text-gray-400 hover:text-purple-400";
   const isReservationBlockedByLimit = context === "shared" && hasReservedItemByCurrentUser && !isReserver;
   const isReservationBlockedByOtherUser = context !== "own" && isReserved && !isReserver;
-  const isReserveDisabled =
-    context === "guest" ||
-    isReservationBlockedByLimit ||
-    isReservationBlockedByOtherUser ||
-    isReserver;
+  const isModalBlockedForSharedItem =
+    context === "shared" && (isReservationBlockedByLimit || isReservationBlockedByOtherUser);
   const reserveActionLabel = isReserver
     ? "Unreserve item"
     : isReservationBlockedByLimit
@@ -98,11 +95,31 @@ const WishlistItem = ({
   ? link
   : "https://images.unsplash.com/photo-1647221598091-880219fa2c8f?q=80&w=2232&auto=format&fit=crop&ixlib=rb-4.1.0";
 
+  const handleItemLinkClick = () => {
+    if (!link || isModalBlockedForSharedItem) {
+      return;
+    }
+
+    setIsLinkModalOpen(true);
+  };
+
   return (
   <>
     <div
-      className="flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 hover:border-purple-500 border border-transparent transition mb-3 cursor-default transition-transform duration-200 ease-in-out active:scale-[0.99] active:shadow-lg"
+      className={`relative flex items-center gap-4 p-4 min-h-[80px] w-full rounded-xl bg-gray-800 transition mb-3 cursor-default transition-transform duration-200 ease-in-out active:scale-[0.99] active:shadow-lg ${
+        reservationState === "reservedByMe"
+          ? "border border-purple-500 shadow-[0_0_0_1px_rgba(168,85,247,0.08)]"
+          : "border border-transparent hover:border-purple-500"
+      }`}
     >
+      {context !== "own" && reservationState === "reservedByMe" && (
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
+          <span className="inline-flex rounded-full border border-purple-300/25 bg-[#312b4f] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-100 shadow-lg">
+            {reservationLabel}
+          </span>
+        </div>
+      )}
+
       {/* 🟣 Drag handle */}
       {context === "own" && (
       <div
@@ -119,20 +136,16 @@ const WishlistItem = ({
         src={imageToShow}
         alt={name}
         className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-        onClick={() => link && setIsLinkModalOpen(true)}
+        onClick={handleItemLinkClick}
       />
 
       {/* 📄 Info section */}
-      <div className="flex-1 min-w-0" onClick={() => link && setIsLinkModalOpen(true)}>
+      <div className="flex-1 min-w-0" onClick={handleItemLinkClick}>
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-sm font-medium">{name}</h3>
-          {context !== "own" && isReserved && (
+          {context !== "own" && reservationState === "reservedByMe" && (
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                reservationState === "reservedByMe"
-                  ? "bg-emerald-500/20 text-emerald-300"
-                  : "bg-amber-500/20 text-amber-300"
-              }`}
+              className="sr-only"
             >
               {reservationLabel}
             </span>
@@ -256,18 +269,20 @@ const WishlistItem = ({
                 return;
               }
 
-              if (isReserveDisabled) return;
+              if (isReservationBlockedByLimit || isReservationBlockedByOtherUser) return;
               setIsLinkModalOpen(false);
-              handleConfirmClick("reserve");
+              handleConfirmClick(isReserver ? "unreserve" : "reserve");
             }}
-            disabled={isReserveDisabled}
+            disabled={isReservationBlockedByLimit || isReservationBlockedByOtherUser}
             className={`flex-1 px-4 py-2 rounded-lg text-white ${
-              isReserveDisabled
+              isReservationBlockedByLimit || isReservationBlockedByOtherUser
                 ? "bg-gray-700 cursor-not-allowed opacity-70"
-                : "bg-emerald-600 hover:bg-emerald-500"
+                : isReserver
+                  ? "border border-red-400/40 bg-red-500/10 text-red-100 hover:border-red-300/60 hover:bg-red-500/18"
+                  : "bg-purple-600 hover:bg-purple-500"
             }`}
           >
-            Reserve
+            {isReserver ? "Unreserve" : "Reserve"}
           </button>
         )}
       </div>
@@ -282,7 +297,7 @@ const WishlistItem = ({
         </p>
       )}
       {context === "shared" && isReserver && (
-        <p className="mt-3 text-xs text-emerald-300">
+        <p className="mt-3 text-xs text-purple-300">
           This item is reserved by you.
         </p>
       )}
