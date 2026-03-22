@@ -7,6 +7,13 @@ import {
   markAllNotificationsRead,
   notificationsQueryKey,
 } from "../features/notifications/api/notificationsApi";
+import { ApiError } from "../shared/lib/apiClient";
+
+const isAbortError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") return false;
+
+  return (error as { name?: unknown }).name === "AbortError";
+};
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { firebaseUser } = useAuth();
@@ -23,9 +30,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         const token = await firebaseUser.getIdToken();
         return await fetchNotifications(token, signal);
       } catch (error) {
-        console.error("Failed loading notifications", error);
+        if (!isAbortError(error)) {
+          console.error("Failed loading notifications", error);
+        }
         throw error;
       }
+    },
+    retry: (failureCount, error) => {
+      if (isAbortError(error)) {
+        return false;
+      }
+
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        return false;
+      }
+
+      return failureCount < 2;
     },
     select: (items) =>
       [...items].sort(
