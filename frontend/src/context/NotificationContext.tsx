@@ -8,6 +8,9 @@ import {
   notificationsQueryKey,
 } from "../features/notifications/api/notificationsApi";
 
+const isAbortError = (error: unknown) =>
+  error instanceof DOMException && error.name === "AbortError";
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { firebaseUser } = useAuth();
   const userId = firebaseUser?.uid;
@@ -23,7 +26,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         const token = await firebaseUser.getIdToken();
         return await fetchNotifications(token, signal);
       } catch (error) {
-        console.error("Failed loading notifications", error);
+        if (!isAbortError(error)) {
+          console.error("Failed loading notifications", error);
+        }
         throw error;
       }
     },

@@ -6,20 +6,23 @@ import Spinner from "../components/ui/Spinner";
 const PAGE_SIZE = 20;
 
 export default function NotificationsPage() {
-  const { notifications, isLoading, loadNotifications, markAllAsRead } = useNotificationContext();
+  const { notifications, isLoading, markAllAsRead } = useNotificationContext();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const hasMarkedReadRef = useRef(false);
 
   // ----------------------------------------------------------------------
-  // ✓ LOAD & MARK READ ONCE WHEN PAGE OPENS
+  // ✓ MARK READ ONCE WHEN PAGE HAS DATA
   // ----------------------------------------------------------------------
   useEffect(() => {
-    (async () => {
-      await loadNotifications();
-      await markAllAsRead();
-    })();
-  }, [loadNotifications, markAllAsRead]);
+    if (notifications.length === 0 || hasMarkedReadRef.current) {
+      return;
+    }
+
+    hasMarkedReadRef.current = true;
+    void markAllAsRead();
+  }, [notifications.length, markAllAsRead]);
 
   // ----------------------------------------------------------------------
   // ✓ INFINITE SCROLL
