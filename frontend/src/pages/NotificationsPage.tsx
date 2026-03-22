@@ -6,23 +6,44 @@ import Spinner from "../components/ui/Spinner";
 const PAGE_SIZE = 20;
 
 export default function NotificationsPage() {
-  const { notifications, isLoading, markAllAsRead } = useNotificationContext();
+  const { notifications, isLoading, unreadCount, refreshNotifications, markAllAsRead } = useNotificationContext();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [hasRefreshedOnOpen, setHasRefreshedOnOpen] = useState(false);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const hasRefreshedRef = useRef(false);
   const hasMarkedReadRef = useRef(false);
 
   // ----------------------------------------------------------------------
-  // ✓ MARK READ ONCE WHEN PAGE HAS DATA
+  // ✓ REFRESH ON PAGE OPEN TO AVOID STALE PROVIDER CACHE
   // ----------------------------------------------------------------------
   useEffect(() => {
-    if (notifications.length === 0 || hasMarkedReadRef.current) {
+    if (hasRefreshedRef.current) {
+      return;
+    }
+
+    hasRefreshedRef.current = true;
+
+    void (async () => {
+      try {
+        await refreshNotifications();
+      } finally {
+        setHasRefreshedOnOpen(true);
+      }
+    })();
+  }, [refreshNotifications]);
+
+  // ----------------------------------------------------------------------
+  // ✓ MARK READ ONCE AFTER INITIAL PAGE REFRESH
+  // ----------------------------------------------------------------------
+  useEffect(() => {
+    if (!hasRefreshedOnOpen || unreadCount === 0 || hasMarkedReadRef.current) {
       return;
     }
 
     hasMarkedReadRef.current = true;
     void markAllAsRead();
-  }, [notifications.length, markAllAsRead]);
+  }, [hasRefreshedOnOpen, unreadCount, markAllAsRead]);
 
   // ----------------------------------------------------------------------
   // ✓ INFINITE SCROLL
