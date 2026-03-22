@@ -91,17 +91,17 @@ const WishlistDetail = () => {
           <header className="space-y-3 text-center xl:col-start-1 xl:text-left">
             <div>
               {isOwner ? (
-                <button
-                  type="button"
-                  onClick={() => setIsRenameModalOpen(true)}
-                  className="group inline-flex items-center justify-center gap-3 text-center xl:justify-start xl:text-left"
-                  aria-label={`Rename wishlist ${wishlist.name}`}
-                >
-                  <span className="text-3xl font-semibold text-white transition group-hover:text-purple-200 sm:text-4xl">
-                    {wishlist.name}
-                  </span>
-                  <FiEdit2 className="h-5 w-5 text-purple-300/80 transition group-hover:text-purple-200" />
-                </button>
+                <div className="inline-flex items-center justify-center gap-3 text-center xl:justify-start xl:text-left">
+                  <h1 className="text-3xl font-semibold text-white sm:text-4xl">{wishlist.name}</h1>
+                  <button
+                    type="button"
+                    onClick={() => setIsRenameModalOpen(true)}
+                    className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-purple-300/20 bg-white/5 text-purple-300/80 transition hover:border-purple-300/40 hover:bg-white/10 hover:text-purple-200"
+                    aria-label={`Rename wishlist ${wishlist.name}`}
+                  >
+                    <FiEdit2 className="h-5 w-5" />
+                  </button>
+                </div>
               ) : (
                 <h1 className="text-3xl font-semibold text-white sm:text-4xl">{wishlist.name}</h1>
               )}
@@ -127,12 +127,14 @@ const WishlistDetail = () => {
           {isOwner && (
             <div className="flex items-center gap-3 xl:col-start-1">
               <button
+                type="button"
                 onClick={() => setIsAddModalOpen(true)}
                 className="min-w-0 flex-[1.8] rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-5 py-2.5 text-base font-semibold text-white shadow-[0_10px_30px_rgba(168,85,247,0.24)] xl:w-[16rem] xl:flex-none"
               >
                 + Add Item
               </button>
               <button
+                type="button"
                 onClick={handleShareClick}
                 className="min-w-0 flex-1 rounded-full border border-gray-600 bg-gray-900/30 px-5 py-2.5 text-base font-medium text-white transition hover:border-gray-500 hover:bg-gray-800/50 xl:ml-auto xl:w-[10rem] xl:flex-none"
               >
